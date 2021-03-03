@@ -1,9 +1,13 @@
-This project branched off from INSTINCT HPC. instinct_dt version is designed to be easily portable between linux and windows, and does not
-containerize methods. Rather, the whole processes can ideally be containerized. 
+INSTINCT is an open source project developed by the UW and AFSC, and with funding by NOAA HPC. INSTINCT is an autodetection system implemented in the Luigi framework. 
 
-This version allows for faster development/testing on windows, and will be immediately useful on AFSC workstations. 
+This project is the open alpha version of INSTINCT. A more comprehensive README, list of features, and operating instructions will be provided in the beta stage of the project. 
+For now, feel free to peek at functionality currently being worked on. If you are very eager to use this system while
+it is still in alpha, please reach out to me (daniel.woodrich@noaa.gov) to see if earlier collaboration makes sense. 
 
-The philosophy of atomic methods will still be enforced, rather with containers, by command line calls. Scipts will be passed parameters 
-and relative paths, and will save to the task target to prevent side effects. 
+Beta testing and collaboration will be desired once the system reaches beta stage. 
 
-Python, R, and future dependencies will not be managed during development, but should be accounted for in any containerization. 
+For more information about the INSTINCT det/class algorithm, see https://repository.library.noaa.gov/view/noaa/27222 . 
+Note that this refers to a previous build of the algorithm, not available here. Source code available upon request. 
+The original det/class algorithm is an extension of the presented method in Ross & Allen 2014
+
+
