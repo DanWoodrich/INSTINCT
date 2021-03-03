@@ -1,0 +1,43 @@
+#update above for new container deployment. 
+python
+import os
+Moorings = ["BS13_AU_02a_files_All.csv","BS17_AU_02b_files_All.csv","AW12_AU_BS3_files_All.csv",\
+"AW14_AU_PH1_files_All.csv","AL18_AU_BS4_files_All.csv","AL16_AU_BS1_files_All.csv","BS17_AU_05a_files_All.csv",\
+"BS17_AU_08a_files_All.csv"]
+
+instances = range(len(Moorings))
+for i in instances:
+	command = "gcloud compute instances create-with-container instance-" + str(i+1) + " --zone us-west1-b \
+	--container-image=us.gcr.io/instinct_test1/instinct_dt:v1.6 --machine-type=e2-standard-8 \
+	--container-privileged --container-restart-policy=never --container-env=FG=" + Moorings[i] +" \
+ 	--service-account=gcs-auth-account@instinct-test1.iam.gserviceaccount.com \
+    	--scopes=compute-rw,cloud-platform,storage-full,default"
+    	os.system(command)
+
+#container has auto shutdown on completion
+
+#old
+
+python
+import os
+#loop through moorings 
+Moorings = ["BS13_AU_02a_files_All.csv","BS17_AU_02b_files_All.csv","AW12_AU_BS3_files_All.csv",\
+"AW14_AU_PH1_files_All.csv","AL18_AU_BS4_files_All.csv","AL16_AU_BS1_files_All.csv",\
+"BS12_AU_08a_files_All.csv"]
+Regions = ["us-west1-b","us-central1-a","us-east1-b"]
+instances = range(len(Moorings))
+for i in instances:
+    command = "gcloud compute instances create-with-container instance-" + str(i+1) + " --zone=us-west1-b \
+    --container-image=us.gcr.io/instinct_test1/instinct_dt:v1.2 --machine-type=c2-standard-8 \
+    --container-privileged --container-restart-policy=never --container-env=FG=" + Moorings[i]
+    os.system(command)
+    
+#### delete instances
+for i in instances:
+    command = "gcloud compute instances delete instance-" + str(i+1) + " --quiet --zone=us-west1-b"
+    os.system(command)
+
+#this form of creation and deleting probably requires some extra waiting for each thread. If annoying, saw
+#a thread which recommended this : from multiprocessing import Pool
+
+
