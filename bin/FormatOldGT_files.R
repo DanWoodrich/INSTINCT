@@ -96,9 +96,52 @@ for(n in files){
   GTout$Type<-"i_neg"
   GTout$SignalCode<-Species
   
-  saveName<-paste(Species,saveName,sep="_")
+  #modify stuff to be compatable with new NAS naming. change mooring name (save name), and wav names
   
-  write.csv(GTout,paste("C:/instinct_dt/Data/GroundTruth/",saveName,".csv",sep=""),row.names = FALSE)
+  MooringName<-substr(SfilesName,1,gregexpr("_",SfilesName)[[1]][3]-1)
+  
+  #also, rename wavs if applicable:
+  if(substr(GTout$StartFile[1],1,5)=="AU-BS"){
+    
+    MooringSite<-substr(GTout$StartFile[1],6,7)
+    
+    #if a BS mooring, find the #, then 
+    newWavName<-paste("AU-BSPM",MooringSite,sep="")
+    
+    MooringName<-paste(substr(data$MooringName[1],1,8),"PM",MooringSite,sep="")
+    
+    if((substr(GTout$StartFile[1],8,8)=="a"|substr(GTout$StartFile[1],8,8)=="b")&MooringSite=="02"){
+      newWavName<-paste(newWavName,substr(GTout$StartFile[1],8,8),sep="_")
+      
+      MooringName<-paste(MooringName,substr(GTout$StartFile[1],8,8),sep="-")
+    }
+    
+    dash2<-gregexpr("-",GTout$StartFile[1])[[1]][2]
+    dot1<-gregexpr("\\.",GTout$StartFile[1])[[1]][1]
+    dateTimeFormatStart<-substr(GTout$StartFile,dash2+1,dot1-1)
+    dateTimeFormatEnd<-substr(GTout$EndFile,dash2+1,dot1-1)
+    
+    
+    GTout$StartFile<-paste(newWavName,"-",dateTimeFormatStart,".wav",sep="")
+    GTout$EndFile<-paste(newWavName,"-",dateTimeFormatEnd,".wav",sep="")
+
+  }
+  
+  if(substr(data$SFsh[1],1,5)=="AU-AL"|substr(data$SFsh[1],1,5)=="AU-AW"){
+    
+    #do not need to change .wav names
+    
+    #only works with single digit, but that's ok I think just for backwards conversion of this limited set
+    MooringSite<-substr(MooringName,11,12)
+    
+    #if a BS mooring, find the #, then 
+    MooringName<-paste(substr(MooringName[1],1,10),"0",MooringSite,sep="")
+    
+  }
+  
+  saveName<-paste(Species,MooringName,substr(SfilesName,gregexpr("_",SfilesName)[[1]][3]+1,und5-1),sep="_")
+  
+  write.csv(GTout,paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/INSTINCT/Data/GroundTruth/",saveName,".csv",sep=""),row.names = FALSE)
   
 
 }

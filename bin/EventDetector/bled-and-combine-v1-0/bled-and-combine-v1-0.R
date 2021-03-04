@@ -512,9 +512,8 @@ EnergyDetectoR<-function(Wav,metaData,windowLength,Overlap,noiseThresh,noiseWinL
 }
 
 
-
-
-
+#get params from the following line: 
+#Worker(salt=643267509, workers=1, host=AKCSL2051-LN18, username=daniel.woodrich, pid=3728) failed    UnifyED(ProjectRoot=C:/Apps/INSTINCT/, system=win, r_version=C:/Users/daniel.woodrich/Work/R/R-4.0.3, upstream_task=FormatFG(ProjectRoot=C:/Apps/INSTINCT/, FGhash=aa3f4ad63e6ad534dc7ce33e260f9aebb3f10485, FGfile=C:/Apps/INSTINCT/Data/FileGroups/AL16_AU_BS03_files_152-354.csv), splits=3, CPU=99, Chunk=20, FGhash=aa3f4ad63e6ad534dc7ce33e260f9aebb3f10485, SoundFileRootDir_Host=//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves, EDparamsHash=d939e0121a0c175b0d83dbb02b1c7f91c8b8d3b9, Params=0.5 Stacked 2 50 25 100 1 0 2 0.25 40 1 0 128 bled-and-combine-v1-0, MethodID=bled-and-combine-v1-0, ProcessID=EventDetector)
 
 
 #windows test values
