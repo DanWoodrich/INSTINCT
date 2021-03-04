@@ -6,6 +6,191 @@ library(tuneR)
 library(signal)
 library(foreach)
 
+readWave2 <- 
+  function(filename, from = 1, to = Inf, 
+           units = c("samples", "seconds", "minutes", "hours"), header = FALSE, toWaveMC = NULL){
+    
+    read4ByteUnsignedInt <- function(){
+      as.vector(readBin(con, int, n = 4, size = 1, endian = "little", signed = FALSE) %*% 2^c(0, 8, 16, 24))
+    }
+    
+    if(!is.character(filename))
+      stop("'filename' must be of type character.")
+    if(length(filename) != 1)
+      stop("Please specify exactly one 'filename'.")
+    if(!file.exists(filename))
+      stop("File '", filename, "' does not exist.")
+    
+    ## Open connection
+    con <- file(filename, "rb")
+    on.exit(close(con)) # be careful ...
+    int <- integer()
+    
+    ## Reading in the header:
+    RIFF <- readChar(con, 4)
+    file.length <- read4ByteUnsignedInt()
+    WAVE <- readChar(con, 4)
+    
+    ## waiting for the WAVE part
+    i <- 0
+    while(!(RIFF == "RIFF" && WAVE == "WAVE")){
+      i <- i+1
+      seek(con, where = file.length - 4, origin = "current")
+      RIFF <- readChar(con, 4)
+      file.length <- read4ByteUnsignedInt()
+      WAVE <- readChar(con, 4)
+      if(i > 5) stop("This seems not to be a valid RIFF file of type WAVE.")
+    }
+    
+    
+    FMT <- readChar(con, 4)    
+    bext <- NULL
+    ## extract possible bext information, if header = TRUE
+    if (header && (tolower(FMT) == "bext")){
+      bext.length <- read4ByteUnsignedInt()
+      bext <- sapply(seq(bext.length), function(x) readChar(con, 1, useBytes=TRUE))
+      bext[bext==""] <- " "
+      bext <- paste(bext, collapse="")
+      FMT <- readChar(con, 4)
+    }
+    
+    ## waiting for the fmt chunk
+    i <- 0
+    while(FMT != "fmt "){
+      i <- i+1
+      belength <- read4ByteUnsignedInt()
+      seek(con, where = belength, origin = "current")
+      FMT <- readChar(con, 4)
+      if(i > 5) stop("There seems to be no 'fmt ' chunk in this Wave (?) file.")
+    }
+    fmt.length <- read4ByteUnsignedInt()
+    pcm <- readBin(con, int, n = 1, size = 2, endian = "little", signed = FALSE)
+    ## FormatTag: only WAVE_FORMAT_PCM (0,1), WAVE_FORMAT_IEEE_FLOAT (3), WAVE_FORMAT_EXTENSIBLE (65534, determined by SubFormat)
+    if(!(pcm %in% c(0, 1, 3, 65534)))
+      stop("Only uncompressed PCM and IEEE_FLOAT Wave formats supported")
+    channels <- readBin(con, int, n = 1, size = 2, endian = "little")
+    sample.rate <- readBin(con, int, n = 1, size = 4, endian = "little")
+    bytes.second <- readBin(con, int, n = 1, size = 4, endian = "little")
+    block.align <- readBin(con, int, n = 1, size = 2, endian = "little")
+    bits <- readBin(con, int, n = 1, size = 2, endian = "little")
+    if(!(bits %in% c(8, 16, 24, 32, 64)))
+      stop("Only 8-, 16-, 24-, 32- or 64-bit Wave formats supported")
+    ## non-PCM (chunk size 18 or 40)
+    
+    if(fmt.length >= 18){    
+      cbSize <- readBin(con, int, n = 1, size = 2, endian = "little")
+      ## chunk size 40 (extension 22)
+      if(cbSize == 22 && fmt.length == 40){
+        validBits <- readBin(con, int, n = 1, size = 2, endian = "little")
+        dwChannelMask <- readBin(con, int, n = 1, size = 4, endian = "little")    
+        channelNames <- MCnames[as.logical(intToBits(dwChannelMask)),"name"]
+        SubFormat <- readBin(con, int, n = 1, size = 2, endian = "little", signed = FALSE)
+        x <- readBin(con, "raw", n=14)
+      } else {
+        if(cbSize > 0) 
+          seek(con, where = fmt.length-18, origin = "current")
+      }   
+    }    
+    if(exists("SubFormat") && !(SubFormat %in% c(0, 1, 3)))
+      stop("Only uncompressed PCM and IEEE_FLOAT Wave formats supported")
+    
+    ## fact chunk
+    #    if((pcm %in% c(0, 3)) || (pcm = 65534 && SubFormat %in% c(0, 3))) {
+    #      fact <- readChar(con, 4)
+    #      fact.length <- readBin(con, int, n = 1, size = 4, endian = "little")
+    #      dwSampleLength <- readBin(con, int, n = 1, size = 4, endian = "little")
+    #    }
+    
+    DATA <- readChar(con, 4)
+    ## waiting for the data chunk    
+    i <- 0    
+    while(length(DATA) && DATA != "data"){
+      i <- i+1
+      belength <- read4ByteUnsignedInt()
+      seek(con, where = belength, origin = "current")
+      DATA <- readChar(con, 4)
+      if(i > 5) stop("There seems to be no 'data' chunk in this Wave (?) file.")
+    }
+    if(!length(DATA)) 
+      stop("No data chunk found")
+    data.length <- read4ByteUnsignedInt()
+    bytes <- bits/8
+    if(((sample.rate * block.align) != bytes.second) || 
+       ((channels * bytes) != block.align))
+      warning("Wave file '", filename, "' seems to be corrupted.")
+    
+    ## If only header required: construct and return it
+    if(header){
+      return(c(list(sample.rate = sample.rate, channels = channels, 
+                    bits = bits, samples = data.length / (channels * bytes)),
+               if(!is.null(bext)) list(bext = bext)))
+    }
+    
+    ## convert times to sample numbers
+    fctr <- switch(match.arg(units),
+                   samples = 1,
+                   seconds = sample.rate,
+                   minutes = sample.rate * 60,
+                   hours = sample.rate * 3600)
+    if(fctr > 1) {
+      from <- round(from * fctr + 1)
+      to <- round(to * fctr)
+    } 
+    
+    ## calculating from/to for reading in sample data    
+    N <- data.length / bytes
+    N <- min(N, to*channels) - (from*channels+1-channels) + 1
+    seek(con, where = (from - 1) * bytes * channels, origin = "current")
+    
+    ## reading in sample data
+    ## IEEE FLOAT 
+    if(pcm == 3 || (exists("SubFormat") && SubFormat==3)){
+      sample.data <- readBin(con, "numeric", n = N, size = bytes, 
+                             endian = "little")        
+    } else {
+      ## special case of 24 bits
+      if(bits == 24){
+        sample.data <- readBin(con, int, n = N * bytes, size = 1, 
+                               signed = FALSE, endian = "little")
+        sample.data <- as.vector(t(matrix(sample.data, nrow = 3)) %*% 256^(0:2))
+        sample.data <- sample.data - 2^24 * (sample.data >= 2^23)
+      } else {
+        sample.data <- readBin(con, int, n = N, size = bytes, 
+                               signed = (bytes != 1), endian = "little")
+      }
+    }
+    
+    ## output to WaveMC if selected by the user or if dwChannelMask suggests this is a multichannel Wave
+    toWaveMC <- if(pcm != 65534 || (exists("dwChannelMask") && dwChannelMask %in% c(1,3))) isTRUE(toWaveMC) else TRUE  
+    
+    if(toWaveMC){
+      ## Constructing the WaveMC object: 
+      object <- new("WaveMC", samp.rate = sample.rate, bit = bits, 
+                    pcm = !(pcm == 3 || (exists("SubFormat") && SubFormat==3)))
+      object@.Data <- matrix(sample.data, ncol = channels, byrow=TRUE)
+      if(exists("channelNames")) {
+        if((lcN <- length(channelNames)) < channels)
+          channelNames <- c(channelNames, paste("C", (lcN+1):channels, sep=""))
+        colnames(object@.Data) <- channelNames
+      }
+    } else {
+      ## Constructing the Wave object: 
+      object <- new("Wave", stereo = (channels == 2), samp.rate = sample.rate, bit = bits, 
+                    pcm = !(pcm == 3 || (exists("SubFormat") && SubFormat==3)))
+      if(channels == 2) {
+        sample.data <- matrix(sample.data, nrow = 2)
+        object@left <- sample.data[1, ]
+        object@right <- sample.data[2, ]
+      } else {
+        object@left <- sample.data
+      }
+    }
+    
+    ## Return the Wave object
+    return(object)
+  }
+
+
 doIDvec<-function(x){
   #define peak as from the first minima, through the maxima, and up until the next minima. If peak is not true detection, 
   #turn off this region. 
@@ -170,11 +355,14 @@ EnergyDetectoR<-function(Wav,metaData,windowLength,Overlap,noiseThresh,noiseWinL
   #time1<-Sys.time()
   
   #this is a dummy energy detector just designed for low. Other designs should be created for full sound files
+  start<-Sys.time() 
+  
   spectrogram<- specgram(x = Wav@left,
                          Fs = Wav@samp.rate,
                          window=windowLength,
                          overlap=Overlap
   )
+  end<-Sys.time()
   
   #use for testing upsweeps: inverts the matrix : 
   #spectrogram$S <- apply(spectrogram$S, 2, rev)
@@ -295,29 +483,29 @@ EnergyDetectoR<-function(Wav,metaData,windowLength,Overlap,noiseThresh,noiseWinL
   #time2<-Sys.time()
   
   #visualize detections
-  #step=60
+  step=60
   
-  #topcol<-max(Detections[,3])-lowFreq+1
-  #for(f in seq(to=max(roldur),from=0,by=step)){
+  topcol<-max(Detections[,3])-lowFreq+1
+  for(f in seq(to=max(roldur),from=0,by=step)){
   #just show certain time range
-  #tempogram<-spectrogram
-  #start=f
-  #if(start==max(roldur)){
-  #  break
-  #}
-  #end = f+step
-  #if(end>max(roldur)){
-  #  end=max(roldur)
-  #}
-  #tempogram$S<-spectrogram$S[,(start/tAdjust):(end/tAdjust)]
-  #tempogram$t<-spectrogram$t[(start/tAdjust):(end/tAdjust)]
-  #plot(tempogram)
+  tempogram<-spectrogram
+  start=f
+  if(start==max(roldur)){
+    break
+  }
+  end = f+step
+  if(end>max(roldur)){
+    end=max(roldur)
+  }
+  tempogram$S<-spectrogram$S[,(start/tAdjust):(end/tAdjust)]
+  tempogram$t<-spectrogram$t[(start/tAdjust):(end/tAdjust)]
+  plot(tempogram)
   
-  #rect(Detections[,1],Detections[,3],Detections[,2],Detections[,4],col=rainbow(topcol,alpha=0.25)[Detections[,3]-lowFreq+1])
+  rect(Detections[,1],Detections[,3],Detections[,2],Detections[,4],col=rainbow(topcol,alpha=0.25)[Detections[,3]-lowFreq+1])
   
-  #abline(v=Detections[,1],col="red")
-  #abline(v=Detections[,2],col="red")
-  #}
+  abline(v=Detections[,1],col="red")
+  abline(v=Detections[,2],col="red")
+  }
   
   #
   #algorithm: upsweep downsweep: every spectrogram time step search for if new (not in run) box exists.give unique ID and search for box
@@ -512,18 +700,37 @@ EnergyDetectoR<-function(Wav,metaData,windowLength,Overlap,noiseThresh,noiseWinL
 }
 
 
+#get params from the following line: 
+#Worker(salt=643267509, workers=1, host=AKCSL2051-LN18, username=daniel.woodrich, pid=3728) failed    UnifyED(ProjectRoot=C:/Apps/INSTINCT/, system=win, r_version=C:/Users/daniel.woodrich/Work/R/R-4.0.3, upstream_task=FormatFG(ProjectRoot=C:/Apps/INSTINCT/, FGhash=aa3f4ad63e6ad534dc7ce33e260f9aebb3f10485, FGfile=C:/Apps/INSTINCT/Data/FileGroups/AL16_AU_BS03_files_152-354.csv), splits=3, CPU=99, Chunk=20, FGhash=aa3f4ad63e6ad534dc7ce33e260f9aebb3f10485, SoundFileRootDir_Host=//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves, EDparamsHash=d939e0121a0c175b0d83dbb02b1c7f91c8b8d3b9, Params=0.5 Stacked 2 50 25 100 1 0 2 0.25 40 1 0 128 bled-and-combine-v1-0, MethodID=bled-and-combine-v1-0, ProcessID=EventDetector)
 
-
-
-
+#Params=0.5 Stacked 2 50 25 100 1 0 2 0.25 40 1 0 128 bled-and-combine-v1-0, MethodID=bled-and-combine-v1-0, ProcessID=EventDetector)
 
 #windows test values
-DataPath <-"C:/Apps/instinct_dt/Data/SoundFiles"        #docker volume
-FGpath <- "C:/Apps/instinct_dt/Cache/332728fc5afc848c0a507f3f42580ad591b2d36f"  #docker volume
-ParamPath <- "C:/Apps/instinct_dt/etc"
-resultPath<-"C:/Apps/instinct_dt/Out"
+DataPath <-"//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves/"        #docker volume
+FGpath <- "C:/Apps/INSTINCT/Cache/7f1040f41deafd01007a7cd0ad636c71fc686212"  #docker volume
+ParamPath <- "C:/Apps/INSTINCT/etc"
+resultPath<-"C:/Apps/INSTINCT/Out"
 ReadFile<-'FileGroupFormatSplit3.csv.gz'
 EDstage<-"1"
+
+crs<- as.numeric(99)
+chunkSize<- as.numeric(20)
+
+#make sure these are alphabetical (alphabeterical to python variables that is)
+bandOvlp = as.numeric(0.5)
+combineMethod = "Stacked"
+dBadd<- as.numeric(2)
+highFreq<-as.numeric(50)
+lowFreq<-as.numeric(25)
+maxDur = as.numeric(100)
+minDur = as.numeric(1)
+minFreq = as.numeric(0)
+noiseHopLength<-as.numeric(2)
+noiseThresh<-as.numeric(0.25)
+noiseWinLength<-as.numeric(40)
+numBands <- as.numeric(1)
+Overlap<-as.numeric(0)
+windowLength<-as.numeric(128)
 
 args<-commandArgs(trailingOnly = TRUE)
 
@@ -533,11 +740,6 @@ FGpath <- args[2]
 resultPath <- args[3]
 ReadFile<-args[4]
 EDstage<-args[5]
-
-data<-read.csv(paste(FGpath,ReadFile,sep="/"))
-
-#split dataset into difftime group to parallelize 
-filez<-nrow(data)
 
 crs<- as.numeric(args[6])
 chunkSize<- as.numeric(args[7])
@@ -558,6 +760,10 @@ numBands <- as.numeric(args[19])
 Overlap<-as.numeric(args[20])
 windowLength<-as.numeric(args[21])
 
+data<-read.csv(paste(FGpath,ReadFile,sep="/"))
+
+#split dataset into difftime group to parallelize 
+filez<-nrow(data)
 
 
 #big process: do split chunks evenly to ensure close to equal processing times
@@ -611,11 +817,11 @@ detOut<-foreach(i=1:BigChunks) %do% {
       dataMini$cumsum<-cumsum(dataMini$Duration)-dataMini$Duration[1]
       filePaths<-paste(DataPath,paste(dataMini$FullPath,dataMini$FileName,sep=""),sep="")
       if(nrow(dataMini)==1){
-        soundFile=readWave(filePaths)
+        soundFile=readWave2(filePaths)
       }else{
         SoundList <- vector(mode = "list", length = nrow(dataMini))
         for(g in 1:nrow(dataMini)){
-          SoundList[[g]]<-readWave(filePaths[g])
+          SoundList[[g]]<-readWave2(filePaths[g])
         }
         soundFile<-do.call(bind, SoundList)
       }
