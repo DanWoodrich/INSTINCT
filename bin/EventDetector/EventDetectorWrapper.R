@@ -4,68 +4,50 @@
 args<-commandArgs(trailingOnly = TRUE)
 
 #windows test values
-DataPath <-"//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves/"        #docker volume
-FGpath <- "C:/Apps/INSTINCT/Cache/7f1040f41deafd01007a7cd0ad636c71fc686212"  #docker volume
-ParamPath <- "C:/Apps/INSTINCT/etc"
-resultPath<-"C:/Apps/INSTINCT/Out"
-ReadFile<-'FileGroupFormatSplit3.csv.gz'
-EDstage<-"1"
+#DataPath <-"//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves/"        #docker volume
+#FGpath <- "C:/Apps/INSTINCT/Cache/7f1040f41deafd01007a7cd0ad636c71fc686212"  #docker volume
+#ParamPath <- "C:/Apps/INSTINCT/etc"
+#resultPath<-"C:/Apps/INSTINCT/Out"
+#ReadFile<-'FileGroupFormatSplit3.csv.gz'
+#EDstage<-"1"
 
-
-crs<- as.numeric(99)
-chunkSize<- as.numeric(20)
+#crs<- as.numeric(99)
+#chunkSize<- as.numeric(20)
 
 #make sure these are alphabetical (alphabeterical to python variables that is)
-bandOvlp = as.numeric(0.5)
-combineMethod = "Stacked"
-dBadd<- as.numeric(2)
-highFreq<-as.numeric(50)
-lowFreq<-as.numeric(25)
-maxDur = as.numeric(100)
-minDur = as.numeric(1)
-minFreq = as.numeric(0)
-noiseHopLength<-as.numeric(2)
-noiseThresh<-as.numeric(0.25)
-noiseWinLength<-as.numeric(40)
-numBands <- as.numeric(1)
-Overlap<-as.numeric(0)
-windowLength<-as.numeric(128)
+#bandOvlp = as.numeric(0.5)
+#combineMethod = "Stacked"
+#dBadd<- as.numeric(2)
+#highFreq<-as.numeric(50)
+#lowFreq<-as.numeric(25)
+#maxDur = as.numeric(100)
+#minDur = as.numeric(1)
+#minFreq = as.numeric(0)
+#noiseHopLength<-as.numeric(2)
+#noiseThresh<-as.numeric(0.25)
+#noiseWinLength<-as.numeric(40)
+#numBands <- as.numeric(1)
+#Overlap<-as.numeric(0)
+#windowLength<-as.numeric(128)
 
 #argument values
-DataPath <- args[1]
-FGpath <- args[2]
-resultPath <- args[3]
-ReadFile<-args[4]
-EDstage<-args[5]
+ProjectRoot<-args[1]
+DataPath <- args[2]
+FGpath <- args[3]
+resultPath <- args[4]
+ReadFile<-args[5]
+EDstage<-args[6]
 
-methodID<-args
+crs<- as.numeric(args[7])
+chunkSize<- as.numeric(args[8])
 
-#need methodID
-#need projectRoot
+MethodID<-args[10]
 
-crs<- as.numeric(args[6])
-chunkSize<- as.numeric(args[7])
-
-
-#make sure these are alphabetical (alphabical to python variables that is)
-bandOvlp = as.numeric(args[8])
-combineMethod = args[9]
-dBadd<- as.numeric(args[10])
-highFreq<-as.numeric(args[11])
-lowFreq<-as.numeric(args[12])
-maxDur = as.numeric(args[13])
-minDur = as.numeric(args[14])
-minFreq = as.numeric(args[15])
-noiseHopLength<-as.numeric(args[16])
-noiseThresh<-as.numeric(args[17])
-noiseWinLength<-as.numeric(args[18])
-numBands <- as.numeric(args[19])
-Overlap<-as.numeric(args[20])
-windowLength<-as.numeric(args[21])
+MethodArgs<-args[11:length(args)]
 
 #populate with needed fxns. Determine by command arg (ProjectRoot and MethodID)
 SourcePath<-paste(ProjectRoot,"/bin/EventDetector/",MethodID,"/",MethodID,".R",sep="")
-source("C:/Apps/INSTINCT/bin/EventDetector/bled-and-combine-test-r-source-v1-0/bled-and-combine-test-r-source-v1-0.R")
+source(SourcePath) 
 
 data<-read.csv(paste(FGpath,ReadFile,sep="/"))
 
@@ -109,7 +91,7 @@ detOut<-foreach(i=1:BigChunks) %do% {
   
   
   #foreach into chunks 
-  startLocalPar(crs,"FilezAssign","data","EnergyDetectoR","specgram","splitID","StartFile","EndFile","windowLength","Overlap","noiseThresh","noiseWinLength","noiseHopLength","dBadd","lowFreq","highFreq","numBands","bandOvlp","minDur","maxDur","minFreq","combineMethod")
+  startLocalPar(crs,"FilezAssign","data","EventDetectoR","specgram","splitID","StartFile","EndFile","MethodArgs")
   
   Detections<-foreach(n=1:crs,.packages=c("tuneR","doParallel")) %dopar% {
     dataIn<-data[StartFile:EndFile,][which(FilezAssign==n),]
@@ -135,7 +117,7 @@ detOut<-foreach(i=1:BigChunks) %do% {
       
       #run detector
       
-      outputs<-EnergyDetectoR(soundFile,dataMini,windowLength,Overlap,noiseThresh,noiseWinLength,noiseHopLength,dBadd,lowFreq,highFreq,numBands,bandOvlp,minDur,maxDur,minFreq,combineMethod)
+      outputs<-EventDetectoR(soundFile,dataMini,MethodArgs)
       if(length(outputs)>0){
 
       Cums<-data.frame(cut(outputs[,1],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$cumsum),
@@ -179,7 +161,7 @@ outName<-paste("EDSplit",splitID,".csv.gz",sep="")
     crs<-length(unique(data$DiffTime))
   }
   
-  startLocalPar(crs,"data","EnergyDetectoR","specgram")
+  startLocalPar(crs,"data","EventDetectoR","specgram","MethodArgs")
   
   detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel")) %dopar% {
     dataMini<-data[which(data$DiffTime==n),]
@@ -192,7 +174,7 @@ outName<-paste("EDSplit",splitID,".csv.gz",sep="")
     }
     soundFile<-do.call(bind, SoundList)
     
-    outputs<-EnergyDetectoR(soundFile,dataMini,windowLength,Overlap,noiseThresh,noiseWinLength,noiseHopLength,dBadd,lowFreq,highFreq,numBands,bandOvlp,minDur,maxDur,minFreq,combineMethod)
+    outputs<-EventDetectoR(soundFile,dataMini,MethodArgs)
     
     if(length(outputs)>0){
     Cums<-data.frame(cut(outputs[,1],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$cumsum),

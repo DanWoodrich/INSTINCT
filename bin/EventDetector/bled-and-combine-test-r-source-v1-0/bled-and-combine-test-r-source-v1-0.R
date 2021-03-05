@@ -1,6 +1,3 @@
-#set these variables in all containers:
-MethodID<-"bled-and-combine-v1-0"
-
 library(doParallel)
 library(tuneR)
 library(signal)
@@ -147,9 +144,22 @@ startLocalPar<-function(num_cores,...){
 
 #the actual energy detector (Make new image when changing this)
 
-EnergyDetectoR<-function(Wav,metaData,windowLength,Overlap,noiseThresh,noiseWinLength,noiseHopLength,dBadd,lowFreq,highFreq,numBands,bandOvlp,minDur,maxDur,minFreq,combineMethod){
+EventDetectoR<-function(Wav,metaData,args){
   
-  
+  bandOvlp = as.numeric(args[1])
+  combineMethod = args[2]
+  dBadd<- as.numeric(args[3])
+  highFreq<-as.numeric(args[4])
+  lowFreq<-as.numeric(args[5])
+  maxDur = as.numeric(args[6])
+  minDur = as.numeric(args[7])
+  minFreq = as.numeric(args[8])
+  noiseHopLength<-as.numeric(args[9])
+  noiseThresh<-as.numeric(args[10])
+  noiseWinLength<-as.numeric(args[11])
+  numBands <- as.numeric(args[12])
+  Overlap<-as.numeric(args[13])
+  windowLength<-as.numeric(args[14])
   
   #temporary
   #Wav=readWave(filePaths,from=0,to=600,units='seconds')
@@ -163,7 +173,7 @@ EnergyDetectoR<-function(Wav,metaData,windowLength,Overlap,noiseThresh,noiseWinL
   #to convert to db: average psd values, then 10*log(values) to get dB? 
   #should work basically the same as raven to normalize energy values and then log transform? 
   
-  roldur<-c(dataMini$cumsum,(dataMini$cumsum[nrow(dataMini)]+dataMini$Duration[nrow(dataMini)]))
+  roldur<-c(metaData$cumsum,(metaData$cumsum[nrow(metaData)]+metaData$Duration[nrow(metaData)]))
   
   #goal is to find 'in band power' in each time slice in spectrogram
   #will allow us to reverse engineer BLED

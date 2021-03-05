@@ -79,30 +79,37 @@ class Helper:
 ##########################################
 
 class argParse:
-    def run(cmdType,MethodID,Paths,Args,Params,ProcessID=None,Program=None,ProjectRoot=None,rVers=None,dockerVolMounts=None):
+    def run(cmdType,MethodID,Paths,Args,Params,ProcessID=None,Program=None,ProjectRoot=None,rVers=None,dockerVolMounts=None,Wrapper=False):
         #windows cmd just wants all arguments seperated by a space
         if(cmdType=='win'):
             if(Program=='R'):
                 #default install vers
-                if(len(MethodID)==1):
+                if(Wrapper==False):
                     command1 = '"'+ rVers + '/bin/Rscript.exe" -e "source(\'' + ProjectRoot + 'bin/' + ProcessID + '/' + MethodID +'/'+MethodID+'.R\')"'
                     command2 = ' '.join(Paths) + ' ' + ' '.join(Args) + ' ' + Params
 
-                elif(len(MethodID>1):
-                    command1 = '"'+ rVers + '/bin/Rscript.exe" -e "source(\'' + ProjectRoot + 'bin/' + ProcessID + 'Wrapper.R\')"'
-                    command2 = ProjectRoot + ' ' + ProcessID + ' ' + ' '.join(Paths) + ' ' + ' '.join(Args) #don't think lists need to be flattened, since these should refer to process not the individual methods
-                    loopVar = 1
-                    for h in range(len(MethodID)):
-                        IDit = "method" + str(loopVar)
-                        command2 = command2 + ' ' + IDit + ' ' MethodID[h] + ' ' + ' '.join(Params[h])
+                elif(Wrapper):
+                    command1 = '"'+ rVers + '/bin/Rscript.exe" -e "source(\'' + ProjectRoot + 'bin/' + ProcessID + '/' + ProcessID + 'Wrapper.R\')"'
+                    command2 = ProjectRoot + ' ' + ' '.join(Paths) + ' ' + ' '.join(Args) #don't think lists need to be flattened, since these should refer to process not the individual methods
+
+                    if not(isinstance(MethodID, list)): #this will be a list if there are multiple methods being passed 
+                        command2 = command2 + ' method1 ' + MethodID + ' ' + Params
+                    else:
+                        loopVar = 1
+                        for h in range(len(MethodID)):
+                            IDit = "method" + str(loopVar)
+                            command2 = command2 + ' ' + IDit + ' ' + MethodID[h] + ' ' + Params[h]
+
+
                 #when writing argParse command in python, just make nested list of MethodID, and MethodID params
 
-                #schema for wrapper will be 1: project root, 2: Process ID, 3: Paths 4: Args 5: "method1" 6:Method1 name 7: method1 params 7: "method2" 8: method2 name 9: method2 params... etc
+                #schema for wrapper will be 1: project root, 2: Paths 3: Args 4: "method1" 5:Method1 name 6: method1 params 7: "method2" 8: method2 name 9: method2 params... etc
                 #this way, wrapper can get load in relevant paths, but keep methods parsing dynamic for individual methods. Find method params logic is look after methodx for each method to find name and
                 #then pass params to method. 
                 #paths and args determined by process, such as 
 
                 command = command1 + ' ' + command2
+                print(command)
                 subprocess.run(shlex.split(command))
                 return None
             elif(Program!='R'):
@@ -125,7 +132,7 @@ class argParse:
             command1='docker run' 
             return None
 
-#make this class to avoid repetition above 
+#make this class to avoid repetition above when settled on parser. Do this to add to linux as well 
 
 #class makeCommand2:
     #this will determine if needs 
@@ -262,7 +269,7 @@ class RunED(luigi.Task):
         #just consolidate all command args into one line, args. Send MethodID as a list of length n, if > 1 interpreted as a wrapper
         #argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params)
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params,Wrapper=True)
         
 class UnifyED(luigi.Task):
     ProjectRoot= luigi.Parameter()
@@ -360,7 +367,7 @@ class UnifyED(luigi.Task):
             Args = [ReadFile,self.EDstage,self.CPU,self.Chunk]
             Params = self.Params
 
-            argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params)
+            argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params,Wrapper=True)
 
             #drop process data from ED
             ED = ED.drop(columns="ProcessTag")
