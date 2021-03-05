@@ -84,10 +84,24 @@ class argParse:
         if(cmdType=='win'):
             if(Program=='R'):
                 #default install vers
-                command1 = '"'+ rVers + '/bin/Rscript.exe" -e "source(\'' + ProjectRoot + 'bin/' + ProcessID + '/' + MethodID +'/'+MethodID+'.R\')"'
-                command2 = ' '.join(Paths) + ' ' + ' '.join(Args) + ' ' + Params
-                print(command1)
-                print(command2)
+                if(len(MethodID)==1):
+                    command1 = '"'+ rVers + '/bin/Rscript.exe" -e "source(\'' + ProjectRoot + 'bin/' + ProcessID + '/' + MethodID +'/'+MethodID+'.R\')"'
+                    command2 = ' '.join(Paths) + ' ' + ' '.join(Args) + ' ' + Params
+
+                elif(len(MethodID>1):
+                    command1 = '"'+ rVers + '/bin/Rscript.exe" -e "source(\'' + ProjectRoot + 'bin/' + ProcessID + 'Wrapper.R\')"'
+                    command2 = ProjectRoot + ' ' + ProcessID + ' ' + ' '.join(Paths) + ' ' + ' '.join(Args) #don't think lists need to be flattened, since these should refer to process not the individual methods
+                    loopVar = 1
+                    for h in range(len(MethodID)):
+                        IDit = "method" + str(loopVar)
+                        command2 = command2 + ' ' + IDit + ' ' MethodID[h] + ' ' + ' '.join(Params[h])
+                #when writing argParse command in python, just make nested list of MethodID, and MethodID params
+
+                #schema for wrapper will be 1: project root, 2: Process ID, 3: Paths 4: Args 5: "method1" 6:Method1 name 7: method1 params 7: "method2" 8: method2 name 9: method2 params... etc
+                #this way, wrapper can get load in relevant paths, but keep methods parsing dynamic for individual methods. Find method params logic is look after methodx for each method to find name and
+                #then pass params to method. 
+                #paths and args determined by process, such as 
+
                 command = command1 + ' ' + command2
                 subprocess.run(shlex.split(command))
                 return None
@@ -111,7 +125,12 @@ class argParse:
             command1='docker run' 
             return None
 
-    
+#make this class to avoid repetition above 
+
+#class makeCommand2:
+    #this will determine if needs 
+#    def run(MethodID,Paths,Args,Params):
+        
 ########################
 #format metadata
 ########################
@@ -239,6 +258,9 @@ class RunED(luigi.Task):
         Paths = [DataPath,FGpath,resultPath]
         Args = [ReadFile,self.EDstage,self.CPU,self.Chunk]
         Params = self.Params
+
+        #just consolidate all command args into one line, args. Send MethodID as a list of length n, if > 1 interpreted as a wrapper
+        #argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params)
         
