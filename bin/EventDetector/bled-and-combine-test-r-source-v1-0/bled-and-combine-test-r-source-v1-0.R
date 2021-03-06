@@ -144,7 +144,7 @@ startLocalPar<-function(num_cores,...){
 
 #the actual energy detector (Make new image when changing this)
 
-EventDetectoR<-function(Wav,metaData,args){
+EventDetectoR<-function(spectrogram,metaData,args){
   
   bandOvlp = as.numeric(args[1])
   combineMethod = args[2]
@@ -180,11 +180,7 @@ EventDetectoR<-function(Wav,metaData,args){
   #time1<-Sys.time()
   
   #this is a dummy energy detector just designed for low. Other designs should be created for full sound files
-  spectrogram<- specgram(x = Wav@left,
-                         Fs = Wav@samp.rate,
-                         window=windowLength,
-                         overlap=Overlap
-  )
+
   
   #use for testing upsweeps: inverts the matrix : 
   #spectrogram$S <- apply(spectrogram$S, 2, rev)

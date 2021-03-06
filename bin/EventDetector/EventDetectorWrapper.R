@@ -45,9 +45,13 @@ MethodID<-args[10]
 
 MethodArgs<-args[11:length(args)]
 
-#populate with needed fxns. Determine by command arg (ProjectRoot and MethodID)
+#populate with needed fxns for ED
 SourcePath<-paste(ProjectRoot,"/bin/EventDetector/",MethodID,"/",MethodID,".R",sep="")
 source(SourcePath) 
+
+#and general fxns
+source(paste(ProjectRoot,"/bin/instinct_fxns.R",sep="")) 
+
 
 data<-read.csv(paste(FGpath,ReadFile,sep="/"))
 
@@ -116,6 +120,14 @@ detOut<-foreach(i=1:BigChunks) %do% {
       }
       
       #run detector
+      
+      #render spectrogram : These are method arguments really. Maybe can have a 'spectrogram' tag after the methods, which indicates 
+      #these params for all presented methods. 
+      spectrogram<- specgram(x = Wav@left,
+                             Fs = Wav@samp.rate,
+                             window=windowLength,
+                             overlap=Overlap
+      )
       
       outputs<-EventDetectoR(soundFile,dataMini,MethodArgs)
       if(length(outputs)>0){
