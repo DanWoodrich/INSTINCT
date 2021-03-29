@@ -2,6 +2,29 @@
 
 #don't think I need to call libraries in this script... just in the script I am sourcing from 
 
+#however, script that calls this needs: 
+#signal
+#tuneR
+
+#start parallel processing
+
+getFileName<-function(x){
+  lastSlash<-gregexpr("\\\\",x)[[1]][length(gregexpr("\\\\",x)[[1]])]
+  xmod<-substr(x,lastSlash+1,nchar(x))
+  
+  return(xmod)
+}
+
+
+startLocalPar<-function(num_cores,...){
+  
+  cluz <<- parallel::makeCluster(num_cores)
+  registerDoParallel(cluz)
+  
+  clusterExport(cluz, c(...))
+  
+}
+
 #writeWave that suppresses warning
 #ripped from the internet somewhere 
 writeWave.nowarn <- 
@@ -323,108 +346,109 @@ prime.factor <- function(x){
   return(n)
 }
 
+decDo<-function(wav,dfact,target_samp_rate){
+  #if it is, test if factor is > 64. If it is, split rounds into 2 and start with small factor. 
+  if(dfact<=64){ #64 is highest decimation where it appeared to be successful (128 resulted in complete signal loss)
+    #perform a single decimation
+    wavOut<-signal::decimate(wav@left,dfact)
+    wavOut <- Wave(wavOut, right = numeric(0), samp.rate = target_samp_rate)
+    return(wavOut)
+  }else{
+    #Otherwise, 
+    #perform a decimation in rounds
+    primes<-prime.factor(dfact)
+    if(length(primes)>2){
+      dfactRounds<-c(primes[length(primes)],prod(primes[1:length(primes)-1]))
+    }else{
+      dfactRounds<-primes
+    }
+    wavOut<-wav@left
+    for(n in 1:length(dfactRounds)){ #if there is a prime over 64, can't reduce so will process all in one. results uncertain in these cases. 
+      wavOut<-signal::decimate(wavOut,dfactRounds[n])
+    }
+    wavOut <- Wave(wavOut, right = numeric(0), samp.rate = target_samp_rate)
+    return(wavOut)
+  }
+}
+
+#this function resamples. If target is very close to wav rate, decimate without filtering. Will induce some aliasing but can be tolerable
+#depending on application
+resampINST<-function(wav,wav.samp.rate,target_samp_rate,resampThresh){
+  
+  percDiff<-1-(target_samp_rate/wav.samp.rate)
+  
+  if(percDiff<resampThresh){
+    #just ignore aliasing and downsample
+    wavOut<-Wave(wav@left[round(seq(1,length(wav@left),by=wav.samp.rate/target_samp_rate))], right = numeric(0), samp.rate = target_samp_rate)
+  }else{
+    #if too dissimilar, do the full decimation route
+    wavOut<-signal::resample(wav@left,p=target_samp_rate,q=wav.samp.rate,d=5)
+    
+    wavOut <- Wave(wavOut, right = numeric(0), samp.rate = target_samp_rate)
+  }
+  
+  return(wavOut)
+}
+
 #decimate sound file
-#decimate a sound file in memory, so it can be used in various routines. Tries to find lowest interpolation
-#required for clean decimation to target sample rate. Not thoroughly tested, some combinations of wav samp rate and 
-#target samp rate will not be comparible if hard to find common factors. 
+#decimate a sound file in memory, so it can be used in various routines. Optimized for speed but 
+#after acheiving a minimum suitiable quality (low signal loss and aliasing)
+
+#uses resample and 
 
 #some testing performed to assess if aliasing appears in intermediate steps. 
-decimateData<-function(wav,target_samp_rate,cleanest=TRUE,fastest=FALSE){
-
-    #cannot be cleanest and fastest
-    if(fastest==TRUE){
-      cleanest<-FALSE
-    }else{
-      cleanest<-TRUE
-      fastest<-FALSE
-    }
+decimateData<-function(wav,target_samp_rate){
+  
+    #if target is within 2.5%, skip filter and accept some aliasing. 
+    #specific to application, may want to change this value. Hardcoded for now 
+  
+    resampThresh<-0.025
   
     wav.samp.rate<-wav@samp.rate
-
+    
     #wav.samp.rate<-16384
     #target_samp_rate<-250
     #default values if 
+    #dfact<-wav.samp.rate/target_samp_rate
+    
+    #first, test for 3 conditions: target = wav samp rate
+    if(wav.samp.rate==target_samp_rate){
+      return(wav)
+    }
+    #leave wav file unchanged
+    
     dfact<-wav.samp.rate/target_samp_rate
-    if(is.integer(dfact)){
-      decdo<-prime.factor(wav.samp.rate/target_samp_rate)
-      intdo<-NULL
+    
+    #then, test if wav file factor is a clean integer multiple  
+    if(dfact%%1==0){
+      return(decDo(wav,dfact,target_samp_rate))
     }else{
-      remainder<-dfact-floor(dfact)
       
-      remainderChange<-remainder
-      
-      p=2
-      #to allow for values that are probably 'close enough' to target_samp_rate, could maybe test whether value is very close to 
-      #integer, not just exact match. 
-      while(!isTRUE(all.equal(remainderChange%%1, 0))){
-        remainderChange<-remainder*p
-        p=p+1
-        if(p==100000){
-          stop("you picked, like, the worst possible combination of sample rates to get a clean decimation. What is wrong with you?")
-        }
-      }
-      
-      remFact=p-1
-      
-      intdo<-prime.factor(remFact)
-      decdo<-prime.factor(dfact*remFact)
-
-    }
-
-    wav<-wav@left
+    #if not a clean integer decimation, use resample to get there (much longer)
+    #resample to the next clean multiple, using downsampling shortcut if eligible (introduces some amount of aliasing, careful with this)
+    targetMaxSamp<-(wav.samp.rate-(wav.samp.rate%%target_samp_rate))
     
-    vec_to_do<-c(sort(1/decdo,decreasing = FALSE),sort(intdo,decreasing=FALSE))
-
-    current_samp_rate<-wav.samp.rate
+    targetDfact<-targetMaxSamp/target_samp_rate
     
-    while(length(vec_to_do!=0)){
-      possible=FALSE
-      step=0
-      while(possible==FALSE){
-        step=step+1
-        value<-current_samp_rate*vec_to_do[step]
-        
-        #change which criteria to use, based on if want cleanest or fastest decimation. the 1.5 value is abitrary, more tests cloud 
-        #be helpful to lower this number to the minimum required 
-        if(cleanest){
-          #integer test, and anti-aliasing test (interpolating from values near nyquist seem to degrade signal). try to not get to close (1.5), until no other option
-          assessBool<-((isTRUE(all.equal(value%%1, 0))&value>=(target_samp_rate*1.5))|((length(unique(vec_to_do))==1)&value>=target_samp_rate))
-        }else{
-          #prioritize effecient decimation over avoiding target value. Can degrate signal at higher frequencies
-          assessBool<-(isTRUE(all.equal(value%%1, 0))&value>=(target_samp_rate))
-        }
-        
-        if(assessBool){      
-          #perform decimation/interpolation                                     
-          if(vec_to_do[step]<1){
-            wav<-signal::decimate(wav,as.integer(1/vec_to_do[step]))
-          }else{
-            wav<-signal::interp(wav,as.integer(vec_to_do[step]))
-          }
-          wavSave <- Wave(wav, right = numeric(0), samp.rate = value)
-          writeWave.nowarn(wavSave,paste("C:/Apps/INSTINCT/Out/decimateTest/",value,".wav",sep=""),extensible = FALSE) #line used for testing
-          print(vec_to_do) #testing
-          print(value) #testing
-          current_samp_rate<-value
-          vec_to_do<-vec_to_do[-step]
-          possible=TRUE
-        }      
-      }
-      
+    #prevents this from being prime number 
+    while(length(prime.factor(targetDfact))==1){
+      targetDfact<-targetDfact-1
     }
     
-    wav <- Wave(wav, right = numeric(0), samp.rate = target_samp_rate)
-    
-    return(wav)
+    targetMaxSamp<-target_samp_rate*targetDfact
 
+    #make sure target MaxSamp is not prime. 
+      
+    wavOut<-resampINST(wav,wav.samp.rate,targetMaxSamp,resampThresh)
+    
+    if(wavOut@samp.rate!=target_samp_rate){
+      dfact<-targetMaxSamp/target_samp_rate
+      return(decDo(wavOut,dfact,target_samp_rate))
+    }else{
+      return(wavOut)
+    }
+    
+
+    }
+    
 }
-
-#test fxn a little:
-#wav<-readWave2("C:/Apps/INSTINCT/Out/decimateTest/EA-RWBS02-110401-090816.wav")
-#wavdec<-decimateData(wav,128)
-#wavdec<-decimateData(wav,250,fastest)
-
-
-#function to read wav and render spectrogram 
-
-
