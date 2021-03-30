@@ -27,6 +27,7 @@ args<-commandArgs(trailingOnly = TRUE)
 #noiseThresh<-as.numeric(0.25)
 #noiseWinLength<-as.numeric(40)
 #numBands <- as.numeric(1)
+#targetSampRate<-128
 #Overlap<-as.numeric(0)
 #windowLength<-as.numeric(128)
 
@@ -43,7 +44,23 @@ chunkSize<- as.numeric(args[8])
 
 MethodID<-args[10]
 
-MethodArgs<-args[11:length(args)]
+#after methodID, index @ methodID+1 to the end will be comprised of a methods Vector, and a parameter name vector of equal length
+
+#11:(11+((length(args)-10)/2)) = methodArgs
+#(11+((length(args)-10)/2))+1:length(args) = methodArgsNames
+
+argsLen<-length(11:length(args))
+argsSep<-argsLen/2
+
+ParamArgs<-args[11:(11+argsSep)]
+ParamNames<-args[(11+argsSep+1):length(args)]
+
+targetSampRate<-ParamArgs[which(ParamNames=="t_samp_rate")]
+
+#not using these... yet. But this is how you get them 
+windowLength<-ParamArgs[which(ParamNames=="window_length")]
+Overlap<-ParamArgs[which(ParamNames=="overlap")]
+
 
 #populate with needed fxns for ED
 SourcePath<-paste(ProjectRoot,"/bin/EventDetector/",MethodID,"/",MethodID,".R",sep="")
@@ -52,12 +69,10 @@ source(SourcePath)
 #and general fxns
 source(paste(ProjectRoot,"/bin/instinct_fxns.R",sep="")) 
 
-
 data<-read.csv(paste(FGpath,ReadFile,sep="/"))
 
 #split dataset into difftime group to parallelize 
 filez<-nrow(data)
-
 
 #big process: do split chunks evenly to ensure close to equal processing times
 if(EDstage=="1"){
@@ -95,9 +110,9 @@ detOut<-foreach(i=1:BigChunks) %do% {
   
   
   #foreach into chunks 
-  startLocalPar(crs,"FilezAssign","data","EventDetectoR","specgram","splitID","StartFile","EndFile","MethodArgs")
+  startLocalPar(crs,"FilezAssign","data","EventDetectoR","specgram","splitID","StartFile","EndFile","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2")
   
-  Detections<-foreach(n=1:crs,.packages=c("tuneR","doParallel")) %dopar% {
+  Detections<-foreach(n=1:crs,.packages=c("tuneR","doParallel","signal")) %dopar% {
     dataIn<-data[StartFile:EndFile,][which(FilezAssign==n),]
     #process per diffTime chunk
     outList <- vector(mode = "list")
@@ -110,26 +125,28 @@ detOut<-foreach(i=1:BigChunks) %do% {
       dataMini$cumsum<-cumsum(dataMini$Duration)-dataMini$Duration[1]
       filePaths<-paste(DataPath,paste(dataMini$FullPath,dataMini$FileName,sep=""),sep="")
       if(nrow(dataMini)==1){
-        soundFile=readWave(filePaths)
+        soundFile=readWave2(filePaths)
       }else{
         SoundList <- vector(mode = "list", length = nrow(dataMini))
         for(g in 1:nrow(dataMini)){
-          SoundList[[g]]<-readWave(filePaths[g])
+          SoundList[[g]]<-readWave2(filePaths[g])
         }
         soundFile<-do.call(bind, SoundList)
       }
       
       #run detector
       
-      #render spectrogram : These are method arguments really. Maybe can have a 'spectrogram' tag after the methods, which indicates 
-      #these params for all presented methods. 
-      spectrogram<- specgram(x = Wav@left,
-                             Fs = Wav@samp.rate,
-                             window=windowLength,
-                             overlap=Overlap
-      )
+      soundFile<-decimateData(soundFile,targetSampRate)
       
-      outputs<-EventDetectoR(soundFile,dataMini,MethodArgs)
+      #render spectrogram : Doesn't do much else here, but potentially useful option. 
+      #spectrogram<- specgram(x = Wav@left,
+      #                       Fs = Wav@samp.rate,
+      #                       window=windowLength,
+      #                       overlap=Overlap
+      #)
+      
+      outputs<-EventDetectoR(soundFile,spectrogram=NULL,dataMini,ParamArgs)
+      
       if(length(outputs)>0){
 
       Cums<-data.frame(cut(outputs[,1],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$cumsum),
@@ -173,20 +190,31 @@ outName<-paste("EDSplit",splitID,".csv.gz",sep="")
     crs<-length(unique(data$DiffTime))
   }
   
-  startLocalPar(crs,"data","EventDetectoR","specgram","MethodArgs")
+  startLocalPar(crs,"data","EventDetectoR","specgram","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2")
   
-  detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel")) %dopar% {
+  detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel","signal")) %dopar% {
     dataMini<-data[which(data$DiffTime==n),]
     dataMini$cumsum<-cumsum(dataMini$Duration)-dataMini$Duration[1]
     filePaths<-paste(DataPath,paste(dataMini$FullPath,dataMini$FileName,sep=""),sep="")
     
     SoundList <- vector(mode = "list", length = nrow(dataMini))
     for(g in 1:nrow(dataMini)){
-      SoundList[[g]]<-readWave(filePaths[g])
+      SoundList[[g]]<-readWave2(filePaths[g])
     }
     soundFile<-do.call(bind, SoundList)
     
-    outputs<-EventDetectoR(soundFile,dataMini,MethodArgs)
+    #run detector
+    
+    soundFile<-decimateData(soundFile,targetSampRate)
+    
+    #render spectrogram : Doesn't do much else here, but potentially useful option. 
+    #spectrogram<- specgram(x = Wav@left,
+    #                       Fs = Wav@samp.rate,
+    #                       window=windowLength,
+    #                       overlap=Overlap
+    #)
+    
+    outputs<-EventDetectoR(soundFile,spectrogram=NULL,dataMini,ParamArgs)
     
     if(length(outputs)>0){
     Cums<-data.frame(cut(outputs[,1],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$cumsum),

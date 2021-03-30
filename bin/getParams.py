@@ -14,15 +14,15 @@ def readP_Params(self):
     p_ini.read(self.ParamsRoot + self.methodID + '.ini')
     return p_ini
 
-def getParamList(self):
+def getParamDeets(self,index):
     pList = sorted(self.p_ini.items(self.process))
-    paramList = getParam2(pList)
+    paramList = getParam2(pList,index)
     return paramList
 
-def getParam2(self):
+def getParam2(self,index):
     paramList = [None]*len(self) 
     for p in range(len(self)):
-        paramList[p] = self[p][1]
+        paramList[p] = self[p][index]
     return paramList
 
 def getParamString(self,otherInput=''):
@@ -118,7 +118,7 @@ class AL(gpClass):
         self.methodID = getM_Param(self,'MethodID')
 
         self.p_ini = readP_Params(self)
-        self.paramList = getParamList(self)
+        self.paramList = getParamDeets(self,1)
         self.paramString = getParamString(self,self.hashinc)
         self.paramHash = getParamHash(self) #hashes the modified string
         self.paramString = getParamString(self) #rewrites string to correct form
@@ -135,9 +135,13 @@ class ED(gpClass):
         self.sf_chunk_size = getM_Param(self,'sf_chunk_size')
 
         self.p_ini = readP_Params(self)
-        self.paramList = getParamList(self)
+        self.paramList = getParamDeets(self,1)
         self.paramString = getParamString(self)
         self.paramHash = getParamHash(self)
+        
+        self.paramNames = getParamDeets(self,0)
+        self.paramNames=' '.join(self.paramNames)#pass the dict IDs, useful for methods wrappers when need to
+        #pull out certain params at different stages
 
 class FE(gpClass):
     def __init__(self,Master,ID,ParamsRoot,uTaskpath):
@@ -151,10 +155,12 @@ class FE(gpClass):
         self.CPUNeed = getM_Param(self,'CPUNeed')
 
         self.p_ini = readP_Params(self)
-        self.paramList = getParamList(self)
+        self.paramList = getParamDeets(self,1)
         self.paramString = getParamString(self)
         self.paramHash = getParamHash(self)
 
+        self.paramNames = getParamDeets(self,0)
+        self.paramNames=' '.join(self.paramNames)
 
 class FG(gpClass):
     def __init__(self,Master,ID,ProjectRoot):
@@ -183,7 +189,7 @@ class GT(gpClass):
         self.GT_signal_code = getM_Param(self,'GT_signal_code')
         self.methodID ='' #placeholder to make it work 
         self.p_ini = self.Master
-        self.paramList = getParamList(self)
+        self.paramList = getParamDeets(self,1)
         self.paramString = getParamString(self)
         self.paramHash = getParamHash(self)
         IDlength = len(self.FileGroupID)
@@ -229,7 +235,7 @@ class TM(gpClass):
             self.paramList = sorted(self.p_ini.items(self.process)+ self.p_ini.items(self.stage))
         else:
             self.paramList = sorted(self.p_ini.items(self.process)+ [('cv_it', '1'), ('cv_split', '1')])
-        self.paramList = getParam2(self.paramList) #reformat as usual
+        self.paramList = getParam2(self.paramList,1) #reformat as usual
         self.paramString = getParamString(self)
         self.paramHash = getParamHash(self)
 

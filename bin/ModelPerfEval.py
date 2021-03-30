@@ -120,6 +120,7 @@ class ModelPerfEval(luigi.Task):
     EDmethodID = luigi.Parameter()
     EDparamString=luigi.Parameter()
     EDparamsHash=luigi.Parameter()
+    EDparamsNames=luigi.Parameter()
 
     FEprocess = luigi.Parameter()
     FEmethodID = luigi.Parameter()
@@ -127,6 +128,8 @@ class ModelPerfEval(luigi.Task):
     FEsplits = luigi.IntParameter()
     FEparamString =luigi.Parameter()
     FEparamsHash = luigi.Parameter()
+    FEparamsNames=luigi.Parameter()
+
 
     FEuTaskpath = luigi.Parameter()
         
@@ -216,16 +219,16 @@ class ModelPerfEval(luigi.Task):
     def requires(self):
         task1=EDperfeval(JobName=self.EDpe1_JobName,JobHash=self.EDpe1_JobHash,GTparamsHash=self.GTparamsHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,IDlength=self.IDlength,\
                    GTfile=self.GTfile,FGfile=self.FGfile,FileGroupHashes=self.FileGroupHashes,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
-                   EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,ALprocess=self.ALprocess,\
+                   EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,ALprocess=self.ALprocess,\
                    ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,ALuTask1path=self.ALuTask1path,ALuTask2path=self.ALuTask2path,\
                    PE1ContPath=self.PE1ContPath,PE1process=self.PE1process,PE1methodID=self.PE1methodID,PE1paramsHash=self.PE1paramsHash,PE1uTaskpath=self.PE1uTaskpath,WriteToOutputs=self.EDpe1_WriteToOutputs,\
                    ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version)
         yield(task1)
         task2=TrainModel(JobName=self.TM_JobName,JobHash=self.TM_JobHash,GTparamsHash=self.GTparamsHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
                            IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupHashes=self.FileGroupHashes,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
-                           EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,ALprocess=self.ALprocess,\
+                           EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,ALprocess=self.ALprocess,\
                            ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,ALuTask1path=self.ALuTask1path,ALuTask2path=self.ALuTask2path,\
-                           FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamsHash=self.FEparamsHash,FEuTaskpath=self.FEuTaskpath,\
+                           FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamsHash=self.FEparamsHash,FEparamsNames=self.FEparamsNames,FEuTaskpath=self.FEuTaskpath,\
                            FEsplits=self.FEsplits,FEcpu=self.FEcpu,MFAprocess=self.MFAprocess,MFAmethodID=self.MFAmethodID,MFAparamsHash=self.MFAparamsHash,\
                            MFAuTask1path=self.MFAuTask1path,MFAuTask2path=self.MFAuTask2path,TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparams=self.TMparams,\
                            stage=self.TMstage,TM_outName=self.TM_outName,CVcpu=self.CVcpu,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
@@ -325,9 +328,9 @@ if __name__ == '__main__':
                                IDlength=FGparams.IDlength,FGfile=FGparams.FGfile,FileGroupHashes=FGparams.FileGroupHashes,FileGroupID=FGparams.FileGroupID,\
                                GTfile=GTparams.GTfile,GTparamsHash=GTparams.paramHash,GT_signal_code=GTparams.GT_signal_code,EDprocess=EDparams.process,\
                                EDsplits=EDparams.Splits,EDcpu=EDparams.CPUNeed,EDchunk=EDparams.sf_chunk_size,EDmethodID=EDparams.methodID,\
-                               EDparamString=EDparams.paramString,EDparamsHash=EDparams.paramHash,ALprocess=ALparams.process,ALmethodID=ALparams.methodID,\
+                               EDparamString=EDparams.paramString,EDparamsHash=EDparams.paramHash,EDparamsNames=EDparams.paramNames,ALprocess=ALparams.process,ALmethodID=ALparams.methodID,\
                                ALparamString=ALparams.paramString,ALparamsHash=ALparams.paramHash,ALuTask1path=ALparams.uTask1path,ALuTask2path=ALparams.uTask2path,\
-                               FEprocess=FEparams.process,FEmethodID=FEparams.methodID,FEparamString=FEparams.paramString,FEparamsHash=FEparams.paramHash,\
+                               FEprocess=FEparams.process,FEmethodID=FEparams.methodID,FEparamString=FEparams.paramString,FEparamsHash=FEparams.paramHash,FEparamsNames=FEparams.paramNames,\
                                FEuTaskpath=FEparams.uTaskpath,FEsplits=FEparams.Splits,FEcpu=FEparams.CPUNeed,MFAprocess=MFAparams.process,\
                                MFAmethodID=MFAparams.methodID,MFAparamsHash=MFAparams.paramHash,MFAuTask1path=MFAparams.uTask1path,MFAuTask2path=MFAparams.uTask2path,\
                                TM_JobName=TM_JobName,TM_JobHash=TM_JobHash,TMprocess=TMparams.process,TMmethodID=TMparams.methodID,TMparams=TMparams.paramString,\

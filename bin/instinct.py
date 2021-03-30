@@ -79,7 +79,7 @@ class Helper:
 ##########################################
 
 class argParse:
-    def run(cmdType,MethodID,Paths,Args,Params,ProcessID=None,Program=None,ProjectRoot=None,rVers=None,dockerVolMounts=None,Wrapper=False):
+    def run(cmdType,MethodID,Paths,Args,Params,paramsNames=None,ProcessID=None,Program=None,ProjectRoot=None,rVers=None,dockerVolMounts=None,Wrapper=False):
         #windows cmd just wants all arguments seperated by a space
         if(cmdType=='win'):
             if(Program=='R'):
@@ -93,12 +93,12 @@ class argParse:
                     command2 = ProjectRoot + ' ' + ' '.join(Paths) + ' ' + ' '.join(Args) #don't think lists need to be flattened, since these should refer to process not the individual methods
 
                     if not(isinstance(MethodID, list)): #this will be a list if there are multiple methods being passed 
-                        command2 = command2 + ' method1 ' + MethodID + ' ' + Params
+                        command2 = command2 + ' method1 ' + MethodID + ' ' + Params + ' ' + paramsNames
                     else:
                         loopVar = 1
                         for h in range(len(MethodID)):
                             IDit = "method" + str(loopVar)
-                            command2 = command2 + ' ' + IDit + ' ' + MethodID[h] + ' ' + Params[h]
+                            command2 = command2 + ' ' + IDit + ' ' + MethodID[h] + ' ' + Params[h] + ' ' + paramsNames[h]
 
 
                 #when writing argParse command in python, just make nested list of MethodID, and MethodID params
@@ -239,6 +239,8 @@ class RunED(luigi.Task):
     SoundFileRootDir_Host = luigi.Parameter()
     EDparamsHash = luigi.Parameter()
     Params = luigi.Parameter()
+    paramsNames =luigi.Parameter()
+
 
     MethodID = luigi.Parameter()
     ProcessID = luigi.Parameter()
@@ -269,7 +271,8 @@ class RunED(luigi.Task):
         #just consolidate all command args into one line, args. Send MethodID as a list of length n, if > 1 interpreted as a wrapper
         #argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params,Wrapper=True)
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params,\
+                     paramsNames=self.paramsNames,Wrapper=True)
         
 class UnifyED(luigi.Task):
     ProjectRoot= luigi.Parameter()
@@ -286,6 +289,8 @@ class UnifyED(luigi.Task):
     SoundFileRootDir_Host = luigi.Parameter()
     EDparamsHash = luigi.Parameter()
     Params = luigi.Parameter()
+    paramsNames =luigi.Parameter()
+    
 
     MethodID = luigi.Parameter()
     ProcessID = luigi.Parameter()
@@ -299,8 +304,8 @@ class UnifyED(luigi.Task):
     def requires(self):
         for k in range(self.splits):
             yield RunED(upstream_task=self.upstream_task,splits=self.splits,splitNum=k,FGhash=self.FGhash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                        MethodID=self.MethodID,ProcessID=self.ProcessID,EDparamsHash=self.EDparamsHash,Params=self.Params,CPU=self.CPU,Chunk=self.Chunk,ProjectRoot=self.ProjectRoot,\
-                        system=self.system,r_version=self.r_version)
+                        MethodID=self.MethodID,ProcessID=self.ProcessID,EDparamsHash=self.EDparamsHash,paramsNames=self.paramsNames,Params=self.Params,CPU=self.CPU,Chunk=self.Chunk,\
+                        ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version)
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/Detections.csv.gz')
     def run(self):
@@ -367,7 +372,8 @@ class UnifyED(luigi.Task):
             Args = [ReadFile,self.EDstage,self.CPU,self.Chunk]
             Params = self.Params
 
-            argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params,Wrapper=True)
+            argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params,\
+                     paramsNames=self.paramsNames,Wrapper=True)
 
             #drop process data from ED
             ED = ED.drop(columns="ProcessTag")
@@ -492,6 +498,7 @@ class RunFE(luigi.Task):
     FEparamsHash=luigi.Parameter()
 
     Params = luigi.Parameter()
+    paramsNames = luigi.Parameter()
 
     MethodID = luigi.Parameter()
     ProcessID = luigi.Parameter()
@@ -513,8 +520,9 @@ class RunFE(luigi.Task):
         Args = [str(self.splitNum+1),str(self.CPU)]
         Params = self.Params
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params)
-
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params,\
+                     paramsNames=self.paramsNames,Wrapper=True)
+        
 class UnifyFE(luigi.Task):
     ProjectRoot= luigi.Parameter()
     system= luigi.Parameter()
@@ -531,6 +539,7 @@ class UnifyFE(luigi.Task):
     FEparamsHash=luigi.Parameter()
 
     Params = luigi.Parameter()
+    paramsNames = luigi.Parameter()
 
     MethodID = luigi.Parameter()
     ProcessID = luigi.Parameter()
@@ -538,7 +547,7 @@ class UnifyFE(luigi.Task):
     def requires(self):
         for k in range(self.splits):
             yield RunFE(upstream_task=self.upstream_task,uTaskpath=self.uTaskpath,splits=self.splits,splitNum=k,FGhash=self.FGhash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                        FEparamsHash=self.FEparamsHash,Params=self.Params,MethodID=self.MethodID,ProcessID=self.ProcessID,CPU=self.CPU,ProjectRoot=self.ProjectRoot,\
+                        FEparamsHash=self.FEparamsHash,Params=self.Params,paramsNames=self.paramsNames,MethodID=self.MethodID,ProcessID=self.ProcessID,CPU=self.CPU,ProjectRoot=self.ProjectRoot,\
                         system=self.system,r_version=self.r_version)
     def output(self):
         return luigi.LocalTarget(self.ProjectRoot + 'Cache/' + self.FGhash + '/' + self.uTaskpath + '/' + self.FEparamsHash + '/DETwFeatures.csv.gz')
@@ -924,6 +933,8 @@ class EDperfeval(luigi.Task):
     EDmethodID = luigi.Parameter()
     EDparamString=luigi.Parameter()
     EDparamsHash=luigi.Parameter()
+    EDparamsNames=luigi.Parameter()
+
     
     ALprocess = luigi.Parameter()
     ALmethodID = luigi.Parameter()
@@ -957,7 +968,7 @@ class EDperfeval(luigi.Task):
             task1 = FormatFG(FGfile = self.FGfile[l],FGhash = self.FileGroupHashes[l],ProjectRoot=self.ProjectRoot)
             task2 = FormatGT(GTfile=self.GTfile[l],FGhash = self.FileGroupHashes[l],FGfile = self.FGfile[l],GThash=self.GTparamsHash,ProjectRoot=self.ProjectRoot)
             task3 = UnifyED(upstream_task = task1,splits = self.EDsplits,FGhash=self.FileGroupHashes[l],SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                            EDparamsHash=self.EDparamsHash,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.EDcpu,\
+                            EDparamsHash=self.EDparamsHash,paramsNames=self.EDparamsNames,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.EDcpu,\
                             Chunk=self.EDchunk,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
             task4 = AssignLabels(upstream_task1 = task3,upstream_task2 = task2,FGhash=self.FileGroupHashes[l],uTask1path=self.ALuTask1path,uTask2path=self.ALuTask2path,\
                                  ALparamsHash=self.ALparamsHash,MethodID=self.ALmethodID,ProcessID=self.ALprocess,Params=self.ALparamString,stage=self.ALstage,\
@@ -1036,6 +1047,7 @@ class TrainModel(luigi.Task):
     EDmethodID = luigi.Parameter()
     EDparamString=luigi.Parameter()
     EDparamsHash=luigi.Parameter()
+    EDparamsNames=luigi.Parameter()
 
     FEprocess = luigi.Parameter()
     FEmethodID = luigi.Parameter()
@@ -1043,6 +1055,7 @@ class TrainModel(luigi.Task):
     FEsplits = luigi.IntParameter()
     FEparamString =luigi.Parameter()
     FEparamsHash = luigi.Parameter()
+    FEparamsNames=luigi.Parameter()
 
     FEuTaskpath = luigi.Parameter()
         
@@ -1077,12 +1090,12 @@ class TrainModel(luigi.Task):
             task1 = FormatFG(FGfile = self.FGfile[l],FGhash = self.FileGroupHashes[l],ProjectRoot=self.ProjectRoot)
             task2 = FormatGT(GTfile=self.GTfile[l],FGhash = self.FileGroupHashes[l],FGfile = self.FGfile[l],GThash=self.GTparamsHash,ProjectRoot=self.ProjectRoot)
             task3 = UnifyED(upstream_task = task1,splits = self.EDsplits,FGhash=self.FileGroupHashes[l],SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                            EDparamsHash=self.EDparamsHash,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.EDcpu,\
+                            EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.EDcpu,\
                             Chunk=self.EDchunk,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
             task4 = AssignLabels(upstream_task1 = task3,upstream_task2 = task2,FGhash=self.FileGroupHashes[l],uTask1path=self.ALuTask1path,uTask2path=self.ALuTask2path,\
                                  ALparamsHash=self.ALparamsHash,MethodID=self.ALmethodID,ProcessID=self.ALprocess,Params=self.ALparamString,stage=self.ALstage,\
                                  system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
-            task5 = UnifyFE(upstream_task = task2,FGhash=self.FileGroupHashes[l],uTaskpath=self.FEuTaskpath,FEparamsHash=self.FEparamsHash,MethodID=self.FEmethodID,\
+            task5 = UnifyFE(upstream_task = task2,FGhash=self.FileGroupHashes[l],uTaskpath=self.FEuTaskpath,FEparamsHash=self.FEparamsHash,paramsNames=self.FEparamsNames,MethodID=self.FEmethodID,\
                             ProcessID=self.FEprocess,Params=self.FEparamString,splits=self.FEsplits,CPU=self.FEcpu,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
                             system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
             task6 = MergeFE_AL(upstream_task1 = task5,upstream_task2 = task4,FGhash=self.FileGroupHashes[l],uTask1path=self.MFAuTask1path,uTask2path=self.MFAuTask2path,\

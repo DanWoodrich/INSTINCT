@@ -572,8 +572,9 @@ noiseHopLength<-as.numeric(args[16])
 noiseThresh<-as.numeric(args[17])
 noiseWinLength<-as.numeric(args[18])
 numBands <- as.numeric(args[19])
-Overlap<-as.numeric(args[20])
-windowLength<-as.numeric(args[21])
+t_samp_rate<-args[20] #used in wrapper, unused here
+Overlap<-as.numeric(args[21])
+windowLength<-as.numeric(args[22])
 
 data<-read.csv(paste(FGpath,ReadFile,sep="/"))
 
@@ -640,6 +641,9 @@ detOut<-foreach(i=1:BigChunks) %do% {
         }
         soundFile<-do.call(bind, SoundList)
       }
+      
+      #decimate if
+      soundFile<-decimateData(soundFile,targetSampRate)
       
       #run detector
       
