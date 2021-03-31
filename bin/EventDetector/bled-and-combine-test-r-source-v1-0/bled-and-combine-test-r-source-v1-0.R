@@ -158,9 +158,9 @@ EventDetectoR<-function(wav=NULL,spectrogram=NULL,metaData,args){
   noiseThresh<-as.numeric(args[10])
   noiseWinLength<-as.numeric(args[11])
   numBands <- as.numeric(args[12])
-  #target sample rate at 13, handled in wrapper 
-  #Overlap<-as.numeric(args[14]) handled in wrapper 
-  #windowLength<-as.numeric(args[15]) handled in wrapper 
+  Overlap<-as.numeric(args[13]) #can be handled in wrapper 
+  #target sample rate at 14, handled in wrapper 
+  windowLength<-as.numeric(args[15]) #can be handled in wrapper 
   
   #temporary
   #Wav=readWave(filePaths,from=0,to=600,units='seconds')

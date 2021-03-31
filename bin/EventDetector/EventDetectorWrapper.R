@@ -49,17 +49,17 @@ MethodID<-args[10]
 #11:(11+((length(args)-10)/2)) = methodArgs
 #(11+((length(args)-10)/2))+1:length(args) = methodArgsNames
 
-argsLen<-length(11:length(args))
+argsLen<-length(11:length(args))-1
 argsSep<-argsLen/2
 
 ParamArgs<-args[11:(11+argsSep)]
 ParamNames<-args[(11+argsSep+1):length(args)]
 
-targetSampRate<-ParamArgs[which(ParamNames=="t_samp_rate")]
+targetSampRate<-as.integer(ParamArgs[which(ParamNames=="t_samp_rate")])
 
 #not using these... yet. But this is how you get them 
-windowLength<-ParamArgs[which(ParamNames=="window_length")]
-Overlap<-ParamArgs[which(ParamNames=="overlap")]
+windowLength<-as.integer(ParamArgs[which(ParamNames=="window_length")])
+Overlap<-as.integer(ParamArgs[which(ParamNames=="overlap")])
 
 
 #populate with needed fxns for ED
@@ -134,8 +134,6 @@ detOut<-foreach(i=1:BigChunks) %do% {
         soundFile<-do.call(bind, SoundList)
       }
       
-      #run detector
-      
       soundFile<-decimateData(soundFile,targetSampRate)
       
       #render spectrogram : Doesn't do much else here, but potentially useful option. 
@@ -146,6 +144,7 @@ detOut<-foreach(i=1:BigChunks) %do% {
       #)
       
       outputs<-EventDetectoR(soundFile,spectrogram=NULL,dataMini,ParamArgs)
+      
       
       if(length(outputs)>0){
 

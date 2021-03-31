@@ -1090,7 +1090,7 @@ class TrainModel(luigi.Task):
             task1 = FormatFG(FGfile = self.FGfile[l],FGhash = self.FileGroupHashes[l],ProjectRoot=self.ProjectRoot)
             task2 = FormatGT(GTfile=self.GTfile[l],FGhash = self.FileGroupHashes[l],FGfile = self.FGfile[l],GThash=self.GTparamsHash,ProjectRoot=self.ProjectRoot)
             task3 = UnifyED(upstream_task = task1,splits = self.EDsplits,FGhash=self.FileGroupHashes[l],SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                            EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.EDcpu,\
+                            EDparamsHash=self.EDparamsHash,paramsNames=self.EDparamsNames,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.EDcpu,\
                             Chunk=self.EDchunk,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
             task4 = AssignLabels(upstream_task1 = task3,upstream_task2 = task2,FGhash=self.FileGroupHashes[l],uTask1path=self.ALuTask1path,uTask2path=self.ALuTask2path,\
                                  ALparamsHash=self.ALparamsHash,MethodID=self.ALmethodID,ProcessID=self.ALprocess,Params=self.ALparamString,stage=self.ALstage,\
