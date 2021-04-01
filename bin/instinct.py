@@ -72,8 +72,35 @@ class Helper:
         appPath= appPath[:-4]
         appPath=appPath.replace('\\', '/')
         return(appPath + '/')
-        
 
+#this class tries to abstract running processes (as used in requires) to reduce it down to parameters that frequently change between jobs. 
+class RunProcess:
+    def FormatFG(self,n=0):
+        return(FormatFG(FGfile = self.FGfile[n],FGhash = self.FileGroupHashes[n],ProjectRoot=self.ProjectRoot))
+    def FormatGT(self,n=0):
+        return(FormatGT(GTfile=self.GTfile[n],FGhash = self.FileGroupHashes[n],FGfile = self.FGfile[n],GThash=self.GTparamsHash,ProjectRoot=self.ProjectRoot))
+    def UnifyED(self,upstream,n=0):
+        return(UnifyED(upstream_task = upstream,splits = self.EDsplits,FGhash=self.FileGroupHashes[n],SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
+                       EDparamsHash=self.EDparamsHash,paramsNames=self.EDparamsNames,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.EDcpu,\
+                       Chunk=self.EDchunk,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
+    def AssignLabels(self,upstream1,upstream2,n=0):
+        return(AssignLabels(upstream_task1 = upstream1,upstream_task2 = upstream2,FGhash=self.FileGroupHashes[n],uTask1path=self.ALuTask1path,uTask2path=self.ALuTask2path,\
+                            ALparamsHash=self.ALparamsHash,MethodID=self.ALmethodID,ProcessID=self.ALprocess,Params=self.ALparamString,stage=self.ALstage,\
+                            system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
+    def PerfEval1(self,upstream,n=0):
+        return(PerfEval1(upstream_task=upstream,FGhash=self.FileGroupHashes[n],uTaskpath=self.PE1uTaskpath, PE1paramsHash=self.PE1paramsHash,\
+                         FileGroupID=self.FileGroupID[n],MethodID=self.PE1methodID,ProcessID=self.PE1process,ContPath=self.PE1ContPath,system=self.system,ProjectRoot=self.ProjectRoot,\
+                         r_version=self.r_version))
+    def UnifyFE(self,upstream,n=0):
+        return(UnifyFE(upstream_task = upstream,FGhash=self.FileGroupHashes[n],uTaskpath=self.FEuTaskpath,FEparamsHash=self.FEparamsHash,paramsNames=self.FEparamsNames,MethodID=self.FEmethodID,\
+                       ProcessID=self.FEprocess,Params=self.FEparamString,splits=self.FEsplits,CPU=self.FEcpu,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
+                       system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
+    def MergeFE_AL(self,upstream1,upstream2,n=0):             
+        return(MergeFE_AL(upstream_task1 = upstream1,upstream_task2 = upstream2,FGhash=self.FileGroupHashes[n],uTask1path=self.MFAuTask1path,uTask2path=self.MFAuTask2path,\
+                          ProcessID=self.MFAprocess,MFAparamsHash=self.MFAparamsHash,MethodID=self.MFAmethodID,system=self.system,ProjectRoot=self.ProjectRoot,\
+                          r_version=self.r_version))
+                
+        
 ##########################################
 #parse variable inputs into system command
 ##########################################
@@ -897,17 +924,12 @@ class EDperfeval(INSTINCT_RJob):
             return self.ProjectRoot + 'Cache/'
     def requires(self):
         for l in range(self.IDlength):
-            task1 = FormatFG(FGfile = self.FGfile[l],FGhash = self.FileGroupHashes[l],ProjectRoot=self.ProjectRoot)
-            task2 = FormatGT(GTfile=self.GTfile[l],FGhash = self.FileGroupHashes[l],FGfile = self.FGfile[l],GThash=self.GTparamsHash,ProjectRoot=self.ProjectRoot)
-            task3 = UnifyED(upstream_task = task1,splits = self.EDsplits,FGhash=self.FileGroupHashes[l],SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                            EDparamsHash=self.EDparamsHash,paramsNames=self.EDparamsNames,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.EDcpu,\
-                            Chunk=self.EDchunk,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
-            task4 = AssignLabels(upstream_task1 = task3,upstream_task2 = task2,FGhash=self.FileGroupHashes[l],uTask1path=self.ALuTask1path,uTask2path=self.ALuTask2path,\
-                                 ALparamsHash=self.ALparamsHash,MethodID=self.ALmethodID,ProcessID=self.ALprocess,Params=self.ALparamString,stage=self.ALstage,\
-                                 system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
-            task5 = PerfEval1(upstream_task=task4,FGhash=self.FileGroupHashes[l],uTaskpath=self.PE1uTaskpath, PE1paramsHash=self.PE1paramsHash,\
-                              FileGroupID=self.FileGroupID[l],MethodID=self.PE1methodID,ProcessID=self.PE1process,ContPath=self.PE1ContPath,system=self.system,ProjectRoot=self.ProjectRoot,\
-                              r_version=self.r_version)
+            task1 = RunProcess.FormatFG(self,l) 
+            task2 = RunProcess.FormatGT(self,l)
+            task3 = RunProcess.UnifyED(self,task1,l)
+            task4 = RunProcess.AssignLabels(self,task3,task2,l)
+            task5 = RunProcess.PerfEval1(self,task4,l)
+
             yield task5
     def output(self):
         return luigi.LocalTarget(self.rootpath() + self.JobHash + '/Stats.csv.gz')
@@ -1012,20 +1034,13 @@ class TrainModel(INSTINCT_RJob):
 
     def requires(self):
         for l in range(self.IDlength):
-            task1 = FormatFG(FGfile = self.FGfile[l],FGhash = self.FileGroupHashes[l],ProjectRoot=self.ProjectRoot)
-            task2 = FormatGT(GTfile=self.GTfile[l],FGhash = self.FileGroupHashes[l],FGfile = self.FGfile[l],GThash=self.GTparamsHash,ProjectRoot=self.ProjectRoot)
-            task3 = UnifyED(upstream_task = task1,splits = self.EDsplits,FGhash=self.FileGroupHashes[l],SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                            EDparamsHash=self.EDparamsHash,paramsNames=self.EDparamsNames,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.EDcpu,\
-                            Chunk=self.EDchunk,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
-            task4 = AssignLabels(upstream_task1 = task3,upstream_task2 = task2,FGhash=self.FileGroupHashes[l],uTask1path=self.ALuTask1path,uTask2path=self.ALuTask2path,\
-                                 ALparamsHash=self.ALparamsHash,MethodID=self.ALmethodID,ProcessID=self.ALprocess,Params=self.ALparamString,stage=self.ALstage,\
-                                 system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
-            task5 = UnifyFE(upstream_task = task2,FGhash=self.FileGroupHashes[l],uTaskpath=self.FEuTaskpath,FEparamsHash=self.FEparamsHash,paramsNames=self.FEparamsNames,MethodID=self.FEmethodID,\
-                            ProcessID=self.FEprocess,Params=self.FEparamString,splits=self.FEsplits,CPU=self.FEcpu,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                            system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
-            task6 = MergeFE_AL(upstream_task1 = task5,upstream_task2 = task4,FGhash=self.FileGroupHashes[l],uTask1path=self.MFAuTask1path,uTask2path=self.MFAuTask2path,\
-                               ProcessID=self.MFAprocess,MFAparamsHash=self.MFAparamsHash,MethodID=self.MFAmethodID,system=self.system,ProjectRoot=self.ProjectRoot,\
-                               r_version=self.r_version)
+            task1 = RunProcess.FormatFG(self,l) 
+            task2 = RunProcess.FormatGT(self,l)
+            task3 = RunProcess.UnifyED(self,task1,l)
+            task4 = RunProcess.AssignLabels(self,task3,task2,l)
+            task5 = RunProcess.UnifyFE(self,task3,l)
+            task6 = RunProcess.MergeFE_AL(self,task5,task4,l)
+            
             yield task6
     def output(self):
         return luigi.LocalTarget(self.ProjectRoot + 'Cache/' + self.JobHash + '/' + self.TM_outName)
