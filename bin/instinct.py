@@ -138,14 +138,33 @@ class argParse:
 #class makeCommand2:
     #this will determine if needs 
 #    def run(MethodID,Paths,Args,Params):
-        
+
+########################
+#instinct base fxns
+########################
+
+class INSTINCT_Task(luigi.Task):
+
+    ProjectRoot=luigi.Parameter()
+    #Add in the below before too long. Will be useful to direct Cache to NAS in some cases. 
+    #CacheRoot=luigi.Parameter()
+
+class INSTINCT_Rmethod_Task(INSTINCT_Task):
+
+    system= luigi.Parameter()
+    r_version=luigi.Parameter()
+
+class INSTINCT_RJob(INSTINCT_Rmethod_Task):
+
+    #A job which has at least 1 r method involved
+    JobName=luigi.Parameter()
+    JobHash=luigi.Parameter()
+
 ########################
 #format metadata
 ########################
         
-class FormatFG(luigi.Task):
-
-    ProjectRoot=luigi.Parameter()
+class FormatFG(INSTINCT_Task):
     
     FGhash = luigi.Parameter()
     FGfile = luigi.Parameter()
@@ -166,11 +185,9 @@ class FormatFG(luigi.Task):
         os.mkdir(self.outpath())
         FG.to_csv(self.outpath() + '/FileGroupFormat.csv.gz',index=False,compression='gzip')
 
-class FormatGT(luigi.Task):
+class FormatGT(FormatFG):
     ProjectRoot=luigi.Parameter()
 
-    FGhash = luigi.Parameter()
-    FGfile = luigi.Parameter()
     GTfile = luigi.Parameter()
     GThash = luigi.Parameter()
     
@@ -190,12 +207,9 @@ class FormatGT(luigi.Task):
 #Defined event detection with abilty to split into chunks w/o affecting outputs
 ###############################################################################
 
-class SplitED(luigi.Task):
-    ProjectRoot=luigi.Parameter()
-
+class SplitED(INSTINCT_Task):
     upstream_task = luigi.Parameter()
 
-    #To ensure reliable retrieval of data, hashes always constructed as addition of parameters in order appearing in .ini file
     splits = luigi.IntParameter()
     splitNum = luigi.IntParameter()
     FGhash = luigi.Parameter()
@@ -224,24 +238,15 @@ class SplitED(luigi.Task):
             FG.loc[[x==self.splitNum for x in flist]].to_csv(self.outpath() + '/FileGroupFormatSplit' + str(self.splitNum+1)\
                                                 + '.csv.gz',index=False,compression='gzip')
 
-class RunED(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-    system= luigi.Parameter()
-    r_version=luigi.Parameter()
+class RunED(SplitED,INSTINCT_Rmethod_Task):
     
-    upstream_task = luigi.Parameter()
-
-    splits = luigi.IntParameter()
     CPU = luigi.Parameter()
     Chunk  = luigi.Parameter()
-    splitNum = luigi.IntParameter()
     
-    FGhash = luigi.Parameter()
     SoundFileRootDir_Host = luigi.Parameter()
     EDparamsHash = luigi.Parameter()
     Params = luigi.Parameter()
     paramsNames =luigi.Parameter()
-
 
     MethodID = luigi.Parameter()
     ProcessID = luigi.Parameter()
@@ -275,27 +280,9 @@ class RunED(luigi.Task):
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params,\
                      paramsNames=self.paramsNames,Wrapper=True)
         
-class UnifyED(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-    system= luigi.Parameter()
-    r_version=luigi.Parameter()
+class UnifyED(RunED):
 
-    upstream_task = luigi.Parameter()
-
-    splits = luigi.IntParameter()
-    CPU = luigi.Parameter()
-    Chunk  = luigi.Parameter()
-
-    FGhash = luigi.Parameter()
-    SoundFileRootDir_Host = luigi.Parameter()
-    EDparamsHash = luigi.Parameter()
-    Params = luigi.Parameter()
-    paramsNames =luigi.Parameter()
-    
-
-    MethodID = luigi.Parameter()
-    ProcessID = luigi.Parameter()
-
+    splitNum = None
     EDstage = '2' 
 
     def outpath(self):
@@ -449,9 +436,7 @@ class UnifyED(luigi.Task):
 #Feature extraction with horizontal scaling and containerized method
 ####################################################################
 
-class SplitFE(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-
+class SplitFE(INSTINCT_Task):
     upstream_task = luigi.Parameter()
     uTaskpath = luigi.Parameter()
 
@@ -482,10 +467,7 @@ class SplitFE(luigi.Task):
             flist = list(blist.tolist() + extra.tolist())
             DET.loc[[x==self.splitNum for x in flist]].to_csv(self.ProjectRoot + 'Cache/' + self.FGhash + '/' + self.uTaskpath + '/DETsplitForFE' + str(self.splitNum+1)\
                                                 + '.csv.gz',index=False,compression='gzip')
-class RunFE(SplitFE): 
-
-    system= luigi.Parameter()
-    r_version=luigi.Parameter()
+class RunFE(SplitFE,INSTINCT_Rmethod_Task): 
 
     CPU = luigi.Parameter()
     
@@ -546,12 +528,8 @@ class UnifyFE(RunFE):
 #Label detector outputs with GT using containerized method 
 ############################################################
 
-class AssignLabels(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-    system= luigi.Parameter()
-    r_version=luigi.Parameter()
+class AssignLabels(INSTINCT_Rmethod_Task):
 
-    
     upstream_task1 = luigi.Parameter() #det output
     upstream_task2 = luigi.Parameter() #GT
 
@@ -600,12 +578,8 @@ class AssignLabels(luigi.Task):
 #Det with labels and FE 
 ########################
 
-class MergeFE_AL(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-    system= luigi.Parameter()
-    r_version=luigi.Parameter()
+class MergeFE_AL(INSTINCT_Rmethod_Task):
 
-    
     upstream_task1 = luigi.Parameter()
     upstream_task2 = luigi.Parameter()
     
@@ -647,12 +621,8 @@ class MergeFE_AL(luigi.Task):
 #Performance stats based on specification dependent labels
 ############################################################
 
-class PerfEval1(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-    system= luigi.Parameter()
-    r_version=luigi.Parameter()
+class PerfEval1(INSTINCT_Rmethod_Task):
 
-    
     upstream_task = luigi.Parameter()
 
     FGhash = luigi.Parameter()
@@ -705,11 +675,8 @@ class PerfEval1(luigi.Task):
 #Performance stats based on specification independent labels
 ############################################################
 
-class PerfEval2(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-    system= luigi.Parameter()
-    r_version=luigi.Parameter()
-    
+class PerfEval2(INSTINCT_Rmethod_Task):
+
     upstream_task1 = luigi.Parameter() 
     upstream_task2 = luigi.Parameter() 
 
@@ -761,8 +728,7 @@ class PerfEval2(luigi.Task):
 #apply cutoff on DETwProbs object, stage represents if it is in FG paths in cache (2) or in job in cache (1)
 #############################################################
 
-class ApplyCutoff(luigi.Task):
-    ProjectRoot= luigi.Parameter()
+class ApplyCutoff(INSTINCT_Task):
     
     upstream_task = luigi.Parameter()
     uTaskpath = luigi.Parameter()
@@ -794,10 +760,7 @@ class ApplyCutoff(luigi.Task):
 #Apply a model to data with features, generate probability. 
 ######################################################################
 
-class ApplyModel(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-    system= luigi.Parameter()
-    r_version=luigi.Parameter()
+class ApplyModel(INSTINCT_Rmethod_Task):
 
     upstream_task1 = luigi.Parameter() #DETwFE
     upstream_task2 = luigi.Parameter() #Train model
@@ -841,9 +804,8 @@ class ApplyModel(luigi.Task):
 #Split data with probs and labels back into FG components (used for perf eval 2) 
 #####################################################################################
 
-class SplitForPE(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-    
+class SplitForPE(INSTINCT_Task):
+
     upstream_task1 = luigi.Parameter() #will refer to train model 
     uTask1path = luigi.Parameter() #train model object path aka job hash 
 
@@ -884,16 +846,8 @@ class SplitForPE(luigi.Task):
 
 #Performance evalation for a group of event detectors (see EDperfeval.py for example of how to populate params)
 
-class EDperfeval(luigi.Task):
+class EDperfeval(INSTINCT_RJob):
 
-    ProjectRoot=luigi.Parameter()
-    system=luigi.Parameter()
-    r_version=luigi.Parameter()
-
-
-    JobName=luigi.Parameter()
-    JobHash=luigi.Parameter()
-    
     GTparamsHash =luigi.Parameter()
 
     SoundFileRootDir_Host = luigi.Parameter()
@@ -999,15 +953,8 @@ class EDperfeval(luigi.Task):
 
 #Train an RF model. See TrainModel.py for parameters
 
-class TrainModel(luigi.Task):
+class TrainModel(INSTINCT_RJob):
 
-    ProjectRoot=luigi.Parameter()
-    system=luigi.Parameter()
-    r_version=luigi.Parameter()
-    
-    JobName=luigi.Parameter()
-    JobHash=luigi.Parameter()
-    
     GTparamsHash =luigi.Parameter()
 
     SoundFileRootDir_Host = luigi.Parameter()
