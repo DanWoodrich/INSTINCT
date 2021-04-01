@@ -79,6 +79,7 @@ class Helper:
 ##########################################
 
 class argParse:
+    #I need to do some work on this. Command1 should be split, since the parts of it which depend on OS are serpeate from the relationship of the arguments. 
     def run(cmdType,MethodID,Paths,Args,Params,paramsNames=None,ProcessID=None,Program=None,ProjectRoot=None,rVers=None,dockerVolMounts=None,Wrapper=False):
         #windows cmd just wants all arguments seperated by a space
         if(cmdType=='win'):
@@ -481,19 +482,13 @@ class SplitFE(luigi.Task):
             flist = list(blist.tolist() + extra.tolist())
             DET.loc[[x==self.splitNum for x in flist]].to_csv(self.ProjectRoot + 'Cache/' + self.FGhash + '/' + self.uTaskpath + '/DETsplitForFE' + str(self.splitNum+1)\
                                                 + '.csv.gz',index=False,compression='gzip')
-class RunFE(luigi.Task):
-    ProjectRoot= luigi.Parameter()
+class RunFE(SplitFE): 
+
     system= luigi.Parameter()
     r_version=luigi.Parameter()
-    
-    upstream_task = luigi.Parameter()
-    uTaskpath = luigi.Parameter()
 
-    splits = luigi.IntParameter()
     CPU = luigi.Parameter()
     
-    splitNum = luigi.Parameter()
-    FGhash = luigi.Parameter()
     SoundFileRootDir_Host = luigi.Parameter()
     FEparamsHash=luigi.Parameter()
 
@@ -523,26 +518,9 @@ class RunFE(luigi.Task):
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params,\
                      paramsNames=self.paramsNames,Wrapper=True)
         
-class UnifyFE(luigi.Task):
-    ProjectRoot= luigi.Parameter()
-    system= luigi.Parameter()
-    r_version=luigi.Parameter()
-    
-    upstream_task = luigi.Parameter()
-    uTaskpath = luigi.Parameter()
+class UnifyFE(RunFE):
 
-    splits = luigi.IntParameter()
-    CPU = luigi.Parameter()
-
-    FGhash = luigi.Parameter()
-    SoundFileRootDir_Host = luigi.Parameter()
-    FEparamsHash=luigi.Parameter()
-
-    Params = luigi.Parameter()
-    paramsNames = luigi.Parameter()
-
-    MethodID = luigi.Parameter()
-    ProcessID = luigi.Parameter()
+    splitNum=None
     
     def requires(self):
         for k in range(self.splits):
