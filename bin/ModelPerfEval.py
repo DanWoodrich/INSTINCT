@@ -241,7 +241,7 @@ class ModelPerfEval(luigi.Task):
                           PE2paramsHash=self.PE2paramsHash,rootPath=self.PE2rpSplit,FGhash=self.FileGroupHashes[l],system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
             yield(task5)
             task6 = ApplyCutoff(upstream_task=task4,uTaskpath=self.PE2uTask1pathSplit,FGhash=self.FileGroupHashes[l],CutoffHash=self.ACcutoffHash,Cutoff=self.ACcutoffString,ProjectRoot=self.ProjectRoot)
-            task7 = FormatGT(GTfile=self.GTfile[l],FGhash = self.FileGroupHashes[l],FGfile = self.FGfile[l],GThash=self.GTparamsHash,ProjectRoot=self.ProjectRoot)
+            task7 = FormatGT.invoke(self,l)
             task8 = AssignLabels(upstream_task1=task6,uTask1path=self.AL_AMuTask1path,upstream_task2=task7,uTask2path=self.AL_AMuTask2path,FGhash=self.FileGroupHashes[l],ProcessID=self.ALprocess,\
                    MethodID=self.ALmethodID,Params=self.ALparamString,ALparamsHash=self.ALparamsHash,stage=self.AL_AMstage,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
             task9 = PerfEval1(upstream_task=task8,FGhash=self.FileGroupHashes[l],uTaskpath=self.AL_AMuTask1path, PE1paramsHash=self.PE1paramsHash,\
