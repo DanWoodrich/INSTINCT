@@ -88,91 +88,20 @@ PE1_AMparams = PE1(MasterINI,'PerfEval1',str(ACparams.uTaskpath + '/' + ACparams
 PRparams = PR(MasterINI,'PerformanceReport').getParams() #assumes a lot of different paths, so not a modular task
 
 MPE_processes = [ACparams.paramHash, ALparams.paramHash,EDparams.paramHash,FEparams.paramHash,MFAparams.paramHash,PE1params.paramHash,PE2params.paramHash,PRparams.paramHash,TMparams.paramHash] #alphabetical order
-JobHash = hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,MPE_processes)
+MPE_JobHash = hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,MPE_processes)
 
-WriteToOutputs = 'y'
+MPE_WriteToOutputs = 'y'
 
-class ModelPerfEval(luigi.Task):
-
-    ProjectRoot=luigi.Parameter()
-    system=luigi.Parameter()
-    r_version=luigi.Parameter()
+class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,PerfEval2,ApplyCutoff,PerfEval2):
     
     #macro job
-    JobName=luigi.Parameter()
-    JobHash=luigi.Parameter()
-    
-    GTparamsHash =luigi.Parameter()
-    GT_signal_code = luigi.Parameter()
-
-    SoundFileRootDir_Host = luigi.Parameter()
+    MPE_JobName=luigi.Parameter()
+    MPE_JobHash=luigi.Parameter()
+    MPE_WriteToOutputs = luigi.Parameter()
 
     IDlength = luigi.IntParameter()
-    GTfile = luigi.Parameter()
-    FGfile = luigi.Parameter()
-    FileGroupHashes = luigi.Parameter()
-    FileGroupID = luigi.Parameter()
-
-    EDprocess = luigi.Parameter()
-    EDsplits = luigi.IntParameter()
-    EDcpu = luigi.Parameter()
-    EDchunk = luigi.Parameter()
-    EDmethodID = luigi.Parameter()
-    EDparamString=luigi.Parameter()
-    EDparamsHash=luigi.Parameter()
-    EDparamsNames=luigi.Parameter()
-
-    FEprocess = luigi.Parameter()
-    FEmethodID = luigi.Parameter()
-    FEcpu = luigi.Parameter()
-    FEsplits = luigi.IntParameter()
-    FEparamString =luigi.Parameter()
-    FEparamsHash = luigi.Parameter()
-    FEparamsNames=luigi.Parameter()
-
-
-    FEuTaskpath = luigi.Parameter()
-        
-    ALprocess = luigi.Parameter()
-    ALmethodID = luigi.Parameter()
-    ALparamString=luigi.Parameter()
-    ALparamsHash=luigi.Parameter()
-
-    ALuTask1path=luigi.Parameter()
-    ALuTask2path=luigi.Parameter()
-
-
-    PE1process = luigi.Parameter()
-    PE1methodID = luigi.Parameter()
-    PE1paramsHash= luigi.Parameter()
-
-    PE1uTaskpath = luigi.Parameter()
-
-    PE1ContPath='y'
-
-    MFAprocess = luigi.Parameter()
-    MFAmethodID = luigi.Parameter()
-    MFAparamsHash = luigi.Parameter()
-
-    MFAuTask1path = luigi.Parameter()
-    MFAuTask2path = luigi.Parameter()
-    
-    #EDpe1 job 
-    EDpe1_JobName=luigi.Parameter()
-    EDpe1_JobHash=luigi.Parameter()
-    EDpe1_WriteToOutputs=luigi.Parameter()
 
     #TM job
-    TM_JobName=luigi.Parameter()
-    TM_JobHash=luigi.Parameter()
-
-    TMprocess = luigi.Parameter()
-    TMmethodID = luigi.Parameter()
-    TMparams = luigi.Parameter()
-
-    TMstage=luigi.Parameter()
-    TM_outName=luigi.Parameter()
-    CVcpu=luigi.Parameter()
 
     PE2process = luigi.Parameter()
     PE2methodID = luigi.Parameter()
@@ -181,76 +110,51 @@ class ModelPerfEval(luigi.Task):
     #pre split
     PE2uTask1path = luigi.Parameter() #DETwProbs
     PE2uTask2path = luigi.Parameter() #Stats.csv
-
     PE2rp= luigi.Parameter()
-
-    SFPuTask2path= luigi.Parameter() #
 
     #post split
     PE2uTask1pathSplit=luigi.Parameter()
     PE2rpSplit= luigi.Parameter()
-
-    #AC
-    ACcutoffString=luigi.Parameter()
-    ACcutoffHash=luigi.Parameter()
-
-    #AL_AM
-
-    AL_AMuTask1path =  luigi.Parameter()
-    AL_AMuTask2path = luigi.Parameter()
-    AL_AMstage = '2'
-
-    #PE1 AM 
-    PE1uTaskpathAM =luigi.Parameter()
-    PE1_AMContPath = 'n'
-    PE1_AMstage = '2'
 
     #PR
     PRprocess=luigi.Parameter()
     PRmethodID=luigi.Parameter()
     PRparamsHash=luigi.Parameter()
 
-    WriteToOutputs = luigi.Parameter()
     def rootpath(self):
         if self.WriteToOutputs=='y':
-            return self.ProjectRoot +'Outputs/' + self.JobName + '/'
+            return self.ProjectRoot +'Outputs/' + self.MPE_JobName + '/'
         elif self.WriteToOutputs=='n':
             return self.ProjectRoot + 'Cache/'
     def requires(self):
-        task1=EDperfeval(JobName=self.EDpe1_JobName,JobHash=self.EDpe1_JobHash,GTparamsHash=self.GTparamsHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,IDlength=self.IDlength,\
-                   GTfile=self.GTfile,FGfile=self.FGfile,FileGroupHashes=self.FileGroupHashes,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
-                   EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,ALprocess=self.ALprocess,\
-                   ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,ALuTask1path=self.ALuTask1path,ALuTask2path=self.ALuTask2path,\
-                   PE1ContPath=self.PE1ContPath,PE1process=self.PE1process,PE1methodID=self.PE1methodID,PE1paramsHash=self.PE1paramsHash,PE1uTaskpath=self.PE1uTaskpath,WriteToOutputs=self.EDpe1_WriteToOutputs,\
-                   ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version)
+        task1=EDperfeval.invoke(self)
         yield(task1)
-        task2=TrainModel(JobName=self.TM_JobName,JobHash=self.TM_JobHash,GTparamsHash=self.GTparamsHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
+        task2=TrainModel(TM_JobName=self.TM_JobName,TM_JobHash=self.TM_JobHash,GTparamsHash=self.GTparamsHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
                            IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupHashes=self.FileGroupHashes,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
                            EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,ALprocess=self.ALprocess,\
-                           ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,ALuTask1path=self.ALuTask1path,ALuTask2path=self.ALuTask2path,\
-                           FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamsHash=self.FEparamsHash,FEparamsNames=self.FEparamsNames,FEuTaskpath=self.FEuTaskpath,\
+                           ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,\
+                           FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamsHash=self.FEparamsHash,FEparamsNames=self.FEparamsNames,\
                            FEsplits=self.FEsplits,FEcpu=self.FEcpu,MFAprocess=self.MFAprocess,MFAmethodID=self.MFAmethodID,MFAparamsHash=self.MFAparamsHash,\
-                           MFAuTask1path=self.MFAuTask1path,MFAuTask2path=self.MFAuTask2path,TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparams=self.TMparams,\
-                           stage=self.TMstage,TM_outName=self.TM_outName,CVcpu=self.CVcpu,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
+                           TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparams=self.TMparams,\
+                           TMstage=self.TMstage,TM_outName=self.TM_outName,TMcpu=self.TMcpu,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
         task3 = PerfEval2(upstream_task1=task2,upstream_task2=task1,uTask1path=self.PE2uTask1path,uTask2path=self.PE2uTask2path,ProcessID=self.PE2process,MethodID=self.PE2methodID,\
                           PE2paramsHash=self.PE2paramsHash,rootPath=self.PE2rp,FGhash=None,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
         yield(task3)
         for l in range(self.IDlength):
-            task4 = SplitForPE(upstream_task1=task2,uTask1path=self.TM_JobHash,uTask2path=self.SFPuTask2path,FileGroupID=self.FileGroupID[l],FGhash=self.FileGroupHashes[l],ProjectRoot=self.ProjectRoot) #task which splits the combined data based on file IDs back into FG. 
+            task4 = SplitForPE.invoke(self,task2,AssignLabels.invoke(self,task3,task2,ALstageDef='1',n=l),l) #since we didn't explicitly invoke yet, can do in here. Will be completed by EDperfEval anyways. 
             task5 = PerfEval2(upstream_task1=task4,upstream_task2=task1,uTask1path=self.PE2uTask1pathSplit,uTask2path=self.PE2uTask2path,ProcessID=self.PE2process,MethodID=self.PE2methodID,\
                           PE2paramsHash=self.PE2paramsHash,rootPath=self.PE2rpSplit,FGhash=self.FileGroupHashes[l],system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
             yield(task5)
-            task6 = ApplyCutoff(upstream_task=task4,uTaskpath=self.PE2uTask1pathSplit,FGhash=self.FileGroupHashes[l],CutoffHash=self.ACcutoffHash,Cutoff=self.ACcutoffString,ProjectRoot=self.ProjectRoot)
+            task6 = ApplyCutoff.invoke(self,task4,l)
             task7 = FormatGT.invoke(self,l)
-            task8 = AssignLabels(upstream_task1=task6,uTask1path=self.AL_AMuTask1path,upstream_task2=task7,uTask2path=self.AL_AMuTask2path,FGhash=self.FileGroupHashes[l],ProcessID=self.ALprocess,\
-                   MethodID=self.ALmethodID,Params=self.ALparamString,ALparamsHash=self.ALparamsHash,stage=self.AL_AMstage,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
-            task9 = PerfEval1(upstream_task=task8,FGhash=self.FileGroupHashes[l],uTaskpath=self.AL_AMuTask1path, PE1paramsHash=self.PE1paramsHash,\
-                               FileGroupID=self.FileGroupID[l],MethodID=self.PE1methodID,ProcessID=self.PE1process,ContPath=self.PE1_AMContPath,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version)
+            task8 = AssignLabels.invoke(self,task6,task7,ALstageDef='2',n=l)
+            task9 = PerfEval1.invoke(self,task8,PE1ContPathDef='n',n=l)
+
             yield task9
     def output(self):
         #this is full performance report
         #return luigi.LocalTarget(OutputsRoot + self.JobName + '/' + self.JobHash + '/RFmodel.rds')
-        return luigi.LocalTarget(self.rootpath() + '/' + self.JobHash + '/FullStats.csv')
+        return luigi.LocalTarget(self.rootpath() + '/' + self.MPE_JobHash + '/FullStats.csv')
     def run(self):
         #this is a mega job. Do PervEval1 stage 2 here (similar to run section of EDperfeval). Collect all artifacts and summarize into report: for now, this is going to be a static printout from R.
         #Don't worry about adding map yet, but when want to do that should draw lat long from FG.
@@ -264,7 +168,7 @@ class ModelPerfEval(luigi.Task):
                                         self.TM_JobHash + '/' + self.ACcutoffHash + '/Stats.csv.gz',compression='gzip')
         Modeleval = pd.concat(dataframes,ignore_index=True)
 
-        resultPath2= self.ProjectRoot + 'Cache/' + self.JobHash
+        resultPath2= self.ProjectRoot + 'Cache/' + self.MPE_JobHash
         if not os.path.exists(resultPath2):
             os.mkdir(resultPath2)
 
@@ -278,7 +182,7 @@ class ModelPerfEval(luigi.Task):
         FGID = 'NULL'
 
         Paths = [FGpath,LABpath,INTpath,resultPath]
-        Args = [FGID,self.PE1_AMstage]
+        Args = [FGID,'2']
         Params = ''
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params=Params)
@@ -298,7 +202,7 @@ class ModelPerfEval(luigi.Task):
 
                 
         EDstatPath= self.ProjectRoot + 'Cache/' + self.EDpe1_JobHash
-        MDstatPath= self.ProjectRoot + 'Cache/' + self.JobHash
+        MDstatPath= self.ProjectRoot + 'Cache/' + self.MPE_JobHash
         MDvisPath= self.ProjectRoot + 'Cache/' + self.TM_JobHash + '/' + self.PE2paramsHash
         
         FGvis_paths = [None] * self.IDlength
@@ -324,9 +228,9 @@ class ModelPerfEval(luigi.Task):
 
         
 if __name__ == '__main__':
-    luigi.build([ModelPerfEval(JobName=JobName,JobHash=JobHash,WriteToOutputs=WriteToOutputs,SoundFileRootDir_Host=FGparams.SoundFileRootDir_Host,\
+    luigi.build([ModelPerfEval(MPE_JobName=JobName,MPE_JobHash=JobHash,WriteToOutputs=WriteToOutputs,SoundFileRootDir_Host=FGparams.SoundFileRootDir_Host,\
                                IDlength=FGparams.IDlength,FGfile=FGparams.FGfile,FileGroupHashes=FGparams.FileGroupHashes,FileGroupID=FGparams.FileGroupID,\
-                               GTfile=GTparams.GTfile,GTparamsHash=GTparams.paramHash,GT_signal_code=GTparams.GT_signal_code,EDprocess=EDparams.process,\
+                               GTfile=GTparams.GTfile,GTparamsHash=GTparams.paramHash,,EDprocess=EDparams.process,\
                                EDsplits=EDparams.Splits,EDcpu=EDparams.CPUNeed,EDchunk=EDparams.sf_chunk_size,EDmethodID=EDparams.methodID,\
                                EDparamString=EDparams.paramString,EDparamsHash=EDparams.paramHash,EDparamsNames=EDparams.paramNames,ALprocess=ALparams.process,ALmethodID=ALparams.methodID,\
                                ALparamString=ALparams.paramString,ALparamsHash=ALparams.paramHash,ALuTask1path=ALparams.uTask1path,ALuTask2path=ALparams.uTask2path,\
@@ -334,7 +238,7 @@ if __name__ == '__main__':
                                FEuTaskpath=FEparams.uTaskpath,FEsplits=FEparams.Splits,FEcpu=FEparams.CPUNeed,MFAprocess=MFAparams.process,\
                                MFAmethodID=MFAparams.methodID,MFAparamsHash=MFAparams.paramHash,MFAuTask1path=MFAparams.uTask1path,MFAuTask2path=MFAparams.uTask2path,\
                                TM_JobName=TM_JobName,TM_JobHash=TM_JobHash,TMprocess=TMparams.process,TMmethodID=TMparams.methodID,TMparams=TMparams.paramString,\
-                               TMstage=TMparams.stage,TM_outName=TMparams.outName,CVcpu=TMparams.CPUNeed,EDpe1_WriteToOutputs=EDpe1_WriteToOutputs,\
+                               TMstage=TMparams.stage,TM_outName=TMparams.outName,TMcpu=TMparams.CPUNeed,EDpe1_WriteToOutputs=EDpe1_WriteToOutputs,\
                                EDpe1_JobName=EDpe1_JobName,EDpe1_JobHash=EDpe1_JobHash,PE1process=PE1params.process,PE1methodID=PE1params.methodID,\
                                PE1paramsHash=PE1params.paramHash,PE1uTaskpath=PE1params.uTaskpath,PE2process=PE2params.process,PE2methodID=PE2params.methodID,\
                                PE2paramsHash=PE2params.paramHash,PE2uTask1path=PE2params.uTask1path,PE2uTask2path=PE2params.uTask2path,PE2rp=PE2params.rp,\
