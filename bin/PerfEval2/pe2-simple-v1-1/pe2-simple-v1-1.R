@@ -16,9 +16,9 @@ DataType<-args[4]
 data<-read.csv(paste(dataPath,"DETwProbs.csv.gz",sep="/"))
 PE1data<-read.csv(paste(PE1s2path,"Stats.csv.gz",sep="/"))
 
-if(rootPath=="All"){
+if(DataType=="All"){
   EDrecDiff<-1-PE1data$Recall[nrow(PE1data)]
-}else if(rootPath=="FG"){
+}else if(DataType=="FG"){
   EDrecDiff<-1-PE1data$Recall[which(as.character(PE1data$FGID)==as.character(unique(data$FGID)))]
 }
 

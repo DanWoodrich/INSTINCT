@@ -66,7 +66,7 @@ TM_JobHash = hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,TM_processes)
 
 #PE2 works off of two jobs 
 
-PE2params = PE2(MasterINI,'PerfEval2','Job',TM_JobHash,EDpe1_JobHash,EDpe1_JobHash).getParams()
+PE2params = PE2(MasterINI,'PerfEval2','All',TM_JobHash,EDpe1_JobHash,EDpe1_JobHash).getParams()
 
 #split FE: branch off of ALparams hash
 
@@ -110,32 +110,29 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
     #nullify some inherited parameters:
     PE2datType=None
 
-    def rootpath(self):
+    def outpath(self):
         if self.MPE_WriteToOutputs=='y':
-            return self.ProjectRoot +'Outputs/' + self.MPE_JobName + '/'
+            return self.ProjectRoot +'Outputs/' + self.MPE_JobName + '/' + self.MPE_JobHash 
         elif self.MPE_WriteToOutputs=='n':
-            return self.ProjectRoot + 'Cache/'
+            return self.ProjectRoot + 'Cache/' + self.MPE_JobHash 
     def requires(self):
         task1 = EDperfEval.invoke(self)
         task2 = TrainModel.invoke(self)
-        yield(task2)
-        #task3 = PerfEval2.invoke(self,task2,task1,"All")
-        #yield(task3)
-        #for l in range(self.IDlength):
+        task3 = PerfEval2.invoke(self,task2,task1,"All")
+        for l in range(self.IDlength):
             
-        #    task4 = SplitForPE.invoke(self,task2,l) #need to give a static path for this, unfortunately. 
-        #    task5 = PerfEval2.invoke(self,task4,task1,"FG")
-        #    yield(task5)
-        #    task6 = ApplyCutoff.invoke(self,task4,l)
-        #    task7 = FormatGT.invoke(self,l)
-        #    task8 = AssignLabels.invoke(self,task6,task7,ALstageDef='2',n=l)
-        #    task9 = PerfEval1.invoke(self,task8,PE1ContPathDef='n',n=l)
+            task4 = SplitForPE.invoke(self,task2,l) 
+            task5 = PerfEval2.invoke(self,task4,task1,"FG",l)
+            task6 = ApplyCutoff.invoke(self,task4,l)
+            task7 = FormatGT.invoke(self,l)
+            task8 = AssignLabels.invoke(self,task6,task7,ALstageDef='2',n=l)
+            task9 = PerfEval1.invoke(self,task8,PE1ContPathDef='n',n=l)
 
-        #   yield task9
+            yield task9
     def output(self):
         #this is full performance report
         #return luigi.LocalTarget(OutputsRoot + self.JobName + '/' + self.JobHash + '/RFmodel.rds')
-        return luigi.LocalTarget(self.rootpath() + '/' + self.MPE_JobHash + '/FullStats.csv')
+        return luigi.LocalTarget(self.outpath() + '/FullStats.csv')
     def run(self):
         #this is a mega job. Do PervEval1 stage 2 here (similar to run section of EDperfeval). Collect all artifacts and summarize into report: for now, this is going to be a static printout from R.
         #Don't worry about adding map yet, but when want to do that should draw lat long from FG.
@@ -149,26 +146,27 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
                                         self.TM_JobHash + '/' + self.ACcutoffHash + '/Stats.csv.gz',compression='gzip')
         Modeleval = pd.concat(dataframes,ignore_index=True)
 
-        resultPath2= self.ProjectRoot + 'Cache/' + self.MPE_JobHash
-        if not os.path.exists(resultPath2):
-            os.mkdir(resultPath2)
+        #trying to get resultPath formated like normal, messed up paths a little bit need to fix!!! Pick up here. 
+        resultPath= self.outpath() 
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
 
-        Modeleval.to_csv(resultPath2 + '/Stats_Intermediate.csv',index=False)
+        Modeleval.to_csv(resultPath + '/Stats_Intermediate.csv',index=False)
         #send back in to PE1
 
         FGpath = 'NULL'
         LABpath = 'NULL'
-        INTpath = resultPath2 + '/Stats_Intermediate.csv'
-        resultPath =  resultPath2 + '/Stats.csv.gz'
+        INTpath = resultPath + '/Stats_Intermediate.csv'
+        resultPath2 =  resultPath + '/Stats.csv.gz'
         FGID = 'NULL'
 
-        Paths = [FGpath,LABpath,INTpath,resultPath]
+        Paths = [FGpath,LABpath,INTpath,resultPath2]
         Args = [FGID,'2']
         Params = ''
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params=Params)
 
-        os.remove(resultPath2 + '/Stats_Intermediate.csv')
+        os.remove(resultPath + '/Stats_Intermediate.csv')
 
         #now send the paths for all of the artifacts into the performance report R script.
 
@@ -191,10 +189,6 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
         FGvis_paths = ','.join(FGvis_paths)
         FGIDs=','.join(self.FileGroupID)
         
-        if not os.path.exists(self.rootpath()):
-            os.mkdir(self.rootpath())
-
-        resultPath = self.rootpath() + '/' + self.JobHash
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 

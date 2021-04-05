@@ -512,7 +512,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
         Args = [str(self.splitNum+1),str(self.FEcpu)]
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.FEprocess,MethodID=self.FEmethodID,Paths=Paths,Args=Args,Params=self.FEparamString,\
-                     paramsNames=self.paramsNames,Wrapper=True)
+                     paramsNames=self.FEparamsNames,Wrapper=True)
         
     def invoke(obj,n):
         return(RunFE(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,FEsplits=obj.FEsplits,splitNum=n,FileGroupHashes=obj.FileGroupHashes,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
@@ -722,8 +722,7 @@ class PerfEval2(INSTINCT_Rmethod_Task):
         return luigi.LocalTarget(self.outpath() + '/PRcurve_auc.txt')
     def run(self):
 
-        #this is kind of an ugly solution. Should rework eventually so FGhash is part of relative path so we don't get situations like this. 
-        StatsPath = self.ProjectRoot + 'Cache/' + '/' +self.uTask2path
+        StatsPath = self.uTask2path
         resultPath = self.outpath()
 
         DETpath = self.uTask1path
@@ -731,11 +730,9 @@ class PerfEval2(INSTINCT_Rmethod_Task):
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
-        Paths = [DETpath,resultPath,StatsPath,rootPath]
-        Args = ''
-        Params = ''
+        Paths = [DETpath,resultPath,StatsPath,self.PE2datType]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params=Params)
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE2process,MethodID=self.PE2methodID,Paths=Paths,Args='',Params='')
 
     def invoke(obj,upstream1,upstream2,PE2datTypeDef=None,n='default'):
         FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n) 
@@ -773,8 +770,8 @@ class ApplyCutoff(INSTINCT_Task):
         DwPcut.to_csv(self.outpath() + '/DETwProbs.csv.gz',index=False,compression='gzip')
     def invoke(obj,upstream1,n='default'):
         FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n) 
-        ApplyCutoff(upstream_task1=upstream1,uTask1path=upstream1.outpath(),FileGroupHashes=FileGroupHashes,ACcutoffHash=obj.ACcutoffHash,ACcutoffString=obj.ACcutoffString,\
-                    ProjectRoot=obj.ProjectRoot)
+        return(ApplyCutoff(upstream_task1=upstream1,uTask1path=upstream1.outpath(),FileGroupHashes=FileGroupHashes,ACcutoffHash=obj.ACcutoffHash,ACcutoffString=obj.ACcutoffString,\
+                    ProjectRoot=obj.ProjectRoot))
 
 ######################################################################
 #Apply a model to data with features, generate probability. 
@@ -856,7 +853,8 @@ class SplitForPE(INSTINCT_Task):
         #this is kind of a weird one. Might not be very modular to other applications as is. 
     def invoke(obj,upstream1,n='default'):
         FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n)
-        return(SplitForPE(upstream_task1=upstream1,uTask1path=obj.TM_JobHash,SFPEspecialPath=obj.SFPEspecialPath,FileGroupID=obj.FileGroupID[n],\
+        FileGroupID = Helper.tplExtract(obj.FileGroupID,n=n)
+        return(SplitForPE(upstream_task1=upstream1,uTask1path=obj.TM_JobHash,SFPEspecialPath=obj.SFPEspecialPath,FileGroupID=FileGroupID,\
                           FileGroupHashes=FileGroupHashes,ProjectRoot=obj.ProjectRoot))
         
 ##################################################################################
@@ -889,7 +887,7 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
         if self.EDpe1_WriteToOutputs=='y':
             return self.ProjectRoot +'Outputs/' + self.EDpe1_JobName 
         elif self.EDpe1_WriteToOutputs=='n':
-            return self.ProjectRoot + 'Cache'
+            return self.ProjectRoot + 'Cache/' + self.EDpe1_JobHash
     def requires(self):
         for l in range(self.IDlength):
             task1 = FormatFG.invoke(self,l) 
@@ -900,7 +898,7 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
 
             yield task5
     def output(self):
-        return luigi.LocalTarget(self.outpath() + self.EDpe1_JobHash + '/Stats.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/Stats.csv.gz')
     def run(self):
         
         #concatenate outputs and summarize
@@ -910,28 +908,26 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
             dataframes[k] = pd.read_csv(self.ProjectRoot + 'Cache/' + self.FileGroupHashes[k] + '/' + self.EDparamsHash + '/' + self.ALparamsHash + '/' + self.PE1paramsHash + '/Stats.csv.gz',compression='gzip')
         EDeval = pd.concat(dataframes,ignore_index=True)
 
-        if not os.path.exists(self.outpath()):
-            os.mkdir(self.outpath())
+        resultPath = self.outpath()
 
-        resultPath2= self.outpath() + '/' + self.EDpe1_JobHash
-        if not os.path.exists(resultPath2):
-            os.mkdir(resultPath2)
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
 
-        EDeval.to_csv(resultPath2 + '/Stats_Intermediate.csv',index=False)
+        EDeval.to_csv(resultPath + '/Stats_Intermediate.csv',index=False)
         #send back in to PE1
 
         FGpath = 'NULL'
         LABpath = 'NULL'
-        INTpath = resultPath2 + '/Stats_Intermediate.csv'
-        resultPath =  resultPath2 + '/Stats.csv.gz'
+        INTpath =  resultPath + '/Stats_Intermediate.csv'
+        resultPath2 =   resultPath + '/Stats.csv.gz'
         FGID = 'NULL'
 
-        Paths = [FGpath,LABpath,INTpath,resultPath]
+        Paths = [FGpath,LABpath,INTpath,resultPath2]
         Args = [FGID,'2'] #run second stage of R script 
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
 
-        os.remove(resultPath2 + '/Stats_Intermediate.csv')
+        os.remove(resultPath + '/Stats_Intermediate.csv')
         
     def invoke(self):
         return(EDperfEval(EDpe1_JobName=self.EDpe1_JobName,EDpe1_JobHash=self.EDpe1_JobHash,GTparamsHash=self.GTparamsHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,IDlength=self.IDlength,\
@@ -1000,8 +996,8 @@ class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
-        TMdat.to_csv(self.outpath() + '/TM_Intermediate1.csv.gz',index=False,compression='gzip')
-        FGdf.to_csv(self.outpath() + '/FG_Intermediate2.csv.gz',index=False,compression='gzip')
+        TMdat.to_csv(resultPath + '/TM_Intermediate1.csv.gz',index=False,compression='gzip')
+        FGdf.to_csv(resultPath + '/FG_Intermediate2.csv.gz',index=False,compression='gzip')
 
         #
         TMpath = resultPath + '/TM_Intermediate1.csv.gz'
