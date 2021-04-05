@@ -45,7 +45,7 @@ Job_processes = [ALparams.paramHash,EDparams.paramHash,PE1params.paramHash] #alp
 JobHash =hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,Job_processes)
 
 if __name__ == '__main__':
-    luigi.build([EDperfeval(JobName=JobName,JobHash=JobHash,WriteToOutputs=WriteToOutputs,SoundFileRootDir_Host=FGparams.SoundFileRootDir_Host,\
+    luigi.build([EDperfEval(JobName=JobName,JobHash=JobHash,WriteToOutputs=WriteToOutputs,SoundFileRootDir_Host=FGparams.SoundFileRootDir_Host,\
                             IDlength=FGparams.IDlength,FGfile=FGparams.FGfile,FileGroupHashes=FGparams.FileGroupHashes,FileGroupID=FGparams.FileGroupID,\
                             GTfile=GTparams.GTfile,GTparamsHash=GTparams.paramHash,EDprocess=EDparams.process,
                             EDsplits=EDparams.Splits,EDcpu=EDparams.CPUNeed,EDchunk=EDparams.sf_chunk_size,EDmethodID=EDparams.methodID,\

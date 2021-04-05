@@ -10,13 +10,13 @@ args<-commandArgs(trailingOnly = TRUE)
 dataPath<-args[1]
 resultPath<-args[2]
 PE1s2path<-args[3]
-rootPath<-args[4]
+DataType<-args[4]
 
 
 data<-read.csv(paste(dataPath,"DETwProbs.csv.gz",sep="/"))
 PE1data<-read.csv(paste(PE1s2path,"Stats.csv.gz",sep="/"))
 
-if(rootPath=="Job"){
+if(rootPath=="All"){
   EDrecDiff<-1-PE1data$Recall[nrow(PE1data)]
 }else if(rootPath=="FG"){
   EDrecDiff<-1-PE1data$Recall[which(as.character(PE1data$FGID)==as.character(unique(data$FGID)))]
