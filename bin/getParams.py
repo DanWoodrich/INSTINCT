@@ -29,18 +29,18 @@ def getParamString(self,otherInput=''):
     string_out = str(' '.join(self.paramList) + ' ' + self.methodID + otherInput).lstrip(' ')
     return string_out 
 
-def getParamHash(self):
-    hashval = str(hashlib.sha1(self.paramString.encode('utf8')).hexdigest())
+def getParamHash(self,hLen):
+    hashval = str(hashlib.sha1(self.paramString.encode('utf8')).hexdigest())[0:hLen]
     return hashval
 
-def hashJob(FileGroupHashes,GTHashes,otherHashes):
+def hashJob(FileGroupHashes,GTHashes,otherHashes,hLen):
     IDlength = len(FileGroupHashes)
     strings = [None] * IDlength
     for l in range(IDlength):
         strings[l] = ''.join(otherHashes) + FileGroupHashes[l] + GTHashes[l]
     strings = sorted(strings).__str__()
     jobHash = strings.encode('utf8')
-    jobHash = str(hashlib.sha1(jobHash).hexdigest())
+    jobHash = str(hashlib.sha1(jobHash).hexdigest())[0:hLen]
     return jobHash
 
 ###########################
@@ -103,7 +103,7 @@ class AC(gpClass):
         
         self.paramList = str(self.cutoff) #only 1 param
         self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self)
+        self.paramHash = getParamHash(self,6)
         self.paramString = ''
 
 class AL(gpClass):
@@ -120,7 +120,7 @@ class AL(gpClass):
         self.p_ini = readP_Params(self)
         self.paramList = getParamDeets(self,1)
         self.paramString = getParamString(self,self.hashinc)
-        self.paramHash = getParamHash(self) #hashes the modified string
+        self.paramHash = getParamHash(self,6) #hashes the modified string
         self.paramString = getParamString(self) #rewrites string to correct form
         
 class ED(gpClass):
@@ -137,7 +137,7 @@ class ED(gpClass):
         self.p_ini = readP_Params(self)
         self.paramList = getParamDeets(self,1)
         self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self)
+        self.paramHash = getParamHash(self,6)
         
         self.paramNames = getParamDeets(self,0)
         self.paramNames=' '.join(self.paramNames)#pass the dict IDs, useful for methods wrappers when need to
@@ -157,7 +157,7 @@ class FE(gpClass):
         self.p_ini = readP_Params(self)
         self.paramList = getParamDeets(self,1)
         self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self)
+        self.paramHash = getParamHash(self,6)
 
         self.paramNames = getParamDeets(self,0)
         self.paramNames=' '.join(self.paramNames)
@@ -177,7 +177,7 @@ class FG(gpClass):
 
         for l in range(self.IDlength):
             self.FGfile[l] = self.ProjectRoot +'Data/' + 'FileGroups/' + self.FileGroupID[l]
-            self.FileGroupHashes[l] = Helper.hashfile(self.FGfile[l])
+            self.FileGroupHashes[l] = Helper.hashfile(self.FGfile[l],12)
     
 class GT(gpClass):
     def __init__(self,Master,ID,ProjectRoot,FileGroupID):
@@ -191,7 +191,7 @@ class GT(gpClass):
         self.p_ini = self.Master
         self.paramList = getParamDeets(self,1)
         self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self)
+        self.paramHash = getParamHash(self,6)
         IDlength = len(self.FileGroupID)
         
         self.GTfile = [None] * IDlength
@@ -199,7 +199,7 @@ class GT(gpClass):
 
         for l in range(IDlength):
             self.GTfile[l] = self.ProjectRoot +'Data/' + 'GroundTruth/' + self.GT_signal_code + '_' +self.FileGroupID[l]
-            self.GTHashes[l] = Helper.hashfile(self.GTfile[l])
+            self.GTHashes[l] = Helper.hashfile(self.GTfile[l],12)
 
 class MFA(gpClass):
     def __init__(self,Master,ID,uTask1path,uTask2path,hashinc):
@@ -213,7 +213,7 @@ class MFA(gpClass):
 
         self.paramList= '' 
         self.paramString = getParamString(self,self.hashinc)
-        self.paramHash = getParamHash(self)
+        self.paramHash = getParamHash(self,6)
         self.paramString = ''
 
 class TM(gpClass):
@@ -237,7 +237,7 @@ class TM(gpClass):
             self.paramList = sorted(self.p_ini.items(self.process)+ [('cv_it', '1'), ('cv_split', '1')])
         self.paramList = getParam2(self.paramList,1) #reformat as usual
         self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self)
+        self.paramHash = getParamHash(self,6)
 
 class PE1(gpClass):
     def __init__(self,Master,ID,uTaskpath):
@@ -248,7 +248,7 @@ class PE1(gpClass):
         self.methodID = getM_Param(self,'MethodID')
         self.paramList = '' #no params
         self.paramString = getParamString(self) #just hashes methodID
-        self.paramHash = getParamHash(self)
+        self.paramHash = getParamHash(self,6)
         self.paramString = ''
 
 
@@ -266,7 +266,7 @@ class PE2(gpClass):
 
         self.paramList = '' #no params
         self.paramString = getParamString(self,self.hashinc)
-        self.paramHash = getParamHash(self) 
+        self.paramHash = getParamHash(self,6) 
         self.paramString = ''
 
 
@@ -278,7 +278,7 @@ class PR(gpClass):
         self.methodID = getM_Param(self,'MethodID')
         self.paramList = '' #no params
         self.paramString = getParamString(self) #just hashes methodID
-        self.paramHash = getParamHash(self)
+        self.paramHash = getParamHash(self,6)
         self.paramString = ''
 
 

@@ -16,9 +16,9 @@ ProjectRoot=Helper.getProjRoot()
 
 #####parse config for parameters#######
 
-JobName='runFullNovel'
+RFN_JobName='runFullNovel'
     
-ParamsRoot=ProjectRoot + 'etc/' + JobName + '/'
+ParamsRoot=ProjectRoot + 'etc/' + RFN_JobName + '/'
 
 MasterINI = configparser.ConfigParser()
 MasterINI.read(ParamsRoot + 'Master.ini')
@@ -69,7 +69,6 @@ n_FEparams = ED(MasterINI,'n_EventDetector',ParamsRoot).getParams()
 #apply model
 
 APM_Filename = "DETwFeatures.csv.gz"
-APMuTask1path = EDparams.paramHash + '/' + FEparams.paramHash 
 
 #apply cutoff
 
@@ -78,73 +77,11 @@ ACparams = AC(MasterINI,'ApplyCutoff',str(APMuTask1path + '/' + TM_JobHash)).get
 #hash the full job
 JobHash="placeholder for now" 
 
-class runFullNovel(luigi.Task):
+class runFullNovel(TrainModel,ApplyModel,ApplyCutoff):
 
-    ProjectRoot=luigi.Parameter()
-    system=luigi.Parameter()
-    r_version=luigi.Parameter()
-
-    JobName=luigi.Parameter()
-    JobHash=luigi.Parameter()
+    RFN_JobName=luigi.Parameter()
+    RFN_JobHash=luigi.Parameter()
     
-    #train model job params: 
-    TM_JobName=luigi.Parameter()
-    TM_JobHash=luigi.Parameter()
-    
-    ParamsRoot=luigi.Parameter()
-
-    GTparamsHash =luigi.Parameter()
-
-    SoundFileRootDir_Host = luigi.Parameter()
-
-    IDlength = luigi.IntParameter()
-    GTfile = luigi.Parameter()
-    FGfile = luigi.Parameter()
-    FileGroupHashes = luigi.Parameter()
-    FileGroupID = luigi.Parameter()
-
-    EDprocess = luigi.Parameter()
-    EDsplits = luigi.IntParameter()
-    EDcpu = luigi.Parameter()
-    EDchunk = luigi.Parameter()
-    EDmethodID = luigi.Parameter()
-    EDparamString=luigi.Parameter()
-    EDparamsHash=luigi.Parameter()
-    EDparamsNames = luigi.Parameter()
-
-    FEprocess = luigi.Parameter()
-    FEmethodID = luigi.Parameter()
-    FEcpu = luigi.Parameter()
-    FEsplits = luigi.IntParameter()
-    FEparamString =luigi.Parameter()
-    FEparamsHash = luigi.Parameter()
-    FEparamsNames = luigi.Parameter()
-    
-    FEuTaskpath = luigi.Parameter()
-        
-    ALprocess = luigi.Parameter()
-    ALmethodID = luigi.Parameter()
-    ALparamString=luigi.Parameter()
-    ALparamsHash=luigi.Parameter()
-
-    ALuTask1path=luigi.Parameter()
-    ALuTask2path=luigi.Parameter()
-
-    MFAprocess = luigi.Parameter()
-    MFAmethodID = luigi.Parameter()
-    MFAparamsHash = luigi.Parameter()
-
-    MFAuTask1path = luigi.Parameter()
-    MFAuTask2path = luigi.Parameter()
-
-    TMprocess = luigi.Parameter()
-    TMmethodID = luigi.Parameter()
-    TMparams = luigi.Parameter()
-    TMstage= luigi.Parameter()
-    TM_outName= luigi.Parameter()
-
-    CVcpu= luigi.Parameter()
-
     #run full params:
     
     n_FGfile = luigi.Parameter()
@@ -160,31 +97,17 @@ class runFullNovel(luigi.Task):
     n_FEsplits= luigi.IntParameter()
     n_FEcpu= luigi.Parameter()
 
-    APMuTask1path= luigi.Parameter()
-    APM_Filename=luigi.Parameter()
-
-    ACcutoff= luigi.Parameter()
-    ACcutoffHash= luigi.Parameter()
-    ACuTaskpath= luigi.Parameter()
-
     def requires(self):
-        task1 = TrainModel(JobName=self.TM_JobName,JobHash=self.TM_JobHash,GTparamsHash=self.GTparamsHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                           IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupHashes=self.FileGroupHashes,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
-                           EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamNames,\
-                           ALprocess=self.ALprocess,ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,ALuTask1path=self.ALuTask1path,ALuTask2path=self.ALuTask2path,\
-                           FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamsHash=self.FEparamsHash,FEparamsNames=FEparams.paramNames,FEuTaskpath=self.FEuTaskpath,\
-                           FEsplits=self.FEsplits,FEcpu=self.FEcpu,MFAprocess=self.MFAprocess,MFAmethodID=self.MFAmethodID,MFAparamsHash=self.MFAparamsHash,\
-                           MFAuTask1path=self.MFAuTask1path,MFAuTask2path=self.MFAuTask2path,TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparams=self.TMparams,\
-                           stage=self.TMstage,TM_outName=self.TM_outName,CVcpu=self.CVcpu,system=self.system,r_version=self.r_version,ProjectRoot=self.ProjectRoot)
+        task1 = TrainModel.invoke(self)
         for l in range(self.n_IDlength):
             task2 = FormatFG(FGfile = self.n_FGfile[l],FGhash = self.n_FileGroupHashes[l],ProjectRoot=self.ProjectRoot)
-            task3 = UnifyED(upstream_task = task2,splits = self.n_EDsplits,FGhash=self.n_FileGroupHashes[l],SoundFileRootDir_Host=self.n_SoundFileRootDir_Host,\
+            task3 = UnifyED(upstream_task1 = task2,splits = self.n_EDsplits,FGhash=self.n_FileGroupHashes[l],SoundFileRootDir_Host=self.n_SoundFileRootDir_Host,\
                             EDparamsHash=self.EDparamsHash,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.n_EDcpu,\
                             Chunk=self.n_EDchunk,system=self.system,r_version=self.r_version,ProjectRoot=self.ProjectRoot)
-            task4 = UnifyFE(upstream_task = task3,FGhash=self.n_FileGroupHashes[l],uTaskpath=self.FEuTaskpath,FEparamsHash=self.FEparamsHash,MethodID=self.FEmethodID,\
+            task4 = UnifyFE(upstream_task1 = task3,FGhash=self.n_FileGroupHashes[l],uTask1path=self.FEuTaskpath,FEparamsHash=self.FEparamsHash,MethodID=self.FEmethodID,\
                             ProcessID=self.FEprocess,Params=self.FEparamString,splits=self.n_FEsplits,CPU=self.n_FEcpu,SoundFileRootDir_Host=self.n_SoundFileRootDir_Host,r_version=self.r_version,\
                             ProjectRoot=self.ProjectRoot,system=self.system)
-            task5 = ApplyModel(upstream_task1=task4,upstream_task2=task1,uTask1path=self.APMuTask1path,uTask2path=self.TM_JobHash,uTask1FileName=self.APM_Filename,\
+            task5 = ApplyModel(upstream_task1=task4,upstream_task2=task1,uTask1path=upstream_task1.outpath(),uTask2path=pstream_task2.outpath(),APM_Filename=self.APM_Filename,\
                                FGhash=self.n_FileGroupHashes[l],ProcessID=self.TMprocess,MethodID=self.TMmethodID,system=self.system,r_version=self.r_version,ProjectRoot=self.ProjectRoot)
             task6 = ApplyCutoff(upstream_task=task5,uTaskpath=self.ACuTaskpath,FGhash=self.n_FileGroupHashes[l],CutoffHash=self.ACcutoffHash,Cutoff=self.ACcutoff,ProjectRoot=self.ProjectRoot)
             yield task6

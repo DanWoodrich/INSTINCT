@@ -56,13 +56,13 @@ EDpe1_JobName='EDperfeval'
 
 EDpe1_processes = [ALparams.paramHash,EDparams.paramHash,PE1params.paramHash] #alphabetical order
 
-EDpe1_JobHash =hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,EDpe1_processes)
+EDpe1_JobHash =hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,EDpe1_processes,12)
 
 #TM params
 TM_processes = [ALparams.paramHash,EDparams.paramHash,FEparams.paramHash,MFAparams.paramHash,TMparams.paramHash] #alphabetical order
 
 TM_JobName='TrainModel'
-TM_JobHash = hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,TM_processes)
+TM_JobHash = hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,TM_processes,12)
 
 #PE2 works off of two jobs 
 
@@ -89,7 +89,7 @@ PRparams = PR(MasterINI,'PerformanceReport').getParams() #assumes a lot of diffe
 
 MPE_processes = [ACparams.paramHash, ALparams.paramHash,EDparams.paramHash,FEparams.paramHash,MFAparams.paramHash,PE1params.paramHash,PE2params.paramHash,\
                  PRparams.paramHash,TMparams.paramHash] #alphabetical order
-MPE_JobHash = hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,MPE_processes)
+MPE_JobHash = hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,MPE_processes,12)
 
 MPE_WriteToOutputs = 'y'
 
@@ -119,14 +119,16 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
         task1 = EDperfEval.invoke(self)
         task2 = TrainModel.invoke(self)
         task3 = PerfEval2.invoke(self,task2,task1,"All")
+        yield task3 #nothing calls this so have to yield specifically
         for l in range(self.IDlength):
             
             task4 = SplitForPE.invoke(self,task2,l) 
             task5 = PerfEval2.invoke(self,task4,task1,"FG",l)
+            yield task5
             task6 = ApplyCutoff.invoke(self,task4,l)
             task7 = FormatGT.invoke(self,l)
-            task8 = AssignLabels.invoke(self,task6,task7,ALstageDef='2',n=l)
-            task9 = PerfEval1.invoke(self,task8,PE1ContPathDef='n',n=l)
+            task8 = AssignLabels.invoke(self,task6,task7,n=l)
+            task9 = PerfEval1.invoke(self,task8,n=l)
 
             yield task9
     def output(self):
@@ -143,21 +145,21 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
         dataframes = [None] * self.IDlength
         for k in range(self.IDlength):
             dataframes[k] = pd.read_csv(self.ProjectRoot + 'Cache/' + self.FileGroupHashes[k] + '/' + self.EDparamsHash + '/' + self.ALparamsHash + '/' +\
-                                        self.TM_JobHash + '/' + self.ACcutoffHash + '/Stats.csv.gz',compression='gzip')
+                                        self.TM_JobHash + '/' + self.ACcutoffHash + '/' + self.ALparamsHash + '/' + self.PE1paramsHash + '/Stats.csv.gz',compression='gzip')
         Modeleval = pd.concat(dataframes,ignore_index=True)
 
         #trying to get resultPath formated like normal, messed up paths a little bit need to fix!!! Pick up here. 
-        resultPath= self.outpath() 
-        if not os.path.exists(resultPath):
-            os.mkdir(resultPath)
+        resultCache= self.ProjectRoot + 'Cache/' + self.MPE_JobHash
+        if not os.path.exists(resultCache):
+            os.mkdir(resultCache)
 
-        Modeleval.to_csv(resultPath + '/Stats_Intermediate.csv',index=False)
+        Modeleval.to_csv(resultCache + '/Stats_Intermediate.csv',index=False)
         #send back in to PE1
 
         FGpath = 'NULL'
         LABpath = 'NULL'
-        INTpath = resultPath + '/Stats_Intermediate.csv'
-        resultPath2 =  resultPath + '/Stats.csv.gz'
+        INTpath = resultCache + '/Stats_Intermediate.csv'
+        resultPath2 =  resultCache + '/Stats.csv.gz'
         FGID = 'NULL'
 
         Paths = [FGpath,LABpath,INTpath,resultPath2]
@@ -166,7 +168,7 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params=Params)
 
-        os.remove(resultPath + '/Stats_Intermediate.csv')
+        os.remove(resultCache + '/Stats_Intermediate.csv')
 
         #now send the paths for all of the artifacts into the performance report R script.
 
@@ -188,7 +190,12 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
             FGvis_paths[k] = self.ProjectRoot + 'Cache/' + self.FileGroupHashes[k] + '/' + self.EDparamsHash + '/' + self.ALparamsHash + '/' + self.TM_JobHash + '/' + self.PE2paramsHash
         FGvis_paths = ','.join(FGvis_paths)
         FGIDs=','.join(self.FileGroupID)
-        
+
+        resultPath=self.outpath()
+
+        if not os.path.exists(self.outpath()):
+            os.mkdir(self.outpath())
+                    
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
