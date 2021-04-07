@@ -94,6 +94,9 @@ MPE_JobHash = hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,MPE_processes,1
 MPE_WriteToOutputs = 'y'
 
 class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
+
+    #temporary for testing:
+    EDparamsHash=luigi.Parameter()
     
     #macro job
     MPE_JobName=luigi.Parameter()
@@ -116,7 +119,7 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
         elif self.MPE_WriteToOutputs=='n':
             return self.ProjectRoot + 'Cache/' + self.MPE_JobHash 
     def requires(self):
-        task1 = EDperfEval.invoke(self)
+        #task1 = EDperfEval.invoke(self)
         task2 = TrainModel.invoke(self)
         task3 = PerfEval2.invoke(self,task2,task1,"All")
         yield task3 #nothing calls this so have to yield specifically
@@ -207,7 +210,7 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
 if __name__ == '__main__':
     luigi.build([ModelPerfEval(MPE_JobName=MPE_JobName,MPE_JobHash=MPE_JobHash,MPE_WriteToOutputs=MPE_WriteToOutputs,SoundFileRootDir_Host=FGparams.SoundFileRootDir_Host,\
                                IDlength=FGparams.IDlength,FGfile=FGparams.FGfile,FileGroupHashes=FGparams.FileGroupHashes,FileGroupID=FGparams.FileGroupID,\
-                               GTfile=GTparams.GTfile,GTparamsHash=GTparams.paramHash,EDprocess=EDparams.process,\
+                               GTfile=GTparams.GTfile,EDprocess=EDparams.process,\
                                EDsplits=EDparams.Splits,EDcpu=EDparams.CPUNeed,EDchunk=EDparams.sf_chunk_size,EDmethodID=EDparams.methodID,\
                                EDparamString=EDparams.paramString,EDparamsHash=EDparams.paramHash,EDparamsNames=EDparams.paramNames,ALprocess=ALparams.process,ALmethodID=ALparams.methodID,\
                                ALparamString=ALparams.paramString,ALparamsHash=ALparams.paramHash,\

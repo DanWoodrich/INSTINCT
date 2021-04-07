@@ -79,6 +79,9 @@ class Helper:
         else:
             valOut=val[n]
         return valOut
+    def getParamHash2(paramString,hLen):
+        hashval = str(hashlib.sha1(paramString.encode('utf8')).hexdigest())[0:hLen]
+        return hashval
 ##########################################
 #parse variable inputs into system command
 ##########################################
@@ -165,11 +168,13 @@ class INSTINCT_Rmethod_Task(INSTINCT_Task):
         
 class FormatFG(INSTINCT_Task):
     
-    FileGroupHashes = luigi.Parameter()
     FGfile = luigi.Parameter()
-    
+
+    def hashProcess(self):
+        hashLength = 12
+        return Helper.hashfile(self.FGfile,hashLength)
     def outpath(self):
-        outpath = self.ProjectRoot + 'Cache/' + self.FileGroupHashes
+        outpath = self.ProjectRoot + 'Cache/' + self.hashProcess()
         return outpath
     def requires(self):
         return None
@@ -185,16 +190,17 @@ class FormatFG(INSTINCT_Task):
         FG.to_csv(self.outpath() + '/FileGroupFormat.csv.gz',index=False,compression='gzip')
     def invoke(obj,n='default'): #shortcut to call this without specifying parameters which typically stay fixed.
         FGfile = Helper.tplExtract(obj.FGfile,n=n)
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n)
-        return(FormatFG(FGfile = FGfile,FileGroupHashes = FileGroupHashes,ProjectRoot=obj.ProjectRoot))
+        return(FormatFG(FGfile = FGfile,ProjectRoot=obj.ProjectRoot))
 
 class FormatGT(FormatFG):
-    GTfile = luigi.Parameter()
-    GTparamsHash = luigi.Parameter()
     
+    GTfile = luigi.Parameter()
+
+    def hashProcess(self):
+        hashLength = 12
+        return Helper.hashfile(self.GTfile,hashLength)
     def outpath(self):
-        outpath = self.ProjectRoot + 'Cache/' + self.FileGroupHashes + '/' + self.GTparamsHash
-        return outpath
+        return FormatFG.invoke(self).outpath() + '/' + self.hashProcess()
     def requires(self):
         return FormatFG.invoke(self)
     def output(self):
@@ -204,34 +210,35 @@ class FormatGT(FormatFG):
         GT = pd.read_csv(self.GTfile)
         GT.to_csv(self.outpath() + '/GTFormat.csv.gz',index=False,compression='gzip')
     def invoke(obj,n='default'):
-        FGfile = Helper.tplExtract(obj.FGfile,n=n)
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n)
         GTfile = Helper.tplExtract(obj.GTfile,n=n)
-        return(FormatGT(GTfile=GTfile,FileGroupHashes=FileGroupHashes,FGfile=FGfile,GTparamsHash=obj.GTparamsHash,ProjectRoot=obj.ProjectRoot))    
+        FGfile = Helper.tplExtract(obj.FGfile,n=n)
+        return(FormatGT(GTfile=GTfile,FGfile = FGfile,ProjectRoot=obj.ProjectRoot))  
         
 ###############################################################################
 #Defined event detection with abilty to split into chunks w/o affecting outputs
 ###############################################################################
 
-class SplitED(INSTINCT_Task):
+class SplitED(luigi.Task):
+    
     upstream_task1 = luigi.Parameter()
+    uTask1path= luigi.Parameter()
 
     EDsplits = luigi.IntParameter()
     splitNum = luigi.IntParameter()
-    FileGroupHashes = luigi.Parameter()
     
     def outpath(self):
-        outpath = self.ProjectRoot + 'Cache/' + self.FileGroupHashes
-        return outpath
+        return self.uTask1path 
     def requires(self):
         return self.upstream_task1
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/FileGroupFormatSplit' + str(self.splitNum+1) + '.csv.gz')
     def run(self):
-        #run docker container corresponding to energy detector
-        FG_dict = Helper.peek(self.input().fn,fn_type = object,fp_type = object,st_type = object,\
+
+        inFile = self.uTask1path + '/FileGroupFormat.csv.gz'
+        
+        FG_dict = Helper.peek(inFile,fn_type = object,fp_type = object,st_type = object,\
                               dur_type = 'float64',comp_type = 'gzip')
-        FG = pd.read_csv(self.input().fn, dtype=FG_dict,compression='gzip')
+        FG = pd.read_csv(inFile, dtype=FG_dict,compression='gzip')
         if self.EDsplits == 1:
             FG.to_csv(self.outpath() + '/FileGroupFormatSplit1.csv.gz',index=False,compression='gzip')
         #need to test this section to ensure forking works 
@@ -245,7 +252,7 @@ class SplitED(INSTINCT_Task):
             FG.loc[[x==self.splitNum for x in flist]].to_csv(self.outpath() + '/FileGroupFormatSplit' + str(self.splitNum+1)\
                                                 + '.csv.gz',index=False,compression='gzip')
     def invoke(obj):
-        return(SplitED(upstream_task1=obj.upstream_task1,EDsplits=obj.EDsplits,splitNum=obj.splitNum,FileGroupHashes=obj.FileGroupHashes,ProjectRoot=obj.ProjectRoot))
+        return(SplitED(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,EDsplits=obj.EDsplits,splitNum=obj.splitNum))
         
 class RunED(SplitED,INSTINCT_Rmethod_Task):
     
@@ -253,24 +260,25 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
     EDchunk  = luigi.Parameter()
     
     SoundFileRootDir_Host = luigi.Parameter()
-    EDparamsHash = luigi.Parameter()
     EDparamString = luigi.Parameter()
     EDparamsNames =luigi.Parameter()
 
     EDmethodID = luigi.Parameter()
     EDprocess = luigi.Parameter()
 
+    def hashProcess(self):
+        hashLength = 6 
+        EDparamsHash = Helper.getParamHash2(self.EDparamString + ' ' + self.EDmethodID,hashLength)
+        return EDparamsHash
     def outpath(self):
-        inpath = self.ProjectRoot + 'Cache/' + self.FileGroupHashes  
-        outpath =  inpath + '/' + self.EDparamsHash   
-        return outpath
+        return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
         return SplitED.invoke(self)
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/EDSplit' + str(self.splitNum+1) + '.csv.gz')
     def run(self):
         #define volume arguments
-        FGpath = self.ProjectRoot + 'Cache/' + self.FileGroupHashes +'/'
+        FGpath = self.uTask1path +'/'
         ReadFile = 'FileGroupFormatSplit' + str(self.splitNum+1) + '.csv.gz'
         DataPath = self.SoundFileRootDir_Host
         resultPath =  self.outpath()
@@ -287,18 +295,14 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
                      paramsNames=self.EDparamsNames,Wrapper=True)
         
     def invoke(obj,n):
-        return(RunED(upstream_task1=obj.upstream_task1,EDsplits=obj.EDsplits,splitNum=n,FileGroupHashes=obj.FileGroupHashes,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
-                     EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDparamsHash=obj.EDparamsHash,EDparamsNames=obj.EDparamsNames,EDparamString=obj.EDparamString,EDcpu=obj.EDcpu,EDchunk=obj.EDchunk,\
+        return(RunED(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,EDsplits=obj.EDsplits,splitNum=n,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
+                     EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDparamsNames=obj.EDparamsNames,EDparamString=obj.EDparamString,EDcpu=obj.EDcpu,EDchunk=obj.EDchunk,\
                      ProjectRoot=obj.ProjectRoot,system=obj.system,r_version=obj.r_version))
         
 class UnifyED(RunED):
 
     splitNum = None
 
-    def outpath(self):
-        inpath = self.ProjectRoot + 'Cache/' + self.FileGroupHashes  
-        outpath =  inpath + '/' + self.EDparamsHash   
-        return outpath
     def requires(self):
         for k in range(self.EDsplits):
             yield RunED.invoke(self,k)
@@ -348,7 +352,7 @@ class UnifyED(RunED):
             FG_cols = ['FileName','FullPath','StartTime','Duration','DiffTime']
 
             FG_dict = {'FileName': 'string','FullPath': 'category', 'StartTime': 'string','Duration': 'int', 'DiffTime':'int'}
-            FG = pd.read_csv(self.ProjectRoot + 'Cache/' + self.FileGroupHashes +'/FileGroupFormat.csv.gz', dtype=FG_dict, usecols=FG_cols)
+            FG = pd.read_csv(self.uTask1path +'/FileGroupFormat.csv.gz', dtype=FG_dict, usecols=FG_cols)
 
             #retain only the file names, and use these to subset original FG
             FG = FG[FG.FileName.isin(EDfin['StartFile'])]
@@ -423,20 +427,19 @@ class UnifyED(RunED):
             ED = pd.concat([EDpatchsub,ED],ignore_index=True)
             ED = ED.sort_values(['StartTime'], ascending=True)
 
-            ED.to_csv(self.outpath() + '/Detections.csv.gz',index=False,compression='gzip')
+            ED.to_csv(FGpath + '/Detections.csv.gz',index=False,compression='gzip')
 
-            os.remove(self.outpath() + '/EDunify.csv.gz') 
-            os.remove(self.outpath() + '/EDoutCorrect.csv.gz')
+            os.remove(FGpath + '/EDunify.csv.gz') 
+            os.remove(FGpath + '/EDoutCorrect.csv.gz')
             
         for n in range(self.EDsplits):
             os.remove(self.outpath() + '/EDSplit' + str(n+1) + '.csv.gz') 
         for n in range(self.EDsplits):
-            os.remove(self.ProjectRoot + 'Cache/' + self.FileGroupHashes + '/FileGroupFormatSplit' + str(n+1) + '.csv.gz') #might want to rework this to make the files load in the current directory instead of the upstream directory. makes more atomic
+            os.remove(self.uTask1path + '/FileGroupFormatSplit' + str(n+1) + '.csv.gz') #might want to rework this to make the files load in the current directory instead of the upstream directory. makes more atomic
 
-    def invoke(obj,upstream1,n='default'):
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n)
-        return(UnifyED(upstream_task1 = upstream1,EDsplits = obj.EDsplits,FileGroupHashes=FileGroupHashes,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
-                       EDparamsHash=obj.EDparamsHash,EDparamsNames=obj.EDparamsNames,EDparamString=obj.EDparamString,EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDcpu=obj.EDcpu,\
+    def invoke(obj,upstream1):
+        return(UnifyED(upstream_task1 = upstream1,uTask1path= upstream1.outpath(),EDsplits = obj.EDsplits,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,EDparamsNames=obj.EDparamsNames,\
+                       EDparamString=obj.EDparamString,EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDcpu=obj.EDcpu,\
                        EDchunk=obj.EDchunk,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
                 
         #merge outputs with ED:
@@ -448,16 +451,21 @@ class UnifyED(RunED):
 #Feature extraction with horizontal scaling and containerized method
 ####################################################################
 
-class SplitFE(INSTINCT_Task):
+class SplitFE(luigi.Task):
     upstream_task1 = luigi.Parameter()
     uTask1path = luigi.Parameter()
 
+    upstream_task2 = luigi.Parameter()
+
+
     FEsplits = luigi.IntParameter()
     splitNum = luigi.IntParameter()
-    FileGroupHashes = luigi.Parameter()
 
+    def outpath(self):
+        return self.uTask1path 
     def requires(self):
         return self.upstream_task1
+        return self.upstream_task2
     def output(self):
         return luigi.LocalTarget(self.uTask1path + '/DETsplitForFE' + str(self.splitNum+1) + '.csv.gz')
     def run(self):
@@ -480,28 +488,35 @@ class SplitFE(INSTINCT_Task):
             DET.loc[[x==self.splitNum for x in flist]].to_csv(self.uTask1path + '/DETsplitForFE' + str(self.splitNum+1)\
                                                 + '.csv.gz',index=False,compression='gzip')
     def invoke(obj):
-        return(SplitFE(upstream_task1=obj.upstream_task1,FEsplits=obj.FEsplits,splitNum=obj.splitNum,FileGroupHashes=obj.FileGroupHashes,uTask1path=obj.uTask1path,ProjectRoot=obj.ProjectRoot))
+        return(SplitFE(upstream_task1=obj.upstream_task1,upstream_task2=obj.upstream_task2,FEsplits=obj.FEsplits,splitNum=obj.splitNum,uTask1path=obj.uTask1path))
         
-class RunFE(SplitFE,INSTINCT_Rmethod_Task): 
+class RunFE(SplitFE,INSTINCT_Rmethod_Task):
+
+    uTask2path = luigi.Parameter()
 
     FEcpu = luigi.Parameter()
     
     SoundFileRootDir_Host = luigi.Parameter()
-    FEparamsHash=luigi.Parameter()
 
     FEparamString = luigi.Parameter()
     FEparamsNames = luigi.Parameter()
 
     FEprocess = luigi.Parameter()
     FEmethodID = luigi.Parameter()
-
+    
+    def hashProcess(self):
+        hashLength = 6 
+        FEparamsHash = Helper.getParamHash2(self.FEparamString + ' ' + self.FEmethodID + ' ' + self.upstream_task2.hashProcess(),hashLength)
+        return FEparamsHash
+    def outpath(self):
+        return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
         return SplitFE.invoke(self)
     def output(self):
-        return luigi.LocalTarget(self.uTask1path + '/' + self.FEparamsHash + '/DETwFeaturesSplit' + str(self.splitNum+1) + '.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETwFeaturesSplit' + str(self.splitNum+1) + '.csv.gz')
     def run(self):
         #define volume arguments
-        FGpath = self.ProjectRoot + 'Cache/' + self.FileGroupHashes + '/'
+        FGpath = self.uTask2path + '/'
         DETpath = self.uTask1path
         DataPath = self.SoundFileRootDir_Host
         resultPath = self.uTask1path + '/' + self.FEparamsHash
@@ -515,16 +530,15 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
                      paramsNames=self.FEparamsNames,Wrapper=True)
         
     def invoke(obj,n):
-        return(RunFE(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,FEsplits=obj.FEsplits,splitNum=n,FileGroupHashes=obj.FileGroupHashes,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
-                     FEparamsHash=obj.FEparamsHash,FEparamString=obj.FEparamString,FEparamsNames=obj.FEparamsNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEcpu=obj.FEcpu,
+        return(RunFE(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,upstream_task2=obj.upstream_task2,uTask2path=obj.uTask2path,FEsplits=obj.FEsplits,splitNum=n,
+                     SoundFileRootDir_Host=obj.SoundFileRootDir_Host,FEparamsHash=obj.FEparamsHash,FEparamString=obj.FEparamString,\
+                     FEparamsNames=obj.FEparamsNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEcpu=obj.FEcpu,\
                      ProjectRoot=obj.ProjectRoot,system=obj.system,r_version=obj.r_version))
 
 class UnifyFE(RunFE):
 
     splitNum=None
 
-    def outpath(self):
-        return self.uTask1path + '/' + self.FEparamsHash 
     def requires(self):
         for k in range(self.FEsplits):
             return RunFE.invoke(self,k)
@@ -543,11 +557,10 @@ class UnifyFE(RunFE):
         for n in range(self.FEsplits):
             os.remove(self.uTask1path + '/DETsplitForFE' + str(n+1) + '.csv.gz')
             
-    def invoke(obj,upstream1,n='default'):
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n)
-        return(UnifyFE(upstream_task1 = upstream1,FileGroupHashes=FileGroupHashes,uTask1path=upstream1.outpath(),FEparamsHash=obj.FEparamsHash,FEparamsNames=obj.FEparamsNames,FEmethodID=obj.FEmethodID,\
-                       FEprocess=obj.FEprocess,FEparamString=obj.FEparamString,FEsplits=obj.FEsplits,FEcpu=obj.FEcpu,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
-                       system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version)) 
+    def invoke(obj,upstream1):
+        return(UnifyFE(upstream_task1 = upstream1,uTask1path=upstream1.outpath(),upstream_task2 = upstream2,uTask2path= upstream2.outpath(),FEparamsHash=obj.FEparamsHash,
+                       FEparamsNames=obj.FEparamsNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEparamString=obj.FEparamString,FEsplits=obj.FEsplits,FEcpu=obj.FEcpu,\
+                       SoundFileRootDir_Host=obj.SoundFileRootDir_Host,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version)) 
 
 ############################################################
 #Label detector outputs with GT using containerized method 
@@ -874,6 +887,9 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
     ALstage=None
     PE1ContPath=None
 
+    #temporary for testing:
+    EDparamsHash=luigi.Parameter()
+
     def outpath(self):
         if self.EDpe1_WriteToOutputs=='y':
             return self.ProjectRoot +'Outputs/' + self.EDpe1_JobName 
@@ -883,9 +899,9 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
         for l in range(self.IDlength):
             task1 = FormatFG.invoke(self,l) 
             task2 = FormatGT.invoke(self,l)
-            task3 = UnifyED.invoke(self,task1,l)
-            task4 = AssignLabels.invoke(self,task3,task2,n=l)
-            task5 = PerfEval1.invoke(self,task4,n=l)
+            task3 = UnifyED.invoke(self,task1)
+            task4 = AssignLabels.invoke(self,task3,task2,l)
+            task5 = PerfEval1.invoke(self,task4,l)
 
             yield task5
     def output(self):
@@ -921,7 +937,7 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
         os.remove(resultPath + '/Stats_Intermediate.csv')
         
     def invoke(self):
-        return(EDperfEval(EDpe1_JobName=self.EDpe1_JobName,EDpe1_JobHash=self.EDpe1_JobHash,GTparamsHash=self.GTparamsHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,IDlength=self.IDlength,\
+        return(EDperfEval(EDpe1_JobName=self.EDpe1_JobName,EDpe1_JobHash=self.EDpe1_JobHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,IDlength=self.IDlength,\
                    GTfile=self.GTfile,FGfile=self.FGfile,FileGroupHashes=self.FileGroupHashes,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
                    EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,ALprocess=self.ALprocess,\
                    ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,\
@@ -954,15 +970,20 @@ class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
     uTask2path=None
     ALstage=None
 
+    #temporary for testing:
+    EDparamsHash=luigi.Parameter()
+    FEparamsHash=luigi.Parameter()
+
+
     def outpath(self):
         return self.ProjectRoot + 'Cache/' + self.TM_JobHash
     def requires(self):
         for l in range(self.IDlength):
             task1 = FormatFG.invoke(self,l) 
             task2 = FormatGT.invoke(self,l)
-            task3 = UnifyED.invoke(self,task1,l)
-            task4 = AssignLabels.invoke(self,task3,task2,n=l)
-            task5 = UnifyFE.invoke(self,task3,l)
+            task3 = UnifyED.invoke(self,task1)
+            task4 = AssignLabels.invoke(self,task3,task2,l)
+            task5 = UnifyFE.invoke(self,task3)
             task6 = MergeFE_AL.invoke(self,task5,task4,l)
             
             yield task6
@@ -979,8 +1000,8 @@ class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
             #dataframes[k] = pd.read_csv(self.ProjectRoot + 'Cache/' + self.FileGroupHashes[k] + '/' + self.EDparamsHash + '/' + self.ALparamsHash + '/' + self.MFAparamsHash + '/DETwFEwAL.csv.gz')
             #test to see if this works
             dataframes[k] = pd.read_csv(MergeFE_AL.invoke(self,UnifyFE.invoke(self,UnifyED.invoke(self,FormatFG.invoke(self,k),k),k),\
-                                                          AssignLabels.invoke(self,UnifyED.invoke(self,FormatFG.invoke(self,k),k),\
-                                                                              FormatGT.invoke(self,k),n=k),k).outpath()+ '/DETwFEwAL.csv.gz') # 
+                                                          AssignLabels.invoke(self,UnifyED.invoke(self,FormatFG.invoke(self,k)),\
+                                                                              FormatGT.invoke(self,k),k),k).outpath()+ '/DETwFEwAL.csv.gz') # 
             dataframes[k]['FGID'] = pd.Series(self.FileGroupID[k], index=dataframes[k].index)
             
             FGdf[k] = pd.read_csv(self.ProjectRoot + 'Cache/' + self.FileGroupHashes[k] + '/FileGroupFormat.csv.gz')
@@ -1009,7 +1030,7 @@ class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
 
         #copy params to output folder
     def invoke(self):
-        return(TrainModel(TM_JobName=self.TM_JobName,TM_JobHash=self.TM_JobHash,GTparamsHash=self.GTparamsHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
+        return(TrainModel(TM_JobName=self.TM_JobName,TM_JobHash=self.TM_JobHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
                            IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupHashes=self.FileGroupHashes,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
                            EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,ALprocess=self.ALprocess,\
                            ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,\

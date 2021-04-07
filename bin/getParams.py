@@ -29,6 +29,7 @@ def getParamString(self,otherInput=''):
     string_out = str(' '.join(self.paramList) + ' ' + self.methodID + otherInput).lstrip(' ')
     return string_out 
 
+
 def getParamHash(self,hLen):
     hashval = str(hashlib.sha1(self.paramString.encode('utf8')).hexdigest())[0:hLen]
     return hashval
