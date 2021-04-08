@@ -79,7 +79,17 @@ mtry<-as.integer(args[11])
 ntree<-as.integer(args[12])
 }
 
-data<-read.csv(dataPath)
+#Here, make sure we are reading the right file. Doesn't care what
+#luigi is really pointing to. Two name options currently, this 
+#works the same on both. DETwFeatures.csv.gz & DETwFEwAL.csv.gz
+if(file.exists(dataPath)){
+  data<-read.csv(dataPath)
+}else{
+  dProot<-dirname(dataPath)
+  dataPath<-paste(dProot,"DETwFEwAL.csv.gz",sep="/")
+}
+
+
 
 #use then when building in functionality to read in metadata
 #FGdata<-read.csv(FGpath)

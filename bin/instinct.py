@@ -197,7 +197,7 @@ class FormatGT(FormatFG):
     GTfile = luigi.Parameter()
 
     def hashProcess(self):
-        hashLength = 12
+        hashLength = 6
         return Helper.hashfile(self.GTfile,hashLength)
     def outpath(self):
         return FormatFG.invoke(self).outpath() + '/' + self.hashProcess()
@@ -261,7 +261,7 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
     
     SoundFileRootDir_Host = luigi.Parameter()
     EDparamString = luigi.Parameter()
-    EDparamsNames =luigi.Parameter()
+    EDparamNames =luigi.Parameter()
 
     EDmethodID = luigi.Parameter()
     EDprocess = luigi.Parameter()
@@ -292,11 +292,11 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
         #argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.EDprocess,MethodID=self.EDmethodID,Paths=Paths,Args=Args,Params=self.EDparamString,\
-                     paramsNames=self.EDparamsNames,Wrapper=True)
+                     paramsNames=self.EDparamNames,Wrapper=True)
         
     def invoke(obj,n):
         return(RunED(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,EDsplits=obj.EDsplits,splitNum=n,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
-                     EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDparamsNames=obj.EDparamsNames,EDparamString=obj.EDparamString,EDcpu=obj.EDcpu,EDchunk=obj.EDchunk,\
+                     EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDparamNames=obj.EDparamNames,EDparamString=obj.EDparamString,EDcpu=obj.EDcpu,EDchunk=obj.EDchunk,\
                      ProjectRoot=obj.ProjectRoot,system=obj.system,r_version=obj.r_version))
         
 class UnifyED(RunED):
@@ -372,7 +372,7 @@ class UnifyED(RunED):
             Args = [ReadFile,'2',self.EDcpu,self.EDchunk]
 
             argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.EDprocess,MethodID=self.EDmethodID,Paths=Paths,Args=Args,Params=self.EDparamString,\
-                     paramsNames=self.EDparamsNames,Wrapper=True)
+                     paramsNames=self.EDparamNames,Wrapper=True)
 
             #drop process data from ED
             ED = ED.drop(columns="ProcessTag")
@@ -438,7 +438,7 @@ class UnifyED(RunED):
             os.remove(self.uTask1path + '/FileGroupFormatSplit' + str(n+1) + '.csv.gz') #might want to rework this to make the files load in the current directory instead of the upstream directory. makes more atomic
 
     def invoke(obj,upstream1):
-        return(UnifyED(upstream_task1 = upstream1,uTask1path= upstream1.outpath(),EDsplits = obj.EDsplits,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,EDparamsNames=obj.EDparamsNames,\
+        return(UnifyED(upstream_task1 = upstream1,uTask1path= upstream1.outpath(),EDsplits = obj.EDsplits,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,EDparamNames=obj.EDparamNames,\
                        EDparamString=obj.EDparamString,EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDcpu=obj.EDcpu,\
                        EDchunk=obj.EDchunk,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
                 
@@ -499,7 +499,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
     SoundFileRootDir_Host = luigi.Parameter()
 
     FEparamString = luigi.Parameter()
-    FEparamsNames = luigi.Parameter()
+    FEparamNames = luigi.Parameter()
 
     FEprocess = luigi.Parameter()
     FEmethodID = luigi.Parameter()
@@ -519,7 +519,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
         FGpath = self.uTask2path + '/'
         DETpath = self.uTask1path
         DataPath = self.SoundFileRootDir_Host
-        resultPath = self.uTask1path + '/' + self.FEparamsHash
+        resultPath = self.outpath()
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
@@ -527,12 +527,12 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
         Args = [str(self.splitNum+1),str(self.FEcpu)]
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.FEprocess,MethodID=self.FEmethodID,Paths=Paths,Args=Args,Params=self.FEparamString,\
-                     paramsNames=self.FEparamsNames,Wrapper=True)
+                     paramsNames=self.FEparamNames,Wrapper=True)
         
     def invoke(obj,n):
         return(RunFE(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,upstream_task2=obj.upstream_task2,uTask2path=obj.uTask2path,FEsplits=obj.FEsplits,splitNum=n,
-                     SoundFileRootDir_Host=obj.SoundFileRootDir_Host,FEparamsHash=obj.FEparamsHash,FEparamString=obj.FEparamString,\
-                     FEparamsNames=obj.FEparamsNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEcpu=obj.FEcpu,\
+                     SoundFileRootDir_Host=obj.SoundFileRootDir_Host,FEparamString=obj.FEparamString,\
+                     FEparamNames=obj.FEparamNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEcpu=obj.FEcpu,\
                      ProjectRoot=obj.ProjectRoot,system=obj.system,r_version=obj.r_version))
 
 class UnifyFE(RunFE):
@@ -557,9 +557,9 @@ class UnifyFE(RunFE):
         for n in range(self.FEsplits):
             os.remove(self.uTask1path + '/DETsplitForFE' + str(n+1) + '.csv.gz')
             
-    def invoke(obj,upstream1):
-        return(UnifyFE(upstream_task1 = upstream1,uTask1path=upstream1.outpath(),upstream_task2 = upstream2,uTask2path= upstream2.outpath(),FEparamsHash=obj.FEparamsHash,
-                       FEparamsNames=obj.FEparamsNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEparamString=obj.FEparamString,FEsplits=obj.FEsplits,FEcpu=obj.FEcpu,\
+    def invoke(obj,upstream1,upstream2):
+        return(UnifyFE(upstream_task1 = upstream1,uTask1path=upstream1.outpath(),upstream_task2 = upstream2,uTask2path= upstream2.outpath(),
+                       FEparamNames=obj.FEparamNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEparamString=obj.FEparamString,FEsplits=obj.FEsplits,FEcpu=obj.FEcpu,\
                        SoundFileRootDir_Host=obj.SoundFileRootDir_Host,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version)) 
 
 ############################################################
@@ -570,26 +570,30 @@ class AssignLabels(INSTINCT_Rmethod_Task):
 
     upstream_task1 = luigi.Parameter() #det output
     upstream_task2 = luigi.Parameter() #GT
+    upstream_task3 = luigi.Parameter() #FG 
     uTask1path = luigi.Parameter()
     uTask2path = luigi.Parameter()
+    uTask3path = luigi.Parameter()
 
-    ALparamsHash=luigi.Parameter()
     ALparamString=luigi.Parameter()
     ALprocess = luigi.Parameter()
     ALmethodID = luigi.Parameter()
-
-    FileGroupHashes=luigi.Parameter()
     
+    def hashProcess(self):
+        hashLength = 6 
+        ALparamsHash = Helper.getParamHash2(self.ALparamString + ' ' + self.ALmethodID + ' ' + self.upstream_task2.hashProcess()+ ' ' + self.upstream_task3.hashProcess(),hashLength)
+        return ALparamsHash
     def outpath(self):
-        return self.uTask1path  + '/' + self.ALparamsHash
+        return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
         yield self.upstream_task1
         yield self.upstream_task2
+        yield self.upstream_task3
     def output(self):
         return(luigi.LocalTarget(self.outpath() + '/DETwLabels.csv.gz'))
     def run(self):
 
-        FGpath = self.ProjectRoot + 'Cache/' + self.FileGroupHashes + '/'
+        FGpath = self.uTask3path + '/'
         DETpath = self.uTask1path + '/'
         GTpath = self.uTask2path + '/'
         resultPath =  self.outpath()
@@ -601,10 +605,9 @@ class AssignLabels(INSTINCT_Rmethod_Task):
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ALprocess,MethodID=self.ALmethodID,Paths=Paths,Args=Args,Params=self.ALparamString)
         
-    def invoke(obj,upstream1,upstream2,n='default'):
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n)
-        return(AssignLabels(upstream_task1 = upstream1,FileGroupHashes=FileGroupHashes,upstream_task2 = upstream2,uTask1path=upstream1.outpath(),uTask2path=upstream2.outpath(),\
-                            ALparamsHash=obj.ALparamsHash,ALmethodID=obj.ALmethodID,ALprocess=obj.ALprocess,ALparamString=obj.ALparamString,\
+    def invoke(obj,upstream1,upstream2,upstream3):
+        return(AssignLabels(upstream_task1 = upstream1,upstream_task2 = upstream2,uTask1path=upstream1.outpath(),uTask2path=upstream2.outpath(),upstream_task3 = upstream3,uTask3path=upstream3.outpath(),\
+                            ALmethodID=obj.ALmethodID,ALprocess=obj.ALprocess,ALparamString=obj.ALparamString,\
                             system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
 
 ########################
@@ -618,14 +621,15 @@ class MergeFE_AL(INSTINCT_Rmethod_Task):
     uTask1path = luigi.Parameter()
     uTask2path = luigi.Parameter()
     
-    FileGroupHashes = luigi.Parameter()
-    
     MFAprocess = luigi.Parameter()
     MFAmethodID = luigi.Parameter()
-    MFAparamsHash=luigi.Parameter()
-
+    
+    def hashProcess(self):
+        hashLength = 6 
+        MFAparamsHash = Helper.getParamHash2(self.MFAmethodID + ' ' + self.upstream_task1.hashProcess()+ ' ' + self.upstream_task2.hashProcess(),hashLength)
+        return MFAparamsHash
     def outpath(self):
-        return self.uTask2path + '/' + self.MFAparamsHash
+        return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
         yield self.upstream_task1
         yield self.upstream_task2
@@ -633,8 +637,8 @@ class MergeFE_AL(INSTINCT_Rmethod_Task):
         return luigi.LocalTarget(self.outpath() + '/DETwFEwAL.csv.gz')
     def run(self):
 
-        DETwFEpath = self.uTask1path + '/'
-        DETwALpath = self.uTask2path + '/'
+        DETwALpath = self.uTask1path + '/'
+        DETwFEpath = self.uTask2path + '/'
         resultPath =  self.outpath()
 
         if not os.path.exists(resultPath):
@@ -644,10 +648,9 @@ class MergeFE_AL(INSTINCT_Rmethod_Task):
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.MFAprocess,MethodID=self.MFAmethodID,Paths=Paths,Args='',Params='')
         
-    def invoke(obj,upstream1,upstream2,n='default'):
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n)
-        return(MergeFE_AL(upstream_task1 = upstream1,upstream_task2 = upstream2,FileGroupHashes=FileGroupHashes,uTask1path=upstream1.outpath(),uTask2path=upstream2.outpath(),\
-                          MFAprocess=obj.MFAprocess,MFAparamsHash=obj.MFAparamsHash,MFAmethodID=obj.MFAmethodID,system=obj.system,ProjectRoot=obj.ProjectRoot,\
+    def invoke(obj,upstream1,upstream2):
+        return(MergeFE_AL(upstream_task1 = upstream1,upstream_task2 = upstream2,uTask1path=upstream1.outpath(),uTask2path=upstream2.outpath(),\
+                          MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,system=obj.system,ProjectRoot=obj.ProjectRoot,\
                           r_version=obj.r_version))
 
 
@@ -658,25 +661,30 @@ class MergeFE_AL(INSTINCT_Rmethod_Task):
 class PerfEval1(INSTINCT_Rmethod_Task):
 
     upstream_task1 = luigi.Parameter()
+    upstream_task2 = luigi.Parameter()#FG
     uTask1path = luigi.Parameter()
+    uTask2path = luigi.Parameter()
 
-    FileGroupHashes = luigi.Parameter()
     FileGroupID = luigi.Parameter()
     
     PE1process = luigi.Parameter()
     PE1methodID = luigi.Parameter()
-    PE1paramsHash=luigi.Parameter()
 
+    def hashProcess(self):
+        hashLength = 6 
+        PE1paramsHash = Helper.getParamHash2(self.PE1methodID + ' ' + self.upstream_task1.hashProcess()+ ' ' + self.upstream_task2.hashProcess(),hashLength)
+        return PE1paramsHash
     def outpath(self):
-        return self.uTask1path + '/' + self.PE1paramsHash
+        return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
         yield self.upstream_task1
+        yield self.upstream_task2
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/Stats.csv.gz')
     def run(self):
 
-        FGpath = self.ProjectRoot + 'Cache/' + self.FileGroupHashes + '/'
         LABpath = self.uTask1path
+        FGpath = self.uTask2path + '/'
         INTpath = 'NULL'
         resultPath =  self.outpath()
         if not os.path.exists(resultPath):
@@ -687,11 +695,9 @@ class PerfEval1(INSTINCT_Rmethod_Task):
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
 
-    def invoke(obj,upstream1,n='default'):
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n)
+    def invoke(obj,upstream1,upstream2,n='default'):
         FileGroupID = Helper.tplExtract(obj.FileGroupID,n=n)
-
-        return(PerfEval1(upstream_task1=upstream1,FileGroupHashes=FileGroupHashes,uTask1path=upstream1.outpath(),PE1paramsHash=obj.PE1paramsHash,\
+        return(PerfEval1(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,uTask2path=upstream2.outpath(),\
                          FileGroupID=FileGroupID,PE1methodID=obj.PE1methodID,PE1process=obj.PE1process,system=obj.system,ProjectRoot=obj.ProjectRoot,\
                          r_version=obj.r_version))
 
@@ -709,14 +715,15 @@ class PerfEval2(INSTINCT_Rmethod_Task):
 
     PE2process = luigi.Parameter()
     PE2methodID = luigi.Parameter()
-    PE2paramsHash=luigi.Parameter()
-
-    FileGroupHashes = luigi.Parameter()
 
     PE2datType = luigi.Parameter()
-
+    
+    def hashProcess(self):
+        hashLength = 6 
+        PE2paramsHash = Helper.getParamHash2(self.PE2methodID + ' ' + self.upstream_task1.hashProcess()+ ' ' + self.upstream_task2.hashProcess(),hashLength)
+        return PE2paramsHash
     def outpath(self):
-        return self.uTask1path+ '/' + self.PE2paramsHash
+        return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
         yield self.upstream_task1
         yield self.upstream_task2
@@ -737,10 +744,9 @@ class PerfEval2(INSTINCT_Rmethod_Task):
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE2process,MethodID=self.PE2methodID,Paths=Paths,Args='',Params='')
 
-    def invoke(obj,upstream1,upstream2,PE2datTypeDef=None,n='default'):
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n) 
+    def invoke(obj,upstream1,upstream2,PE2datTypeDef=None):
         return(PerfEval2(upstream_task1=upstream1,upstream_task2=upstream2,uTask1path=upstream1.outpath(),uTask2path=upstream2.outpath(),PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
-                          PE2paramsHash=obj.PE2paramsHash,PE2datType=PE2datTypeDef,FileGroupHashes=FileGroupHashes,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
+                         PE2datType=PE2datTypeDef,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
 
 #############################################################
 #apply cutoff on DETwProbs object, stage represents if it is in FG paths in cache (2) or in job in cache (1)
@@ -751,13 +757,14 @@ class ApplyCutoff(INSTINCT_Task):
     upstream_task1 = luigi.Parameter()
     uTask1path = luigi.Parameter()
 
-    FileGroupHashes = luigi.Parameter()
-
     ACcutoffString = luigi.Parameter()
-    ACcutoffHash= luigi.Parameter()
 
+    def hashProcess(self):
+        hashLength = 6 
+        ACcutoffHash = Helper.getParamHash2(self.ACcutoffString + ' ' + self.upstream_task1.hashProcess(),hashLength)
+        return ACcutoffHash
     def outpath(self):
-        return self.uTask1path + '/' + self.ACcutoffHash
+        return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
         yield self.upstream_task1
     def output(self):
@@ -771,9 +778,8 @@ class ApplyCutoff(INSTINCT_Task):
 
         DwPcut = DETwProbs[DETwProbs.probs>=float(self.ACcutoffString)]
         DwPcut.to_csv(self.outpath() + '/DETwProbs.csv.gz',index=False,compression='gzip')
-    def invoke(obj,upstream1,n='default'):
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n) 
-        return(ApplyCutoff(upstream_task1=upstream1,uTask1path=upstream1.outpath(),FileGroupHashes=FileGroupHashes,ACcutoffHash=obj.ACcutoffHash,ACcutoffString=obj.ACcutoffString,\
+    def invoke(obj,upstream1):
+        return(ApplyCutoff(upstream_task1=upstream1,uTask1path=upstream1.outpath(),ACcutoffString=obj.ACcutoffString,\
                     ProjectRoot=obj.ProjectRoot))
 
 ######################################################################
@@ -784,41 +790,44 @@ class ApplyModel(INSTINCT_Rmethod_Task):
 
     upstream_task1 = luigi.Parameter() #DETwFE
     upstream_task2 = luigi.Parameter() #Train model
+    upstream_task3 = luigi.Parameter() #FG
 
-    FGhash = luigi.Parameter()
     uTask1path = luigi.Parameter()
-    APM_Filename = luigi.Parameter() #'/DETwFeatures.csv.gz' or '/DETwFEwAL.csv.gz'
-    #I should rework so the R script determines this automatically. 
-    uTask2path = luigi.Parameter() #model path 
+    uTask2path = luigi.Parameter() #model path
+    uTask3path = luigi.Parameter() #model path
     
-    ProcessID = luigi.Parameter()
-    MethodID = luigi.Parameter()
+    APMprocessID = luigi.Parameter()
+    APMmethodID = luigi.Parameter()
 
-    stage='apply'
-
+    def hashProcess(self):
+        TM_hash = self.upstream_task2.hashProcess() #steals previous TM hash 
+        return TM_hash
     def outpath(self):
-        inpath = self.ProjectRoot + 'Cache/' + self.FGhash + '/' + self.uTask1path
-        outpath =  inpath + '/' + self.uTask2path
-        return outpath
+        return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
         yield self.upstream_task1
         yield self.upstream_task2
+        yield self.upstream_task3
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/DETwProbs.csv.gz')
     def run(self):
 
-        DETpath= self.ProjectRoot + 'Cache/' + self.FGhash + '/' + self.uTask1path + '/' + self.APM_Filename
-        FGpath = self.ProjectRoot + 'Cache/' + self.FGhash + '/FileGroupFormat.csv.gz'
+        DETpath= self.uTask1path + '/DETwFeatures.csv.gz' #R fixes this if incorrect, ok to leave hardcoded like this 
+        FGpath = self.uTask3path + '/FileGroupFormat.csv.gz'
         resultPath = self.outpath()
-        Mpath= self.ProjectRoot + 'Cache/' + self.uTask2path + '/RFmodel.rds'
+        Mpath= self.uTask2path + '/RFmodel.rds'
 
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
         Paths = [DETpath,FGpath,resultPath,Mpath]
-        Args = [self.stage]
+        Args = ['apply']
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ProcessID,MethodID=self.MethodID,Paths=Paths,Args=Args,Params='')    
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.APMprocessID,MethodID=self.APMmethodID,Paths=Paths,Args=Args,Params='')
+        
+    def invoke(self,upstream1,upstream2):
+        return(ApplyModel(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,uTask2path=upstream2.outpath(),upstream_task3=upstream3,uTask3path=upstream3.outpath(),\
+                          APMprocessID=obj.APMprocessID,APMmethodID=obj.APMmethodID,ProjectRoot=obj.ProjectRoot))
 
 ####################################################################################
 #Split data with probs and labels back into FG components (used for perf eval 2) 
@@ -826,27 +835,27 @@ class ApplyModel(INSTINCT_Rmethod_Task):
 
 class SplitForPE(INSTINCT_Task):
 
-    upstream_task1 = luigi.Parameter() #will refer to train model
-    uTask1path = luigi.Parameter() #train model object path aka job hash 
+    upstream_task1 = luigi.Parameter() #FG
+    uTask1path = luigi.Parameter() #FG path. Makes new folder at low level of FG path. 
 
-    #upstream task 2 is implied from train model (should make a new path if FG path in cache has been cleared, but might want to check that behavior) 
-    SFPEspecialPath=luigi.Parameter() 
-    #goes back to the original cache paths #Cache + FG + ED + FE + DetwFEwAL + SplitForPE
+    upstream_task2 = luigi.Parameter() #will refer to train model
 
-    FileGroupHashes = luigi.Parameter()
     FileGroupID = luigi.Parameter() #single value
 
+    def hashProcess(self):
+        TM_hash = self.upstream_task2.hashProcess() #steals previous TM hash 
+        return TM_hash
     def outpath(self):
-        return self.ProjectRoot + 'Cache/' + self.FileGroupHashes + '/' + self.SFPEspecialPath + '/' + self.uTask1path #make a special case for this
+        return self.uTask1path + '/' + self.hashProcess() #make a special case for this
     def requires(self):
-        return self.upstream_task1
+        return self.upstream_task2 #don't need to requires UP1, because it only continues path and doesn't rely on outputs. 
     def output(self):
         return luigi.LocalTarget(self.outpath() +'/DETwProbs.csv.gz')
     def run(self): 
         #pseudocode:
         #split dataset into num of workers
 
-        DETwProbs = pd.read_csv(self.ProjectRoot + 'Cache/' + self.uTask1path + '/DETwProbs.csv.gz',compression='gzip')
+        DETwProbs = pd.read_csv(self.ProjectRoot + 'Cache/' + self.hashProcess() + '/DETwProbs.csv.gz',compression='gzip')
 
         if not os.path.exists(self.outpath()):
             os.makedirs(self.outpath(),exist_ok=True)
@@ -855,11 +864,10 @@ class SplitForPE(INSTINCT_Task):
         DwPsubset = DETwProbs[DETwProbs.FGID == self.FileGroupID]
         DwPsubset.to_csv(self.outpath() + '/DETwProbs.csv.gz',index=False,compression='gzip')
         #this is kind of a weird one. Might not be very modular to other applications as is. 
-    def invoke(obj,upstream1,n='default'):
-        FileGroupHashes = Helper.tplExtract(obj.FileGroupHashes,n=n)
+    def invoke(obj,upstream1,upstream2,n='default'):
         FileGroupID = Helper.tplExtract(obj.FileGroupID,n=n)
-        return(SplitForPE(upstream_task1=upstream1,uTask1path=obj.TM_JobHash,SFPEspecialPath=obj.SFPEspecialPath,FileGroupID=FileGroupID,\
-                          FileGroupHashes=FileGroupHashes,ProjectRoot=obj.ProjectRoot))
+        return(SplitForPE(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,FileGroupID=FileGroupID,\
+                          ProjectRoot=obj.ProjectRoot))
         
 ##################################################################################
 
@@ -874,7 +882,6 @@ class SplitForPE(INSTINCT_Task):
 class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
     
     EDpe1_JobName=luigi.Parameter()
-    EDpe1_JobHash=luigi.Parameter()
     EDpe1_WriteToOutputs=luigi.Parameter()
 
     IDlength = luigi.IntParameter()
@@ -882,28 +889,38 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
     #nullify some inherited parameters:
     upstream_task1=None
     upstream_task2=None
+    upstream_task3=None
     uTask1path=None
     uTask2path=None
-    ALstage=None
-    PE1ContPath=None
+    uTask3path=None
 
-    #temporary for testing:
-    EDparamsHash=luigi.Parameter()
-
+    def pipelineMap(self,l): #here is where you define pipeline structure 
+        task0 = FormatFG.invoke(self,l) 
+        task1 = FormatGT.invoke(self,l)
+        task2 = UnifyED.invoke(self,task0)
+        task3 = AssignLabels.invoke(self,task2,task1,task0)
+        task4 = PerfEval1.invoke(self,task3,task0,l)
+        return [task0,task1,task2,task3,task4]
+    def hashProcess(self):
+        #this is just composed of the component hashes (PE1, method being run here, is accounted for in pipeline).
+        hashStrings = [None] * self.IDlength
+        for l in range(self.IDlength):
+            tasks = self.pipelineMap(l)
+            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
+                                  tasks[4].hashProcess()])
+    
+        EDpe1_JobHash = Helper.getParamHash2(' '.join(hashStrings),12)
+        return(EDpe1_JobHash)
     def outpath(self):
         if self.EDpe1_WriteToOutputs=='y':
             return self.ProjectRoot +'Outputs/' + self.EDpe1_JobName 
         elif self.EDpe1_WriteToOutputs=='n':
-            return self.ProjectRoot + 'Cache/' + self.EDpe1_JobHash
+            return self.ProjectRoot + 'Cache/' + self.hashProcess()
     def requires(self):
         for l in range(self.IDlength):
-            task1 = FormatFG.invoke(self,l) 
-            task2 = FormatGT.invoke(self,l)
-            task3 = UnifyED.invoke(self,task1)
-            task4 = AssignLabels.invoke(self,task3,task2,l)
-            task5 = PerfEval1.invoke(self,task4,l)
+            tasks = self.pipelineMap(l)
 
-            yield task5
+            yield tasks[len(tasks)-1]
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/Stats.csv.gz')
     def run(self):
@@ -912,7 +929,8 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
 
         dataframes = [None] * self.IDlength
         for k in range(self.IDlength):
-            dataframes[k] = pd.read_csv(self.ProjectRoot + 'Cache/' + self.FileGroupHashes[k] + '/' + self.EDparamsHash + '/' + self.ALparamsHash + '/' + self.PE1paramsHash + '/Stats.csv.gz',compression='gzip')
+            tasks=self.pipelineMap(k)
+            dataframes[k] = pd.read_csv(tasks[4].outpath() + '/Stats.csv.gz',compression='gzip')
         EDeval = pd.concat(dataframes,ignore_index=True)
 
         resultPath = self.outpath()
@@ -937,11 +955,11 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
         os.remove(resultPath + '/Stats_Intermediate.csv')
         
     def invoke(self):
-        return(EDperfEval(EDpe1_JobName=self.EDpe1_JobName,EDpe1_JobHash=self.EDpe1_JobHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,IDlength=self.IDlength,\
-                   GTfile=self.GTfile,FGfile=self.FGfile,FileGroupHashes=self.FileGroupHashes,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
-                   EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,ALprocess=self.ALprocess,\
-                   ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,\
-                   PE1process=self.PE1process,PE1methodID=self.PE1methodID,PE1paramsHash=self.PE1paramsHash,EDpe1_WriteToOutputs=self.EDpe1_WriteToOutputs,\
+        return(EDperfEval(EDpe1_JobName=self.EDpe1_JobName,SoundFileRootDir_Host=self.SoundFileRootDir_Host,IDlength=self.IDlength,\
+                   GTfile=self.GTfile,FGfile=self.FGfile,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
+                   EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
+                   ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,\
+                   PE1process=self.PE1process,PE1methodID=self.PE1methodID,EDpe1_WriteToOutputs=self.EDpe1_WriteToOutputs,\
                    ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
 
 #Train an RF model. See TrainModel.py for parameters
@@ -951,12 +969,9 @@ class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
     IDlength = luigi.IntParameter()
     FileGroupID = luigi.Parameter()
 
-    TM_JobName=luigi.Parameter()
-    TM_JobHash=luigi.Parameter()
-
     TMprocess = luigi.Parameter()
     TMmethodID = luigi.Parameter()
-    TMparams = luigi.Parameter()
+    TMparamString = luigi.Parameter()
 
     TMstage=luigi.Parameter()
     TM_outName=luigi.Parameter()
@@ -966,27 +981,36 @@ class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
     #nullify some inherited parameters:
     upstream_task1=None
     upstream_task2=None
+    upstream_task3=None
     uTask1path=None
     uTask2path=None
-    ALstage=None
+    uTask3path=None
 
-    #temporary for testing:
-    EDparamsHash=luigi.Parameter()
-    FEparamsHash=luigi.Parameter()
-
-
+    def pipelineMap(self,l): #here is where you define pipeline structure
+        task0 = FormatFG.invoke(self,l) 
+        task1 = FormatGT.invoke(self,l)
+        task2 = UnifyED.invoke(self,task0)
+        task3 = AssignLabels.invoke(self,task2,task1,task0)
+        task4 = UnifyFE.invoke(self,task2,task0)
+        task5 = MergeFE_AL.invoke(self,task3,task4)
+        return [task0,task1,task2,task3,task4,task5]
+    def hashProcess(self):
+        hashStrings = [None] * self.IDlength
+        for l in range(self.IDlength):
+            tasks = self.pipelineMap(l)
+            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
+                                  tasks[4].hashProcess(),tasks[5].hashProcess()])
+    
+        TM_JobHash = Helper.getParamHash2(self.TMparamString + ' ' +self.TMmethodID + ' ' + ' '.join(hashStrings),12)
+        return(TM_JobHash)
+        #Method + pipeline  hashes
     def outpath(self):
-        return self.ProjectRoot + 'Cache/' + self.TM_JobHash
+        return self.ProjectRoot + 'Cache/' + self.hashProcess()
     def requires(self):
         for l in range(self.IDlength):
-            task1 = FormatFG.invoke(self,l) 
-            task2 = FormatGT.invoke(self,l)
-            task3 = UnifyED.invoke(self,task1)
-            task4 = AssignLabels.invoke(self,task3,task2,l)
-            task5 = UnifyFE.invoke(self,task3)
-            task6 = MergeFE_AL.invoke(self,task5,task4,l)
-            
-            yield task6
+            tasks = self.pipelineMap(l)
+
+            yield tasks[len(tasks)-1]
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/' + self.TM_outName)
     def run(self):
@@ -997,14 +1021,12 @@ class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
         dataframes = [None] * self.IDlength
         FGdf = [None] * self.IDlength
         for k in range(self.IDlength):
-            #dataframes[k] = pd.read_csv(self.ProjectRoot + 'Cache/' + self.FileGroupHashes[k] + '/' + self.EDparamsHash + '/' + self.ALparamsHash + '/' + self.MFAparamsHash + '/DETwFEwAL.csv.gz')
-            #test to see if this works
-            dataframes[k] = pd.read_csv(MergeFE_AL.invoke(self,UnifyFE.invoke(self,UnifyED.invoke(self,FormatFG.invoke(self,k),k),k),\
-                                                          AssignLabels.invoke(self,UnifyED.invoke(self,FormatFG.invoke(self,k)),\
-                                                                              FormatGT.invoke(self,k),k),k).outpath()+ '/DETwFEwAL.csv.gz') # 
+            tasks = self.pipelineMap(k)
+            
+            dataframes[k] = pd.read_csv(tasks[5].outpath()+ '/DETwFEwAL.csv.gz') # 
             dataframes[k]['FGID'] = pd.Series(self.FileGroupID[k], index=dataframes[k].index)
             
-            FGdf[k] = pd.read_csv(self.ProjectRoot + 'Cache/' + self.FileGroupHashes[k] + '/FileGroupFormat.csv.gz')
+            FGdf[k] = pd.read_csv(tasks[0].outpath() + '/FileGroupFormat.csv.gz')
         TMdat = pd.concat(dataframes,ignore_index=True)
         FGdf = pd.concat(FGdf,ignore_index=True)
 
@@ -1023,20 +1045,20 @@ class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
         Paths = [TMpath,FGpath,resultPath,Mpath]
         Args = [self.TMstage,self.TMcpu]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.TMprocess,MethodID=self.TMmethodID,Paths=Paths,Args=Args,Params=self.TMparams)
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.TMprocess,MethodID=self.TMmethodID,Paths=Paths,Args=Args,Params=self.TMparamString)
 
         os.remove(resultPath + '/TM_Intermediate1.csv.gz')
         os.remove(resultPath + '/FG_Intermediate2.csv.gz')
 
         #copy params to output folder
     def invoke(self):
-        return(TrainModel(TM_JobName=self.TM_JobName,TM_JobHash=self.TM_JobHash,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                           IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupHashes=self.FileGroupHashes,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
-                           EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamsHash=self.EDparamsHash,EDparamsNames=self.EDparamsNames,ALprocess=self.ALprocess,\
-                           ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,ALparamsHash=self.ALparamsHash,\
-                           FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamsHash=self.FEparamsHash,FEparamsNames=self.FEparamsNames,\
-                           FEsplits=self.FEsplits,FEcpu=self.FEcpu,MFAprocess=self.MFAprocess,MFAmethodID=self.MFAmethodID,MFAparamsHash=self.MFAparamsHash,\
-                           TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparams=self.TMparams,\
+        return(TrainModel(SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
+                           IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
+                           EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
+                           ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,\
+                           FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamNames=self.FEparamNames,\
+                           FEsplits=self.FEsplits,FEcpu=self.FEcpu,MFAprocess=self.MFAprocess,MFAmethodID=self.MFAmethodID,\
+                           TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparamString=self.TMparamString,\
                            TMstage=self.TMstage,TM_outName=self.TM_outName,TMcpu=self.TMcpu,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
     def runJob(self):
         #not sure if this will work, but this would be dank 

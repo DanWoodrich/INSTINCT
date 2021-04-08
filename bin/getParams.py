@@ -6,16 +6,13 @@ from instinct import Helper
 #define general fxns
 ####################
 
-def getM_Param(self,param):
-    return self.Master[self.ID][param]
-
-def readP_Params(self):
+def readP_Params(ParamsRoot,methodID):
     p_ini = configparser.ConfigParser()
-    p_ini.read(self.ParamsRoot + self.methodID + '.ini')
+    p_ini.read(ParamsRoot+ methodID+ '.ini')
     return p_ini
 
-def getParamDeets(self,index):
-    pList = sorted(self.p_ini.items(self.process))
+def getParamDeets(p_ini,process,index):
+    pList = sorted(p_ini.items(process))
     paramList = getParam2(pList,index)
     return paramList
 
@@ -25,262 +22,135 @@ def getParam2(self,index):
         paramList[p] = self[p][index]
     return paramList
 
-def getParamString(self,otherInput=''):
-    string_out = str(' '.join(self.paramList) + ' ' + self.methodID + otherInput).lstrip(' ')
+def getParamString(paramList,methodID,otherInput=''):
+    string_out = str(' '.join(paramList) + ' ' + methodID + otherInput).lstrip(' ')
     return string_out 
 
+def AC(self,ID):
+    self.ACprocess = 'ApplyCutoff'
+    self.ACcutoffString = str(self.MasterINI[ID]['cutoff'])
+    return self
 
-def getParamHash(self,hLen):
-    hashval = str(hashlib.sha1(self.paramString.encode('utf8')).hexdigest())[0:hLen]
-    return hashval
+def AL(self,ID):
+    self.ALprocess = 'AssignLabels'
+    self.ALmethodID = self.MasterINI[ID]['MethodID']
 
-def hashJob(FileGroupHashes,GTHashes,otherHashes,hLen):
-    IDlength = len(FileGroupHashes)
-    strings = [None] * IDlength
-    for l in range(IDlength):
-        strings[l] = ''.join(otherHashes) + FileGroupHashes[l] + GTHashes[l]
-    strings = sorted(strings).__str__()
-    jobHash = strings.encode('utf8')
-    jobHash = str(hashlib.sha1(jobHash).hexdigest())[0:hLen]
-    return jobHash
+    p_ini = readP_Params(self.ParamsRoot,self.ALmethodID)
+    paramList = getParamDeets(p_ini,self.ALprocess,1)
+    self.ALparamString = getParamString(paramList,self.ALmethodID)
+    return self
 
-###########################
-#define process classes
-###########################
-
-
-###
-#generic class
-###
-
-class gpClass:
-    def __init__(self,Master,ID):
-        self.Master = Master
-        self.ID = ID
-
-    def getParams(self):
-        return(self)
-
-#want to abstract some of this into generic classes
-#ID and process need to stay seperate, due to how params are being read (ID signals param section in ini, process signals which routine to 
-
-####
-#slightly less generic classes
-####
-
-    #class gpC_default(gpClass):
-#    def __init__(self,Master,ID,ParamsRoot):
-#        super().__init__(Master,ID)
-#        self.methodID = getM_Param(self,'MethodID')
-#        self.ParamsRoot = ParamsRoot
-#
-#        self.p_ini = readP_Params(self)
-#        self.paramList = getParamList(self)
-#        self.paramString = getParamString(self)
-#        self.paramHash = getParamHash(self)
-
-#class FE(gpC_default):
-#    def __init__(self,Master,ID,ParamsRoot,uTaskpath):
-#        super().__init__(Master,ID,ParamsRoot)
-#        self.uTaskpath = uTaskpath
-#        self.process = 'FeatureExtraction'
-#        self.Splits = int(getM_Param(self,'Splits'))
-#        self.CPUNeed = getM_Param(self,'CPUNeed')
-
-#
-
-#class gpC_twoUpstream:
-#class gpC_noParams:
-
-    
-class AC(gpClass):
-    def __init__(self,Master,ID,uTaskpath):
-        super().__init__(Master,ID)
-        self.process = 'ApplyCutoff'
-        self.uTaskpath = uTaskpath
-
-        self.methodID = ''#placeholder to make it work 
-        self.cutoff = str(getM_Param(self,'cutoff'))
         
-        self.paramList = str(self.cutoff) #only 1 param
-        self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self,6)
-        self.paramString = ''
+def ED(self,ID):
+    self.EDprocess = 'EventDetector'
+    self.EDmethodID = self.MasterINI[ID]['MethodID']
+    self.EDsplits = int(self.MasterINI[ID]['Splits'])
+    self.EDcpu = self.MasterINI[ID]['CPUneed']
+    self.EDchunk = self.MasterINI[ID]['sf_chunk_size']
 
-class AL(gpClass):
-    def __init__(self,Master,ID,ParamsRoot,uTask1path,uTask2path,hashinc):
-        super().__init__(Master,ID)
-        self.process = 'AssignLabels'
-        self.ParamsRoot = ParamsRoot
-        self.uTask1path = uTask1path 
-        self.uTask2path = uTask2path
-        self.hashinc = hashinc
+    p_ini = readP_Params(self.ParamsRoot,self.EDmethodID)
+    paramList = getParamDeets(p_ini,self.EDprocess,1)
+    self.EDparamString = getParamString(paramList,self.EDmethodID)
 
-        self.methodID = getM_Param(self,'MethodID')
+    paramNames = getParamDeets(p_ini,self.EDprocess,0)
+    self.EDparamNames=' '.join(paramNames)#pass the dict IDs, useful for methods wrappers when need to
+    #pull out certain params at different stages
+    return self
 
-        self.p_ini = readP_Params(self)
-        self.paramList = getParamDeets(self,1)
-        self.paramString = getParamString(self,self.hashinc)
-        self.paramHash = getParamHash(self,6) #hashes the modified string
-        self.paramString = getParamString(self) #rewrites string to correct form
-        
-class ED(gpClass):
-    def __init__(self,Master,ID,ParamsRoot):
-        super().__init__(Master,ID)
-        self.process = 'EventDetector'
-        self.ParamsRoot = ParamsRoot
+def FE(self,ID):
+    self.FEprocess = 'FeatureExtraction'
+    self.FEmethodID = self.MasterINI[ID]['MethodID']
+    self.FEsplits = int(self.MasterINI[ID]['Splits'])
+    self.FEcpu = self.MasterINI[ID]['CPUneed']
+    p_ini = readP_Params(self.ParamsRoot,self.FEmethodID)
+    paramList = getParamDeets(p_ini,self.FEprocess,1)
+    self.FEparamString = getParamString(paramList,self.FEmethodID)
+    paramNames = getParamDeets(p_ini,self.FEprocess,0)
+    self.FEparamNames=' '.join(paramNames)
+    return self
 
-        self.methodID = getM_Param(self,'MethodID')
-        self.Splits = int(getM_Param(self,'Splits'))
-        self.CPUNeed = getM_Param(self,'CPUNeed')
-        self.sf_chunk_size = getM_Param(self,'sf_chunk_size')
+def FG(self,ID):
+    self.FGprocess = 'FormatFG'
+    FileGroupID = self.MasterINI[ID]['FileGroupID']
+    self.SoundFileRootDir_Host = self.MasterINI[ID]['SoundFileRootDir_Host']
+    self.FileGroupID = sorted(FileGroupID.split(','))
+    self.IDlength = len(self.FileGroupID)
+    self.FGfile = [None] * self.IDlength
+    for l in range(self.IDlength):
+        self.FGfile[l] = self.ProjectRoot +'Data/' + 'FileGroups/' + self.FileGroupID[l]
+    return self
 
-        self.p_ini = readP_Params(self)
-        self.paramList = getParamDeets(self,1)
-        self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self,6)
-        
-        self.paramNames = getParamDeets(self,0)
-        self.paramNames=' '.join(self.paramNames)#pass the dict IDs, useful for methods wrappers when need to
-        #pull out certain params at different stages
+def GT(self,ID):
 
-class FE(gpClass):
-    def __init__(self,Master,ID,ParamsRoot,uTaskpath):
-        super().__init__(Master,ID)
-        self.process = 'FeatureExtraction'
-        self.ParamsRoot = ParamsRoot
-        self.uTaskpath = uTaskpath
+    self.GTprocess = 'FormatGT'
+    self.GT_signal_code = self.MasterINI[ID]['GT_signal_code']
+    self.GTfile = [None] * self.IDlength
 
-        self.methodID = getM_Param(self,'MethodID')
-        self.Splits = int(getM_Param(self,'Splits'))
-        self.CPUNeed = getM_Param(self,'CPUNeed')
-
-        self.p_ini = readP_Params(self)
-        self.paramList = getParamDeets(self,1)
-        self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self,6)
-
-        self.paramNames = getParamDeets(self,0)
-        self.paramNames=' '.join(self.paramNames)
-
-class FG(gpClass):
-    def __init__(self,Master,ID,ProjectRoot):
-        super().__init__(Master,ID)
-        self.process = 'FormatFG'
-        self.ProjectRoot = ProjectRoot 
-
-        self.FileGroupID = getM_Param(self,'FileGroupID')
-        self.SoundFileRootDir_Host = getM_Param(self,'SoundFileRootDir_Host')
-        self.FileGroupID = sorted(self.FileGroupID.split(','))
-        self.IDlength = len(self.FileGroupID)
-        self.FGfile = [None] * self.IDlength
-        self.FileGroupHashes = [None] * self.IDlength
-
-        for l in range(self.IDlength):
-            self.FGfile[l] = self.ProjectRoot +'Data/' + 'FileGroups/' + self.FileGroupID[l]
-            self.FileGroupHashes[l] = Helper.hashfile(self.FGfile[l],12)
-    
-class GT(gpClass):
-    def __init__(self,Master,ID,ProjectRoot,FileGroupID):
-        super().__init__(Master,ID)
-        self.process = 'FormatGT'
-        self.ProjectRoot = ProjectRoot
-        self.FileGroupID = FileGroupID
-
-        self.GT_signal_code = getM_Param(self,'GT_signal_code')
-        self.methodID ='' #placeholder to make it work 
-        self.p_ini = self.Master
-        self.paramList = getParamDeets(self,1)
-        self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self,6)
-        IDlength = len(self.FileGroupID)
-        
-        self.GTfile = [None] * IDlength
-        self.GTHashes = [None] * IDlength
-
-        for l in range(IDlength):
-            self.GTfile[l] = self.ProjectRoot +'Data/' + 'GroundTruth/' + self.GT_signal_code + '_' +self.FileGroupID[l]
-            self.GTHashes[l] = Helper.hashfile(self.GTfile[l],12)
-
-class MFA(gpClass):
-    def __init__(self,Master,ID,uTask1path,uTask2path,hashinc):
-        super().__init__(Master,ID)
-        self.process = 'MergeFE_AL'
-        self.uTask1path = uTask1path 
-        self.uTask2path = uTask2path 
-        self.hashinc = hashinc
-
-        self.methodID = getM_Param(self,'MethodID')
-
-        self.paramList= '' 
-        self.paramString = getParamString(self,self.hashinc)
-        self.paramHash = getParamHash(self,6)
-        self.paramString = ''
-
-class TM(gpClass):
-    def __init__(self,Master,ID,ParamsRoot,stage):
-        super().__init__(Master,ID)
-        self.process = 'TrainModel'
-        self.ParamsRoot = ParamsRoot
-        self.stage = stage
-        if self.stage == 'CV':
-            self.outName = 'DETwProbs.csv.gz'
-        elif self.stage == 'train':
-            self.outName = 'RFmodel.rds'
-
-        self.methodID = getM_Param(self,'MethodID')
-        self.CPUNeed = getM_Param(self,'CPUNeed')
-        
-        self.p_ini = readP_Params(self)
-        if(self.stage=='CV'):
-            self.paramList = sorted(self.p_ini.items(self.process)+ self.p_ini.items(self.stage))
-        else:
-            self.paramList = sorted(self.p_ini.items(self.process)+ [('cv_it', '1'), ('cv_split', '1')])
-        self.paramList = getParam2(self.paramList,1) #reformat as usual
-        self.paramString = getParamString(self)
-        self.paramHash = getParamHash(self,6)
-
-class PE1(gpClass):
-    def __init__(self,Master,ID,uTaskpath):
-        super().__init__(Master,ID)
-        self.process = 'PerfEval1'
-        self.uTaskpath = uTaskpath
-
-        self.methodID = getM_Param(self,'MethodID')
-        self.paramList = '' #no params
-        self.paramString = getParamString(self) #just hashes methodID
-        self.paramHash = getParamHash(self,6)
-        self.paramString = ''
+    for l in range(self.IDlength):
+        self.GTfile[l] = self.ProjectRoot +'Data/' + 'GroundTruth/' + self.GT_signal_code + '_' +self.FileGroupID[l]
+    return self
 
 
+def MFA(self,ID):
+    self.MFAprocess = 'MergeFE_AL'
+    self.MFAmethodID = self.MasterINI[ID]['MethodID']
+    paramList= ''
+    self.MFAparamString = getParamString(paramList,self.MFAmethodID)
+    return self
 
-class PE2(gpClass):
-    def __init__(self,Master,ID,rootpath,uTask1path,uTask2path,hashinc):
-        super().__init__(Master,ID)
-        self.process = 'PerfEval2'
-        self.rp = rootpath
-        self.uTask1path = uTask1path 
-        self.uTask2path = uTask2path 
-        self.hashinc = hashinc
-        
-        self.methodID = getM_Param(self,'MethodID')
+def TM(self,ID,stage):
+    self.TMprocess = 'TrainModel'
+    self.TMstage = stage
+    if self.TMstage == 'CV':
+        self.TM_outName = 'DETwProbs.csv.gz'
+    elif self.TMstage == 'train':
+        self.TM_outName = 'RFmodel.rds'
 
-        self.paramList = '' #no params
-        self.paramString = getParamString(self,self.hashinc)
-        self.paramHash = getParamHash(self,6) 
-        self.paramString = ''
+    self.TMmethodID = self.MasterINI[ID]['MethodID']
+    self.TMcpu = self.MasterINI[ID]['CPUneed']
 
+    p_ini = readP_Params(self.ParamsRoot,self.TMmethodID)
+    if(self.TMstage=='CV'):
+        paramList = sorted(p_ini.items(self.TMprocess)+ p_ini.items(self.TMstage))
+    else:
+        paramList = sorted(p_ini.items(self.TMprocess)+ [('cv_it', '1'), ('cv_split', '1')])
+    paramList = getParam2(paramList,1) #reformat as usual
+    self.TMparamString = getParamString(paramList,self.TMmethodID)
+    return self
 
-class PR(gpClass):
-    def __init__(self,Master,ID):
-        super().__init__(Master,ID)
-        self.process = 'PerformanceReport'
+def PE1(self,ID):
+    self.PE1process = 'PerfEval1'
+    self.PE1methodID = self.MasterINI[ID]['MethodID']
+    paramList = '' #no params
+    self.paramString = getParamString(paramList,self.PE1methodID) #just hashes methodID
+    return self
 
-        self.methodID = getM_Param(self,'MethodID')
-        self.paramList = '' #no params
-        self.paramString = getParamString(self) #just hashes methodID
-        self.paramHash = getParamHash(self,6)
-        self.paramString = ''
+def PE2(self,ID):
+    self.PE2process = 'PerfEval2'
+    self.PE2methodID = self.MasterINI[ID]['MethodID']
+    paramList = ''  # no params
+    self.paramString = getParamString(paramList, self.PE2methodID)
+    return self
+
+def PR(self,ID):
+    self.PRprocess = 'PerformanceReport'
+    self.PRmethodID = self.MasterINI[ID]['MethodID']
+    paramList = ''  # no params
+    paramString = getParamString(paramList, self.PRmethodID)  # just hashes methodID
+    self.PRparamString = ''
+    return self
+
+class MPE_Job:
+    def __init__(self,Name):
+        self.ProjectRoot=Helper.getProjRoot()
+        self.MPE_JobName = Name
+        self.ParamsRoot=self.ProjectRoot + 'etc/' + self.MPE_JobName + '/'
+        MasterINI = configparser.ConfigParser()
+        MasterINI.read(self.ParamsRoot + 'Master.ini')
+        self.MasterINI = MasterINI
+        self.system=self.MasterINI['Global']['system']
+        self.r_version=self.MasterINI['Global']['r_version']
+        self.MPE_WriteToOutputs = 'y'
 
 
 ######################

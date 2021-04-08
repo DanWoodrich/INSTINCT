@@ -6,6 +6,7 @@
 .RDataTmp
 .Rhistory
 .Rprofile
+.idea
 
 Data/SoundFiles/
 Out/
