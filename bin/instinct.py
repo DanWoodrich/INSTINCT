@@ -796,8 +796,8 @@ class ApplyModel(INSTINCT_Rmethod_Task):
     uTask2path = luigi.Parameter() #model path
     uTask3path = luigi.Parameter() #model path
     
-    APMprocessID = luigi.Parameter()
-    APMmethodID = luigi.Parameter()
+    TMprocess = luigi.Parameter()
+    TMmethodID = luigi.Parameter()
 
     def hashProcess(self):
         TM_hash = self.upstream_task2.hashProcess() #steals previous TM hash 
@@ -823,11 +823,12 @@ class ApplyModel(INSTINCT_Rmethod_Task):
         Paths = [DETpath,FGpath,resultPath,Mpath]
         Args = ['apply']
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.APMprocessID,MethodID=self.APMmethodID,Paths=Paths,Args=Args,Params='')
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.TMprocess,MethodID=self.TMmethodID,Paths=Paths,Args=Args,Params='')
         
-    def invoke(self,upstream1,upstream2):
-        return(ApplyModel(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,uTask2path=upstream2.outpath(),upstream_task3=upstream3,uTask3path=upstream3.outpath(),\
-                          APMprocessID=obj.APMprocessID,APMmethodID=obj.APMmethodID,ProjectRoot=obj.ProjectRoot))
+    def invoke(self,upstream1,upstream2,upstream3):
+        return(ApplyModel(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,uTask2path=upstream2.outpath(),\
+                          upstream_task3=upstream3,uTask3path=upstream3.outpath(),TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,\
+                          system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
 
 ####################################################################################
 #Split data with probs and labels back into FG components (used for perf eval 2) 
@@ -865,6 +866,7 @@ class SplitForPE(INSTINCT_Task):
         DwPsubset.to_csv(self.outpath() + '/DETwProbs.csv.gz',index=False,compression='gzip')
         #this is kind of a weird one. Might not be very modular to other applications as is. 
     def invoke(obj,upstream1,upstream2,n='default'):
+        
         FileGroupID = Helper.tplExtract(obj.FileGroupID,n=n)
         return(SplitForPE(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,FileGroupID=FileGroupID,\
                           ProjectRoot=obj.ProjectRoot))

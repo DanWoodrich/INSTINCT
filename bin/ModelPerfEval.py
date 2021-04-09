@@ -15,7 +15,7 @@ from getParams import *
 #home/daniel.woodrich/Projects/instinct_dt/
 #C:/Apps/instinct_dt
 
-MPE_params = MPE_Job('ModelPerfEval')
+MPE_params = MPE('ModelPerfEval')
 
 #add to MPE
 
@@ -53,7 +53,7 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
         task1 = TrainModel.invoke(self)
         task2 = PerfEval2.invoke(self,task1,task0,"All")
         task3 = FormatFG.invoke(self,l)#redundant but lets SFPE,AL,PE1 continue their path
-        task4 = SplitForPE.invoke(self,task3,task1,l) 
+        task4 = SplitForPE.invoke(self,task3,task1,l)
         task5 = PerfEval2.invoke(self,task4,task0,"FG")
         task6 = ApplyCutoff.invoke(self,task4)
         task7 = FormatGT.invoke(self,l)

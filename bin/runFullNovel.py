@@ -12,127 +12,95 @@ from getParams import *
 
 #Run a model on data that does not need to have labels. 
 
-ProjectRoot=Helper.getProjRoot()
+RFN_params = RFN('runFullNovel')
 
-#####parse config for parameters#######
-
-RFN_JobName='runFullNovel'
-    
-ParamsRoot=ProjectRoot + 'etc/' + RFN_JobName + '/'
-
-MasterINI = configparser.ConfigParser()
-MasterINI.read(ParamsRoot + 'Master.ini')
-
-system=MasterINI['Global']['system']
-r_version=MasterINI['Global']['r_version']
-
-FGparams = FG(MasterINI,'FormatFG',ProjectRoot).getParams()
-GTparams = GT(MasterINI,'FormatGT',ProjectRoot,FGparams.FileGroupID).getParams()
-
-EDparams = ED(MasterINI,'EventDetector',ParamsRoot).getParams()
-
-FEparams = FE(MasterINI,'FeatureExtraction',ParamsRoot,EDparams.paramHash).getParams()
-
-ALparams = AL(MasterINI,'AssignLabels',ParamsRoot,EDparams.paramHash,GTparams.paramHash,GTparams.paramHash).getParams()
-
-MFAparams = MFA(MasterINI,'MergeFE_AL',str(FEparams.uTaskpath + '/' + FEparams.paramHash),str(ALparams.uTask1path + '/' + ALparams.paramHash),FEparams.paramHash).getParams()
-
-TMparams = TM(MasterINI,'TrainModel',ParamsRoot,'train').getParams()
-
-TM_processes = [ALparams.paramHash,EDparams.paramHash,FEparams.paramHash,MFAparams.paramHash,TMparams.paramHash] #alphabetical order
-
-TM_JobName='TrainModel'
-TM_JobHash = hashJob(FGparams.FileGroupHashes,GTparams.GTHashes,TM_processes)
+RFN_params = FG(RFN_params,'FormatFG')
+RFN_params = GT(RFN_params,'FormatGT')
+RFN_params = ED(RFN_params,'EventDetector')
+RFN_params = FE(RFN_params,'FeatureExtraction')
+RFN_params = AL(RFN_params,'AssignLabels')
+RFN_params = MFA(RFN_params,'MergeFE_AL')
+RFN_params = TM(RFN_params,'TrainModel','train')
+RFN_params = AC(RFN_params,'ApplyCutoff')
 
 #novel data params
 
 #FG for novel data
-n_FGparams = FG(MasterINI,'FormatFGapply',ProjectRoot).getParams()
+n_RFN_params = RFN('runFullNovel')
+n_FGparams = FG(n_RFN_params,'FormatFGapply')
 
 #if other args are present, load it in as FGID instead of what is on params.
 #note that this is copy pasted from getParams, and is kind of hacky. Potential for conflicts if I'm still using this and change FG()
 if len(sys.argv)>1:
     n_FGparams.FileGroupID=sys.argv[1]
-    n_FGparams.SoundFileRootDir_Host = getM_Param(n_FGparams,'SoundFileRootDir_Host')
     n_FGparams.FileGroupID = sorted(n_FGparams.FileGroupID.split(','))
     n_FGparams.IDlength = len(n_FGparams.FileGroupID)
     n_FGparams.FGfile = [None] * n_FGparams.IDlength
-    n_FGparams.FileGroupHashes = [None] * n_FGparams.IDlength
 
     for l in range(n_FGparams.IDlength):
         n_FGparams.FGfile[l] = n_FGparams.ProjectRoot +'Data/' + 'FileGroups/' + n_FGparams.FileGroupID[l]
-        n_FGparams.FileGroupHashes[l] = Helper.hashfile(n_FGparams.FGfile[l])
 
-n_EDparams = ED(MasterINI,'n_EventDetector',ParamsRoot).getParams()
-n_FEparams = ED(MasterINI,'n_EventDetector',ParamsRoot).getParams()
+#only retain these ones. 
+RFN_params.n_FileGroupID = n_FGparams.FileGroupID
+RFN_params.n_FGfile = n_FGparams.FGfile
+RFN_params.n_IDlength = n_FGparams.IDlength
 
-#apply model
-
-APM_Filename = "DETwFeatures.csv.gz"
-
-#apply cutoff
-
-ACparams = AC(MasterINI,'ApplyCutoff',str(APMuTask1path + '/' + TM_JobHash)).getParams() 
-
-#hash the full job
-JobHash="placeholder for now" 
+#don't think I need this, at least not right now? 
+#n_EDparams = ED(MasterINI,'n_EventDetector',ParamsRoot).getParams()
+#n_FEparams = ED(MasterINI,'n_EventDetector',ParamsRoot).getParams()
 
 class runFullNovel(TrainModel,ApplyModel,ApplyCutoff):
 
     RFN_JobName=luigi.Parameter()
-    RFN_JobHash=luigi.Parameter()
-    
-    #run full params:
-    
     n_FGfile = luigi.Parameter()
     n_FileGroupID = luigi.Parameter()
-    n_FileGroupHashes = luigi.Parameter()
-    n_SoundFileRootDir_Host= luigi.Parameter()
     n_IDlength= luigi.IntParameter()
 
-    n_EDsplits= luigi.IntParameter()
-    n_EDcpu= luigi.Parameter()
-    n_EDchunk= luigi.Parameter()
+    #nullify some inherited parameters:
+    PE2datType=None
+    TM_JobName=None
 
-    n_FEsplits= luigi.IntParameter()
-    n_FEcpu= luigi.Parameter()
+    def pipelineMap(self,l):
+            task0 = TrainModel.invoke(self)
+            task1 = FormatFG(FGfile = self.n_FGfile[l],ProjectRoot=self.ProjectRoot) #long form here: do I need return
+            task2 = UnifyED.invoke(self,task1)
+            task3 = UnifyFE.invoke(self,task2,task1)
+            task4 = ApplyModel.invoke(self,task3,task0,task1)
+            task5 = ApplyCutoff.invoke(self,task4)
 
-    def requires(self):
-        task1 = TrainModel.invoke(self)
+            return [task0,task1,task2,task3,task4,task5]
+    def hashProcess(self):
+        hashStrings = [None] * self.n_IDlength
         for l in range(self.n_IDlength):
-            task2 = FormatFG(FGfile = self.n_FGfile[l],FGhash = self.n_FileGroupHashes[l],ProjectRoot=self.ProjectRoot)
-            task3 = UnifyED(upstream_task1 = task2,splits = self.n_EDsplits,FGhash=self.n_FileGroupHashes[l],SoundFileRootDir_Host=self.n_SoundFileRootDir_Host,\
-                            EDparamsHash=self.EDparamsHash,Params=self.EDparamString,MethodID=self.EDmethodID,ProcessID=self.EDprocess,CPU=self.n_EDcpu,\
-                            Chunk=self.n_EDchunk,system=self.system,r_version=self.r_version,ProjectRoot=self.ProjectRoot)
-            task4 = UnifyFE(upstream_task1 = task3,FGhash=self.n_FileGroupHashes[l],uTask1path=self.FEuTaskpath,FEparamsHash=self.FEparamsHash,MethodID=self.FEmethodID,\
-                            ProcessID=self.FEprocess,Params=self.FEparamString,splits=self.n_FEsplits,CPU=self.n_FEcpu,SoundFileRootDir_Host=self.n_SoundFileRootDir_Host,r_version=self.r_version,\
-                            ProjectRoot=self.ProjectRoot,system=self.system)
-            task5 = ApplyModel(upstream_task1=task4,upstream_task2=task1,uTask1path=upstream_task1.outpath(),uTask2path=pstream_task2.outpath(),APM_Filename=self.APM_Filename,\
-                               FGhash=self.n_FileGroupHashes[l],ProcessID=self.TMprocess,MethodID=self.TMmethodID,system=self.system,r_version=self.r_version,ProjectRoot=self.ProjectRoot)
-            task6 = ApplyCutoff(upstream_task=task5,uTaskpath=self.ACuTaskpath,FGhash=self.n_FileGroupHashes[l],CutoffHash=self.ACcutoffHash,Cutoff=self.ACcutoff,ProjectRoot=self.ProjectRoot)
-            yield task6
-
+            tasks = self.pipelineMap(l)
+            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
+                                       tasks[4].hashProcess(),tasks[5].hashProcess()]) #maybe a more general way to do this? 
+    
+        RNF_JobHash = Helper.getParamHash2(self.PRmethodID + ' ' + ' '.join(hashStrings),12)
+        return(RNF_JobHash)
+    def requires(self):
+        for l in range(self.n_IDlength):
+            tasks = self.pipelineMap(l)
+            yield tasks[5] 
     def output(self):
         return None
     def run(self):
 
         return None
+    def invoke(obj):
+        return(runFullNovel(RFN_JobName=obj.RFN_JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
+                            IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,\
+                            GTfile=obj.GTfile,EDprocess=obj.EDprocess,EDsplits=obj.EDsplits,EDcpu=obj.EDcpu,\
+                            EDchunk=obj.EDchunk,EDmethodID=obj.EDmethodID,EDparamString=obj.EDparamString,\
+                            EDparamNames=obj.EDparamNames,ALprocess=obj.ALprocess,ALmethodID=obj.ALmethodID,\
+                            ALparamString=obj.ALparamString,FEprocess=obj.FEprocess,FEmethodID=obj.FEmethodID,\
+                            FEparamString=obj.FEparamString,FEparamNames=obj.FEparamNames,FEsplits=obj.FEsplits,\
+                            FEcpu=obj.FEcpu,MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,\
+                            TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
+                            TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_FileGroupID=obj.n_FileGroupID,\
+                            n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,system=obj.system,r_version=obj.r_version))
 
 
 if __name__ == '__main__':
-    luigi.build([runFullNovel(JobName=JobName,JobHash=JobHash,ProjectRoot=ProjectRoot,SoundFileRootDir_Host=FGparams.SoundFileRootDir_Host,\
-                              IDlength=FGparams.IDlength,FGfile=FGparams.FGfile,FileGroupHashes=FGparams.FileGroupHashes,FileGroupID=FGparams.FileGroupID,\
-                              GTfile=GTparams.GTfile,GTparamsHash=GTparams.paramHash,EDprocess=EDparams.process,\
-                              EDsplits=EDparams.Splits,EDcpu=EDparams.CPUNeed,EDchunk=EDparams.sf_chunk_size,EDmethodID=EDparams.methodID,\
-                              EDparamString=EDparams.paramString,EDparamsHash=EDparams.paramHash,EDparamsNames=EDparams.paramNames,ALprocess=ALparams.process,ALmethodID=ALparams.methodID,\
-                              ALparamString=ALparams.paramString,ALparamsHash=ALparams.paramHash,ALuTask1path=ALparams.uTask1path,ALuTask2path=ALparams.uTask2path,\
-                              FEprocess=FEparams.process,FEmethodID=FEparams.methodID,FEparamString=FEparams.paramString,FEparamsHash=FEparams.paramHash,FEparamsNames=FEparams.paramNames\
-                              FEuTaskpath=FEparams.uTaskpath,FEsplits=FEparams.Splits,FEcpu=FEparams.CPUNeed,MFAprocess=MFAparams.process,\
-                              MFAmethodID=MFAparams.methodID,MFAparamsHash=MFAparams.paramHash,MFAuTask1path=MFAparams.uTask1path,MFAuTask2path=MFAparams.uTask2path,\
-                              TM_JobName=TM_JobName,TM_JobHash=TM_JobHash,TMprocess=TMparams.process,TMmethodID=TMparams.methodID,TMparams=TMparams.paramString,\
-                              TMstage=TMparams.stage,TM_outName=TMparams.outName,CVcpu=TMparams.CPUNeed,APM_Filename=APM_Filename,APMuTask1path=APMuTask1path,\
-                              ACcutoff=ACparams.cutoff,ACcutoffHash=ACparams.paramHash,ACuTaskpath=ACparams.uTaskpath,n_SoundFileRootDir_Host=n_FGparams.SoundFileRootDir_Host,\
-                              n_FileGroupID=n_FGparams.FileGroupID,n_IDlength=n_FGparams.IDlength,n_FileGroupHashes=n_FGparams.FileGroupHashes,n_FGfile=n_FGparams.FGfile,\
-                              n_EDsplits=n_EDparams.Splits,n_EDcpu=n_EDparams.CPUNeed,n_EDchunk=n_EDparams.sf_chunk_size,n_FEsplits=n_FEparams.Splits,n_FEcpu=n_FEparams.CPUNeed,\
-                              system=system,r_version=r_version,ParamsRoot=ParamsRoot)], local_scheduler=True)
+    luigi.build([runFullNovel.invoke(RFN_params)], local_scheduler=True)
 

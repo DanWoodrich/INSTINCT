@@ -7,7 +7,8 @@ labels= 'n'
 
 probs='y'
 
-Detspath="//akc0ss-n086/NMML_CAEP_Acoustics/Detector/INSTINCT/"
+#Detspath="//akc0ss-n086/NMML_CAEP_Acoustics/Detector/INSTINCT/"
+Despath="C:/Apps/INSTINCT/Cache/f28645a919d2/a04a78/e98d47/bd3f6da3a035/f8ef92"
 DetsName="DETwProbs"
 
 #load in FG.csv

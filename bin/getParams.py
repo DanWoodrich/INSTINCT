@@ -40,7 +40,7 @@ def AL(self,ID):
     self.ALparamString = getParamString(paramList,self.ALmethodID)
     return self
 
-        
+
 def ED(self,ID):
     self.EDprocess = 'EventDetector'
     self.EDmethodID = self.MasterINI[ID]['MethodID']
@@ -140,7 +140,7 @@ def PR(self,ID):
     self.PRparamString = ''
     return self
 
-class MPE_Job:
+class MPE:
     def __init__(self,Name):
         self.ProjectRoot=Helper.getProjRoot()
         self.MPE_JobName = Name
@@ -151,6 +151,18 @@ class MPE_Job:
         self.system=self.MasterINI['Global']['system']
         self.r_version=self.MasterINI['Global']['r_version']
         self.MPE_WriteToOutputs = 'y'
+
+class RFN:
+    def __init__(self,Name):
+        self.ProjectRoot=Helper.getProjRoot()
+        self.RFN_JobName = Name
+        self.ParamsRoot=self.ProjectRoot + 'etc/' + self.RFN_JobName + '/'
+        MasterINI = configparser.ConfigParser()
+        MasterINI.read(self.ParamsRoot + 'Master.ini')
+        self.MasterINI = MasterINI
+        self.system=self.MasterINI['Global']['system']
+        self.r_version=self.MasterINI['Global']['r_version']
+        #self.RNF_WriteToOutputs = 'y' not doing this right now 
 
 
 ######################
