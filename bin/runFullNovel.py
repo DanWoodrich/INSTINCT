@@ -69,15 +69,6 @@ class runFullNovel(TrainModel,ApplyModel,ApplyCutoff):
             task5 = ApplyCutoff.invoke(self,task4)
 
             return [task0,task1,task2,task3,task4,task5]
-    def hashProcess(self):
-        hashStrings = [None] * self.n_IDlength
-        for l in range(self.n_IDlength):
-            tasks = self.pipelineMap(l)
-            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
-                                       tasks[4].hashProcess(),tasks[5].hashProcess()]) #maybe a more general way to do this? 
-    
-        RNF_JobHash = Helper.getParamHash2(self.PRmethodID + ' ' + ' '.join(hashStrings),12)
-        return(RNF_JobHash)
     def requires(self):
         for l in range(self.n_IDlength):
             tasks = self.pipelineMap(l)

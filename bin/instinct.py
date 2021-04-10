@@ -192,27 +192,28 @@ class FormatFG(INSTINCT_Task):
         FGfile = Helper.tplExtract(obj.FGfile,n=n)
         return(FormatFG(FGfile = FGfile,ProjectRoot=obj.ProjectRoot))
 
-class FormatGT(FormatFG):
+class FormatGT(INSTINCT_Task):
     
     GTfile = luigi.Parameter()
+    upstream_task1 = luigi.Parameter()
+    uTask1path=luigi.Parameter()
 
     def hashProcess(self):
         hashLength = 6
         return Helper.hashfile(self.GTfile,hashLength)
     def outpath(self):
-        return FormatFG.invoke(self).outpath() + '/' + self.hashProcess()
+        return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
-        return FormatFG.invoke(self)
+        return self.upstream_task1
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/GTFormat.csv.gz')
     def run(self):
         os.mkdir(self.outpath())
         GT = pd.read_csv(self.GTfile)
         GT.to_csv(self.outpath() + '/GTFormat.csv.gz',index=False,compression='gzip')
-    def invoke(obj,n='default'):
+    def invoke(obj,upstream1,n='default'):
         GTfile = Helper.tplExtract(obj.GTfile,n=n)
-        FGfile = Helper.tplExtract(obj.FGfile,n=n)
-        return(FormatGT(GTfile=GTfile,FGfile = FGfile,ProjectRoot=obj.ProjectRoot))  
+        return(FormatGT(upstream_task1=upstream1,uTask1path=upstream1.outpath(),GTfile=GTfile,ProjectRoot=obj.ProjectRoot)) 
         
 ###############################################################################
 #Defined event detection with abilty to split into chunks w/o affecting outputs
@@ -881,7 +882,7 @@ class SplitForPE(INSTINCT_Task):
 
 #Performance evalation for a group of event detectors (see EDperfeval.py for example of how to populate params)
 
-class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
+class EDperfEval(FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1):
     
     EDpe1_JobName=luigi.Parameter()
     EDpe1_WriteToOutputs=luigi.Parameter()
@@ -898,7 +899,7 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
 
     def pipelineMap(self,l): #here is where you define pipeline structure 
         task0 = FormatFG.invoke(self,l) 
-        task1 = FormatGT.invoke(self,l)
+        task1 = FormatGT.invoke(self,task0,l)
         task2 = UnifyED.invoke(self,task0)
         task3 = AssignLabels.invoke(self,task2,task1,task0)
         task4 = PerfEval1.invoke(self,task3,task0,l)
@@ -966,7 +967,7 @@ class EDperfEval(FormatGT,UnifyED,AssignLabels,PerfEval1):
 
 #Train an RF model. See TrainModel.py for parameters
 
-class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
+class TrainModel(FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
 
     IDlength = luigi.IntParameter()
     FileGroupID = luigi.Parameter()
@@ -990,7 +991,7 @@ class TrainModel(FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
 
     def pipelineMap(self,l): #here is where you define pipeline structure
         task0 = FormatFG.invoke(self,l) 
-        task1 = FormatGT.invoke(self,l)
+        task1 = FormatGT.invoke(self,task0,l)
         task2 = UnifyED.invoke(self,task0)
         task3 = AssignLabels.invoke(self,task2,task1,task0)
         task4 = UnifyFE.invoke(self,task2,task0)

@@ -74,6 +74,7 @@ def FG(self,ID):
     FileGroupID = self.MasterINI[ID]['FileGroupID']
     self.SoundFileRootDir_Host = self.MasterINI[ID]['SoundFileRootDir_Host']
     self.FileGroupID = sorted(FileGroupID.split(','))
+    
     self.IDlength = len(self.FileGroupID)
     self.FGfile = [None] * self.IDlength
     for l in range(self.IDlength):
@@ -162,9 +163,18 @@ class RFN:
         self.MasterINI = MasterINI
         self.system=self.MasterINI['Global']['system']
         self.r_version=self.MasterINI['Global']['r_version']
+
+class TT:
+    def __init__(self,Name):
+        self.ProjectRoot=Helper.getProjRoot()
+        self.TT_JobName = Name
+        self.ParamsRoot=self.ProjectRoot + 'etc/' + self.TT_JobName + '/'
+        MasterINI = configparser.ConfigParser()
+        MasterINI.read(self.ParamsRoot + 'Master.ini')
+        self.MasterINI = MasterINI
+        self.system=self.MasterINI['Global']['system']
+        self.r_version=self.MasterINI['Global']['r_version']
         #self.RNF_WriteToOutputs = 'y' not doing this right now 
-
-
 ######################
 #define job classes
 ######################

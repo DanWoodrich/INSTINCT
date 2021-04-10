@@ -56,7 +56,7 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
         task4 = SplitForPE.invoke(self,task3,task1,l)
         task5 = PerfEval2.invoke(self,task4,task0,"FG")
         task6 = ApplyCutoff.invoke(self,task4)
-        task7 = FormatGT.invoke(self,l)
+        task7 = FormatGT.invoke(self,task3,l)
         task8 = AssignLabels.invoke(self,task6,task7,task3)
         task9 = PerfEval1.invoke(self,task8,task3,n=l)
 
