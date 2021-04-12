@@ -13,8 +13,8 @@ DETwFEpath <- args[1]
 DETwALpath <- args[2]
 resultPath <- args[3]
 
-DETwFE<- read.csv(paste(DETwFEpath,'DETwFeatures.csv.gz',sep=""))
-DETwAL<- read.csv(paste(DETwALpath,'DETwLabels.csv.gz',sep=""))
+DETwFE<- read.csv(paste(DETwFEpath,'DETx.csv.gz',sep=""))
+DETwAL<- read.csv(paste(DETwALpath,'DETx.csv.gz',sep=""))
 #merge the files. Only keep the labels. 
 
 DETwFE$SignalCode<-'out'
@@ -24,7 +24,7 @@ samecols<-c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile","Si
 CombData<-merge(DETwFE,DETwAL,by=samecols,all.x=TRUE)
 
 CombData$SignalCode<-NULL
-outName<-'DETwFEwAL.csv.gz'
+outName<-'DETx.csv.gz'
 
 write.csv(CombData,gzfile(paste(resultPath,outName,sep="/")),row.names = FALSE)
 

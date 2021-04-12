@@ -82,12 +82,8 @@ ntree<-as.integer(args[12])
 #Here, make sure we are reading the right file. Doesn't care what
 #luigi is really pointing to. Two name options currently, this 
 #works the same on both. DETwFeatures.csv.gz & DETwFEwAL.csv.gz
-if(file.exists(dataPath)){
-  data<-read.csv(dataPath)
-}else{
-  dProot<-dirname(dataPath)
-  dataPath<-paste(dProot,"DETwFEwAL.csv.gz",sep="/")
-}
+data<-read.csv(dataPath)
+
 
 
 
@@ -239,7 +235,7 @@ dataOut<-data[colnames(data) %in% c("StartTime","EndTime","LowFreq","HighFreq","
 
 dataOut$probs<-probs
   
-outName="DETwProbs.csv.gz"
+outName="DETx.csv.gz"
   
 write.csv(dataOut,gzfile(paste(resultPath,outName,sep="/")),row.names = FALSE)
   

@@ -141,49 +141,16 @@ def PR(self,ID):
     self.PRparamString = ''
     return self
 
-class MPE:
+class Load_Job:
     def __init__(self,Name):
         self.ProjectRoot=Helper.getProjRoot()
-        self.MPE_JobName = Name
-        self.ParamsRoot=self.ProjectRoot + 'etc/' + self.MPE_JobName + '/'
+        self.JobName = Name
+        self.ParamsRoot=self.ProjectRoot + 'etc/' + self.JobName + '/'
         MasterINI = configparser.ConfigParser()
         MasterINI.read(self.ParamsRoot + 'Master.ini')
         self.MasterINI = MasterINI
         self.system=self.MasterINI['Global']['system']
         self.r_version=self.MasterINI['Global']['r_version']
-        self.MPE_WriteToOutputs = 'y'
-
-class RFN:
-    def __init__(self,Name):
-        self.ProjectRoot=Helper.getProjRoot()
-        self.RFN_JobName = Name
-        self.ParamsRoot=self.ProjectRoot + 'etc/' + self.RFN_JobName + '/'
-        MasterINI = configparser.ConfigParser()
-        MasterINI.read(self.ParamsRoot + 'Master.ini')
-        self.MasterINI = MasterINI
-        self.system=self.MasterINI['Global']['system']
-        self.r_version=self.MasterINI['Global']['r_version']
-
-class TT:
-    def __init__(self,Name):
-        self.ProjectRoot=Helper.getProjRoot()
-        self.TT_JobName = Name
-        self.ParamsRoot=self.ProjectRoot + 'etc/' + self.TT_JobName + '/'
-        MasterINI = configparser.ConfigParser()
-        MasterINI.read(self.ParamsRoot + 'Master.ini')
-        self.MasterINI = MasterINI
-        self.system=self.MasterINI['Global']['system']
-        self.r_version=self.MasterINI['Global']['r_version']
-        #self.RNF_WriteToOutputs = 'y' not doing this right now 
-######################
-#define job classes
-######################
-
-#do EDpe1 vars
-
-#TM params
-
-
 
 
 

@@ -9,7 +9,7 @@ resultPath <- args[5]
 
 splitNum<-args[6] 
 
-ReadFile2<-paste('DETsplitForFE',splitNum,'.csv.gz',sep="")
+ReadFile2<-paste('DETx',splitNum,'.csv.gz',sep="")
 
 FG<-read.csv(paste(FGpath,'FileGroupFormat.csv.gz',sep="/"))
 colnames(FG)[3]<-"RealTime"
@@ -215,7 +215,7 @@ out2<-foreach(f=1:crs,.packages=c("tuneR","imager","doParallel","seewave","pracm
 
 parallel::stopCluster(cluz)
 
-outName<-paste("DETwFeaturesSplit",splitNum,".csv.gz",sep="")
+outName<-paste("DETx",splitNum,".csv.gz",sep="")
 out2<-do.call("rbind",out2)
 
 out2<-data.frame(out2)

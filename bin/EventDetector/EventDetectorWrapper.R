@@ -79,7 +79,7 @@ if(EDstage=="1"){
   
   BigChunks<-ceiling(filez/(crs*chunkSize))
   #splitID<-2
-  splitID<-as.integer(substr(ReadFile,21,nchar(ReadFile)-7)) #assumes this stays as FileGroupFormatSplitx.csv.gz (tolerant of more digits)
+  splitID<-as.integer(substr(ReadFile,16,nchar(ReadFile)-7)) #assumes this stays as FileGroupFormatSplitx.csv.gz (tolerant of more digits)
   
   crsRead<-crs
   
@@ -177,7 +177,7 @@ detOut<-foreach(i=1:BigChunks) %do% {
 }
 
 #write to result
-outName<-paste("EDSplit",splitID,".csv.gz",sep="")  
+outName<-paste("DETx",splitID,".csv.gz",sep="")  
 
 
 }else if(EDstage=="2"){
@@ -237,7 +237,7 @@ outName<-paste("EDSplit",splitID,".csv.gz",sep="")
   #break data into 
   }
 
-  outName<-paste("EDunify.csv.gz",sep="")  
+  outName<-paste("DETx.csv.gz",sep="")  
   
 }
 

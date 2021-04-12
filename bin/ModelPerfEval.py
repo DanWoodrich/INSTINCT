@@ -31,10 +31,12 @@ MPE_params = TM(MPE_params,'TrainModel','CV')
 MPE_params = AC(MPE_params,'ApplyCutoff')
 MPE_params = PR(MPE_params,'PerformanceReport')
 
+MPE_params.MPE_WriteToOutputs = 'y'
+
 class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
     
     #macro job
-    MPE_JobName=luigi.Parameter()
+    JobName=luigi.Parameter()
     MPE_WriteToOutputs = luigi.Parameter()
 
     #PR
@@ -43,10 +45,10 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
 
     #nullify some inherited parameters:
     PE2datType=None
-    EDpe1_JobName=None
 
     #downstream default (required for this to work correctly, but changeable when running EDpe1 as a job. 
     EDpe1_WriteToOutputs='n'
+    C4FT_WriteToOutputs='n'
     
     def pipelineMap(self,l): #here is where you define pipeline structure
         task0 = EDperfEval.invoke(self)
@@ -156,7 +158,7 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PRprocess,MethodID=self.PRmethodID,Paths=Paths,Args=Args,Params='')
     def invoke(obj):
-        return(ModelPerfEval(MPE_JobName=obj.MPE_JobName,MPE_WriteToOutputs=obj.MPE_WriteToOutputs,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
+        return(ModelPerfEval(JobName=obj.JobName,MPE_WriteToOutputs=obj.MPE_WriteToOutputs,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
                              IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,GTfile=obj.GTfile,EDprocess=obj.EDprocess,\
                              EDsplits=obj.EDsplits,EDcpu=obj.EDcpu,EDchunk=obj.EDchunk,EDmethodID=obj.EDmethodID,EDparamString=obj.EDparamString,\
                              EDparamNames=obj.EDparamNames,ALprocess=obj.ALprocess,ALmethodID=obj.ALmethodID,ALparamString=obj.ALparamString,\

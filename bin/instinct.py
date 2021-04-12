@@ -154,14 +154,23 @@ class argParse:
 class INSTINCT_Task(luigi.Task):
 
     ProjectRoot=luigi.Parameter()
+    #standard outpath
+    def outpath(self):
+        return self.uTask1path + '/' + self.hashProcess()
     #Add in the below before too long. Will be useful to direct Cache to NAS in some cases. 
     #CacheRoot=luigi.Parameter()
+
+class INSTINCT_detTask(INSTINCT_Task): #for task types that modifying detection .csvs
+
+       def output(self):
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
 
 class INSTINCT_Rmethod_Task(INSTINCT_Task):
 
     system= luigi.Parameter()
     r_version=luigi.Parameter()
 
+    
 ########################
 #format metadata
 ########################
@@ -221,7 +230,7 @@ class FormatGT(INSTINCT_Task):
 
 class SplitED(luigi.Task):
     
-    upstream_task1 = luigi.Parameter()
+    upstream_task1 = luigi.Parameter() #FG
     uTask1path= luigi.Parameter()
 
     EDsplits = luigi.IntParameter()
@@ -232,7 +241,7 @@ class SplitED(luigi.Task):
     def requires(self):
         return self.upstream_task1
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/FileGroupFormatSplit' + str(self.splitNum+1) + '.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/FileGroupFormat' + str(self.splitNum+1) + '.csv.gz')
     def run(self):
 
         inFile = self.uTask1path + '/FileGroupFormat.csv.gz'
@@ -241,7 +250,7 @@ class SplitED(luigi.Task):
                               dur_type = 'float64',comp_type = 'gzip')
         FG = pd.read_csv(inFile, dtype=FG_dict,compression='gzip')
         if self.EDsplits == 1:
-            FG.to_csv(self.outpath() + '/FileGroupFormatSplit1.csv.gz',index=False,compression='gzip')
+            FG.to_csv(self.outpath() + '/FileGroupFormat1.csv.gz',index=False,compression='gzip')
         #need to test this section to ensure forking works 
         else:
             row_counts = len(FG['DiffTime'])
@@ -250,7 +259,7 @@ class SplitED(luigi.Task):
             bdiff = row_counts - len(blist)
             extra = numpy.repeat(self.EDsplits-1,bdiff)
             flist = list(blist.tolist() + extra.tolist())
-            FG.loc[[x==self.splitNum for x in flist]].to_csv(self.outpath() + '/FileGroupFormatSplit' + str(self.splitNum+1)\
+            FG.loc[[x==self.splitNum for x in flist]].to_csv(self.outpath() + '/FileGroupFormat' + str(self.splitNum+1)\
                                                 + '.csv.gz',index=False,compression='gzip')
     def invoke(obj):
         return(SplitED(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,EDsplits=obj.EDsplits,splitNum=obj.splitNum))
@@ -276,11 +285,11 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
     def requires(self):
         return SplitED.invoke(self)
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/EDSplit' + str(self.splitNum+1) + '.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx' + str(self.splitNum+1) + '.csv.gz')
     def run(self):
         #define volume arguments
         FGpath = self.uTask1path +'/'
-        ReadFile = 'FileGroupFormatSplit' + str(self.splitNum+1) + '.csv.gz'
+        ReadFile = 'FileGroupFormat' + str(self.splitNum+1) + '.csv.gz'
         DataPath = self.SoundFileRootDir_Host
         resultPath =  self.outpath()
         if not os.path.exists(resultPath):
@@ -308,7 +317,7 @@ class UnifyED(RunED):
         for k in range(self.EDsplits):
             yield RunED.invoke(self,k)
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/Detections.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
         #this task will perform several functions:
         #combine the split data,
@@ -323,7 +332,7 @@ class UnifyED(RunED):
         
         dataframes = [None] * self.EDsplits
         for k in range(self.EDsplits):
-            dataframes[k] = pd.read_csv(self.outpath() +'/EDSplit' + str(k+1) + '.csv.gz',dtype=EDdict)
+            dataframes[k] = pd.read_csv(self.outpath() +'/DETx' + str(k+1) + '.csv.gz',dtype=EDdict)
         ED = pd.concat(dataframes,ignore_index=True)
         ED['ProcessTag2']=ED.ProcessTag.str.split('_', 1).map(lambda x: x[0])
         #determin PT changes
@@ -341,7 +350,7 @@ class UnifyED(RunED):
         #if indecesED doesn't exist, skip the patching step and just save combined data. Assume it's in correct order
         if indecesED.empty:
             EDfin = ED[['StartTime','EndTime','LowFreq','HighFreq','StartFile','EndFile']]
-            ED.to_csv(self.outpath() + '/Detections.csv.gz',index=False,compression='gzip')
+            ED.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
         else:
             EDfin = ED.loc[indecesED._values]
             #reduce this to just file names to pass to Energy detector (FG style)
@@ -381,7 +390,7 @@ class UnifyED(RunED):
 
             EDdict2 = {'StartTime': 'float64', 'EndTime': 'float64','LowFreq': 'int', 'HighFreq': 'int', 'StartFile': 'category','EndFile': 'category','DiffTime': 'int'}
             #now load in result,
-            EDpatches = pd.read_csv(FGpath+'/EDunify.csv.gz',dtype=EDdict2)
+            EDpatches = pd.read_csv(FGpath+'/DETx.csv.gz',dtype=EDdict2)
             PatchList = [None] * len(EDpatches['DiffTime'].unique().tolist())
             for n in range(len(EDpatches['DiffTime'].unique().tolist())):
                 EDpatchN= EDpatches[[x == EDpatches['DiffTime'].unique().tolist()[n] for x in EDpatches['DiffTime']]]
@@ -428,15 +437,16 @@ class UnifyED(RunED):
             ED = pd.concat([EDpatchsub,ED],ignore_index=True)
             ED = ED.sort_values(['StartTime'], ascending=True)
 
-            ED.to_csv(FGpath + '/Detections.csv.gz',index=False,compression='gzip')
+            os.remove(FGpath + '/DETx.csv.gz') 
 
-            os.remove(FGpath + '/EDunify.csv.gz') 
+            ED.to_csv(FGpath + '/DETx.csv.gz',index=False,compression='gzip')
+
             os.remove(FGpath + '/EDoutCorrect.csv.gz')
             
         for n in range(self.EDsplits):
-            os.remove(self.outpath() + '/EDSplit' + str(n+1) + '.csv.gz') 
+            os.remove(self.outpath() + '/DETx' + str(n+1) + '.csv.gz') 
         for n in range(self.EDsplits):
-            os.remove(self.uTask1path + '/FileGroupFormatSplit' + str(n+1) + '.csv.gz') #might want to rework this to make the files load in the current directory instead of the upstream directory. makes more atomic
+            os.remove(self.uTask1path + '/FileGroupFormat' + str(n+1) + '.csv.gz') #might want to rework this to make the files load in the current directory instead of the upstream directory. makes more atomic
 
     def invoke(obj,upstream1):
         return(UnifyED(upstream_task1 = upstream1,uTask1path= upstream1.outpath(),EDsplits = obj.EDsplits,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,EDparamNames=obj.EDparamNames,\
@@ -468,16 +478,16 @@ class SplitFE(luigi.Task):
         return self.upstream_task1
         return self.upstream_task2
     def output(self):
-        return luigi.LocalTarget(self.uTask1path + '/DETsplitForFE' + str(self.splitNum+1) + '.csv.gz')
+        return luigi.LocalTarget(self.uTask1path + '/DETx' + str(self.splitNum+1) + '.csv.gz')
     def run(self):
         #pseudocode:
         #split dataset into num of workers
 
         DETdict = {'StartTime': 'float64', 'EndTime': 'float64','LowFreq': 'int', 'HighFreq': 'int', 'StartFile': 'category','EndFile': 'category'}
-        DET = pd.read_csv(self.uTask1path + '/Detections.csv.gz', dtype=DETdict,compression='gzip')
+        DET = pd.read_csv(self.uTask1path + '/DETx.csv.gz', dtype=DETdict,compression='gzip')
         
         if self.FEsplits == 1:
-            DET.to_csv(self.uTask1path + '/DETsplitForFE1.csv.gz',index=False,compression='gzip')
+            DET.to_csv(self.uTask1path + '/DETx1.csv.gz',index=False,compression='gzip')
         #need to test this section to ensure forking works 
         else:
             row_counts = len(DET['StartTime'])
@@ -486,7 +496,7 @@ class SplitFE(luigi.Task):
             bdiff = row_counts - len(blist)
             extra = numpy.repeat(self.FEsplits-1,bdiff)
             flist = list(blist.tolist() + extra.tolist())
-            DET.loc[[x==self.splitNum for x in flist]].to_csv(self.uTask1path + '/DETsplitForFE' + str(self.splitNum+1)\
+            DET.loc[[x==self.splitNum for x in flist]].to_csv(self.uTask1path + '/DETx' + str(self.splitNum+1)\
                                                 + '.csv.gz',index=False,compression='gzip')
     def invoke(obj):
         return(SplitFE(upstream_task1=obj.upstream_task1,upstream_task2=obj.upstream_task2,FEsplits=obj.FEsplits,splitNum=obj.splitNum,uTask1path=obj.uTask1path))
@@ -514,7 +524,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
     def requires(self):
         return SplitFE.invoke(self)
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/DETwFeaturesSplit' + str(self.splitNum+1) + '.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx' + str(self.splitNum+1) + '.csv.gz')
     def run(self):
         #define volume arguments
         FGpath = self.uTask2path + '/'
@@ -544,19 +554,19 @@ class UnifyFE(RunFE):
         for k in range(self.FEsplits):
             return RunFE.invoke(self,k)
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/DETwFeatures.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
         #maybe should try to specify data types, but should assume numeric for these?
         dataframes = [None] * self.FEsplits
         for k in range(self.FEsplits):
-            dataframes[k] = pd.read_csv(self.outpath() + '/DETwFeaturesSplit' + str(k+1)+ '.csv.gz')
+            dataframes[k] = pd.read_csv(self.outpath() + '/DETx' + str(k+1)+ '.csv.gz')
         FE = pd.concat(dataframes,ignore_index=True)
-        FE.to_csv(self.outpath() + '/DETwFeatures.csv.gz',index=False,compression='gzip')
+        FE.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
 
         for n in range(self.FEsplits):
-            os.remove(self.outpath() + '/DETwFeaturesSplit' + str(n+1) + '.csv.gz')
+            os.remove(self.outpath() + '/DETx' + str(n+1) + '.csv.gz')
         for n in range(self.FEsplits):
-            os.remove(self.uTask1path + '/DETsplitForFE' + str(n+1) + '.csv.gz')
+            os.remove(self.uTask1path + '/DETx' + str(n+1) + '.csv.gz')
             
     def invoke(obj,upstream1,upstream2):
         return(UnifyFE(upstream_task1 = upstream1,uTask1path=upstream1.outpath(),upstream_task2 = upstream2,uTask2path= upstream2.outpath(),
@@ -569,7 +579,7 @@ class UnifyFE(RunFE):
 
 class AssignLabels(INSTINCT_Rmethod_Task):
 
-    upstream_task1 = luigi.Parameter() #det output
+    upstream_task1 = luigi.Parameter() #DETx
     upstream_task2 = luigi.Parameter() #GT
     upstream_task3 = luigi.Parameter() #FG 
     uTask1path = luigi.Parameter()
@@ -591,7 +601,7 @@ class AssignLabels(INSTINCT_Rmethod_Task):
         yield self.upstream_task2
         yield self.upstream_task3
     def output(self):
-        return(luigi.LocalTarget(self.outpath() + '/DETwLabels.csv.gz'))
+        return(luigi.LocalTarget(self.outpath() + '/DETx.csv.gz'))
     def run(self):
 
         FGpath = self.uTask3path + '/'
@@ -635,7 +645,7 @@ class MergeFE_AL(INSTINCT_Rmethod_Task):
         yield self.upstream_task1
         yield self.upstream_task2
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/DETwFEwAL.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
 
         DETwALpath = self.uTask1path + '/'
@@ -769,16 +779,16 @@ class ApplyCutoff(INSTINCT_Task):
     def requires(self):
         yield self.upstream_task1
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/DETwProbs.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
 
-        DETwProbs = pd.read_csv(self.uTask1path + '/DETwProbs.csv.gz',compression='gzip')
+        DETwProbs = pd.read_csv(self.uTask1path + '/DETx.csv.gz',compression='gzip')
 
         if not os.path.exists(self.outpath()):
             os.mkdir(self.outpath())
 
         DwPcut = DETwProbs[DETwProbs.probs>=float(self.ACcutoffString)]
-        DwPcut.to_csv(self.outpath() + '/DETwProbs.csv.gz',index=False,compression='gzip')
+        DwPcut.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
     def invoke(obj,upstream1):
         return(ApplyCutoff(upstream_task1=upstream1,uTask1path=upstream1.outpath(),ACcutoffString=obj.ACcutoffString,\
                     ProjectRoot=obj.ProjectRoot))
@@ -789,7 +799,7 @@ class ApplyCutoff(INSTINCT_Task):
 
 class ApplyModel(INSTINCT_Rmethod_Task):
 
-    upstream_task1 = luigi.Parameter() #DETwFE
+    upstream_task1 = luigi.Parameter() #DETx (needs features!) 
     upstream_task2 = luigi.Parameter() #Train model
     upstream_task3 = luigi.Parameter() #FG
 
@@ -810,10 +820,10 @@ class ApplyModel(INSTINCT_Rmethod_Task):
         yield self.upstream_task2
         yield self.upstream_task3
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/DETwProbs.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
 
-        DETpath= self.uTask1path + '/DETwFeatures.csv.gz' #R fixes this if incorrect, ok to leave hardcoded like this 
+        DETpath= self.uTask1path + '/DETx.csv.gz' #R fixes this if incorrect, ok to leave hardcoded like this 
         FGpath = self.uTask3path + '/FileGroupFormat.csv.gz'
         resultPath = self.outpath()
         Mpath= self.uTask2path + '/RFmodel.rds'
@@ -852,125 +862,34 @@ class SplitForPE(INSTINCT_Task):
     def requires(self):
         return self.upstream_task2 #don't need to requires UP1, because it only continues path and doesn't rely on outputs. 
     def output(self):
-        return luigi.LocalTarget(self.outpath() +'/DETwProbs.csv.gz')
+        return luigi.LocalTarget(self.outpath() +'/DETx.csv.gz')
     def run(self): 
         #pseudocode:
         #split dataset into num of workers
 
-        DETwProbs = pd.read_csv(self.ProjectRoot + 'Cache/' + self.hashProcess() + '/DETwProbs.csv.gz',compression='gzip')
+        DETwProbs = pd.read_csv(self.ProjectRoot + 'Cache/' + self.hashProcess() + '/DETx.csv.gz',compression='gzip')
 
         if not os.path.exists(self.outpath()):
             os.makedirs(self.outpath(),exist_ok=True)
             
         #This will save subset file in original path. 
         DwPsubset = DETwProbs[DETwProbs.FGID == self.FileGroupID]
-        DwPsubset.to_csv(self.outpath() + '/DETwProbs.csv.gz',index=False,compression='gzip')
+        DwPsubset.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
         #this is kind of a weird one. Might not be very modular to other applications as is. 
     def invoke(obj,upstream1,upstream2,n='default'):
         
         FileGroupID = Helper.tplExtract(obj.FileGroupID,n=n)
         return(SplitForPE(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,FileGroupID=FileGroupID,\
                           ProjectRoot=obj.ProjectRoot))
-        
-##################################################################################
-
-
-#JOBS
-
 
 ##################################################################################
+#train a model based on detections, extracted features, and GT labels 
+##################################################################################
 
-#Performance evalation for a group of event detectors (see EDperfeval.py for example of how to populate params)
+class TrainModel(INSTINCT_Rmethod_Task):
 
-class EDperfEval(FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1):
-    
-    EDpe1_JobName=luigi.Parameter()
-    EDpe1_WriteToOutputs=luigi.Parameter()
-
-    IDlength = luigi.IntParameter()
-
-    #nullify some inherited parameters:
-    upstream_task1=None
-    upstream_task2=None
-    upstream_task3=None
-    uTask1path=None
-    uTask2path=None
-    uTask3path=None
-
-    def pipelineMap(self,l): #here is where you define pipeline structure 
-        task0 = FormatFG.invoke(self,l) 
-        task1 = FormatGT.invoke(self,task0,l)
-        task2 = UnifyED.invoke(self,task0)
-        task3 = AssignLabels.invoke(self,task2,task1,task0)
-        task4 = PerfEval1.invoke(self,task3,task0,l)
-        return [task0,task1,task2,task3,task4]
-    def hashProcess(self):
-        #this is just composed of the component hashes (PE1, method being run here, is accounted for in pipeline).
-        hashStrings = [None] * self.IDlength
-        for l in range(self.IDlength):
-            tasks = self.pipelineMap(l)
-            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
-                                  tasks[4].hashProcess()])
-    
-        EDpe1_JobHash = Helper.getParamHash2(' '.join(hashStrings),12)
-        return(EDpe1_JobHash)
-    def outpath(self):
-        if self.EDpe1_WriteToOutputs=='y':
-            return self.ProjectRoot +'Outputs/' + self.EDpe1_JobName 
-        elif self.EDpe1_WriteToOutputs=='n':
-            return self.ProjectRoot + 'Cache/' + self.hashProcess()
-    def requires(self):
-        for l in range(self.IDlength):
-            tasks = self.pipelineMap(l)
-
-            yield tasks[len(tasks)-1]
-    def output(self):
-        return luigi.LocalTarget(self.outpath() + '/Stats.csv.gz')
-    def run(self):
-        
-        #concatenate outputs and summarize
-
-        dataframes = [None] * self.IDlength
-        for k in range(self.IDlength):
-            tasks=self.pipelineMap(k)
-            dataframes[k] = pd.read_csv(tasks[4].outpath() + '/Stats.csv.gz',compression='gzip')
-        EDeval = pd.concat(dataframes,ignore_index=True)
-
-        resultPath = self.outpath()
-
-        if not os.path.exists(resultPath):
-            os.mkdir(resultPath)
-
-        EDeval.to_csv(resultPath + '/Stats_Intermediate.csv',index=False)
-        #send back in to PE1
-
-        FGpath = 'NULL'
-        LABpath = 'NULL'
-        INTpath =  resultPath + '/Stats_Intermediate.csv'
-        resultPath2 =   resultPath + '/Stats.csv.gz'
-        FGID = 'NULL'
-
-        Paths = [FGpath,LABpath,INTpath,resultPath2]
-        Args = [FGID,'2'] #run second stage of R script 
-
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
-
-        os.remove(resultPath + '/Stats_Intermediate.csv')
-        
-    def invoke(self):
-        return(EDperfEval(EDpe1_JobName=self.EDpe1_JobName,SoundFileRootDir_Host=self.SoundFileRootDir_Host,IDlength=self.IDlength,\
-                   GTfile=self.GTfile,FGfile=self.FGfile,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
-                   EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
-                   ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,\
-                   PE1process=self.PE1process,PE1methodID=self.PE1methodID,EDpe1_WriteToOutputs=self.EDpe1_WriteToOutputs,\
-                   ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
-
-#Train an RF model. See TrainModel.py for parameters
-
-class TrainModel(FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
-
-    IDlength = luigi.IntParameter()
-    FileGroupID = luigi.Parameter()
+    upstream_task1 = luigi.Parameter() #C4FT
+    uTask1path = luigi.Parameter()
 
     TMprocess = luigi.Parameter()
     TMmethodID = luigi.Parameter()
@@ -981,91 +900,35 @@ class TrainModel(FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
 
     TMcpu=luigi.Parameter()
 
-    #nullify some inherited parameters:
-    upstream_task1=None
-    upstream_task2=None
-    upstream_task3=None
-    uTask1path=None
-    uTask2path=None
-    uTask3path=None
-
-    def pipelineMap(self,l): #here is where you define pipeline structure
-        task0 = FormatFG.invoke(self,l) 
-        task1 = FormatGT.invoke(self,task0,l)
-        task2 = UnifyED.invoke(self,task0)
-        task3 = AssignLabels.invoke(self,task2,task1,task0)
-        task4 = UnifyFE.invoke(self,task2,task0)
-        task5 = MergeFE_AL.invoke(self,task3,task4)
-        return [task0,task1,task2,task3,task4,task5]
     def hashProcess(self):
-        hashStrings = [None] * self.IDlength
-        for l in range(self.IDlength):
-            tasks = self.pipelineMap(l)
-            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
-                                  tasks[4].hashProcess(),tasks[5].hashProcess()])
-    
-        TM_JobHash = Helper.getParamHash2(self.TMparamString + ' ' +self.TMmethodID + ' ' + ' '.join(hashStrings),12)
-        return(TM_JobHash)
-        #Method + pipeline  hashes
+        hashLength = 6 
+        TM_hash = Helper.getParamHash2(self.TMparamString + ' ' + self.TMmethodID,hashLength)
+        return TM_hash
     def outpath(self):
-        return self.ProjectRoot + 'Cache/' + self.hashProcess()
+        return self.uTask1path + '/' + self.hashProcess() 
     def requires(self):
-        for l in range(self.IDlength):
-            tasks = self.pipelineMap(l)
-
-            yield tasks[len(tasks)-1]
+        return self.upstream_task1 #get the 1st one, other one implied (make the change eventually where all outputs are tracked! 
     def output(self):
+        #conditional on what this task is doing. 
         return luigi.LocalTarget(self.outpath() + '/' + self.TM_outName)
     def run(self):
 
-        #concatenate outputs and summarize
+        
+        
+        FGpath = self.uTask1path + '/FileGroupFormat.csv.gz'
+        TMpath = self.uTask1path + '/DETx.csv.gz'
+        Mpath = 'NULL'
 
-        #load in 
-        dataframes = [None] * self.IDlength
-        FGdf = [None] * self.IDlength
-        for k in range(self.IDlength):
-            tasks = self.pipelineMap(k)
-            
-            dataframes[k] = pd.read_csv(tasks[5].outpath()+ '/DETwFEwAL.csv.gz') # 
-            dataframes[k]['FGID'] = pd.Series(self.FileGroupID[k], index=dataframes[k].index)
-            
-            FGdf[k] = pd.read_csv(tasks[0].outpath() + '/FileGroupFormat.csv.gz')
-        TMdat = pd.concat(dataframes,ignore_index=True)
-        FGdf = pd.concat(FGdf,ignore_index=True)
+        resultPath=self.outpath()
 
-        resultPath =self.outpath()
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
-
-        TMdat.to_csv(resultPath + '/TM_Intermediate1.csv.gz',index=False,compression='gzip')
-        FGdf.to_csv(resultPath + '/FG_Intermediate2.csv.gz',index=False,compression='gzip')
-
-        #
-        TMpath = resultPath + '/TM_Intermediate1.csv.gz'
-        FGpath = resultPath + '/FG_Intermediate2.csv.gz'
-        Mpath = 'NULL'
 
         Paths = [TMpath,FGpath,resultPath,Mpath]
         Args = [self.TMstage,self.TMcpu]
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.TMprocess,MethodID=self.TMmethodID,Paths=Paths,Args=Args,Params=self.TMparamString)
-
-        os.remove(resultPath + '/TM_Intermediate1.csv.gz')
-        os.remove(resultPath + '/FG_Intermediate2.csv.gz')
-
-        #copy params to output folder
-    def invoke(self):
-        return(TrainModel(SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
-                           IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
-                           EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
-                           ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,\
-                           FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamNames=self.FEparamNames,\
-                           FEsplits=self.FEsplits,FEcpu=self.FEcpu,MFAprocess=self.MFAprocess,MFAmethodID=self.MFAmethodID,\
-                           TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparamString=self.TMparamString,\
-                           TMstage=self.TMstage,TM_outName=self.TM_outName,TMcpu=self.TMcpu,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
-    def runJob(self):
-        #not sure if this will work, but this would be dank 
-        params = self.loadParams(self) #populate all param names onto params object. 
-        luigi.build([self.invoke(params)]) #run the job. 
-
+    def invoke(self,upstream1):
+        return(TrainModel(upstream_task1=upstream1,uTask1path=upstream1.outpath(),TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparamString=self.TMparamString,\
+                          TMstage=self.TMstage,TM_outName=self.TM_outName,TMcpu=self.TMcpu,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
 

@@ -8,11 +8,12 @@ import numpy
 import subprocess
 import shlex
 from instinct import *
+from Comb4FeatureTrain import Comb4FeatureTrain
 from getParams import *
 
 #Run a model on data that does not need to have labels. 
 
-RFN_params = RFN('runFullNovel')
+RFN_params = Load_Job('runFullNovel')
 
 RFN_params = FG(RFN_params,'FormatFG')
 RFN_params = GT(RFN_params,'FormatGT')
@@ -26,7 +27,7 @@ RFN_params = AC(RFN_params,'ApplyCutoff')
 #novel data params
 
 #FG for novel data
-n_RFN_params = RFN('runFullNovel')
+n_RFN_params = Load_Job('runFullNovel')
 n_FGparams = FG(n_RFN_params,'FormatFGapply')
 
 #if other args are present, load it in as FGID instead of what is on params.
@@ -49,37 +50,44 @@ RFN_params.n_IDlength = n_FGparams.IDlength
 #n_EDparams = ED(MasterINI,'n_EventDetector',ParamsRoot).getParams()
 #n_FEparams = ED(MasterINI,'n_EventDetector',ParamsRoot).getParams()
 
-class runFullNovel(TrainModel,ApplyModel,ApplyCutoff):
+class runFullNovel(ApplyModel,Comb4FeatureTrain,TrainModel,ApplyCutoff):
 
-    RFN_JobName=luigi.Parameter()
     n_FGfile = luigi.Parameter()
     n_FileGroupID = luigi.Parameter()
     n_IDlength= luigi.IntParameter()
 
     #nullify some inherited parameters:
     PE2datType=None
-    TM_JobName=None
+    C4FT_WriteToOutputs='n'
+
+    upstream_task1=None
+    upstream_task2=None
+    upstream_task3=None
+    uTask1path=None
+    uTask2path=None
+    uTask3path=None
 
     def pipelineMap(self,l):
-            task0 = TrainModel.invoke(self)
-            task1 = FormatFG(FGfile = self.n_FGfile[l],ProjectRoot=self.ProjectRoot) #long form here: do I need return
-            task2 = UnifyED.invoke(self,task1)
-            task3 = UnifyFE.invoke(self,task2,task1)
-            task4 = ApplyModel.invoke(self,task3,task0,task1)
-            task5 = ApplyCutoff.invoke(self,task4)
+            task0 = Comb4FeatureTrain.invoke(self)
+            task1 = TrainModel.invoke(self,task0)
+            
+            task2 = FormatFG(FGfile = self.n_FGfile[l],ProjectRoot=self.ProjectRoot) #long form here: do I need return
+            task3 = UnifyED.invoke(self,task2)
+            task4 = UnifyFE.invoke(self,task3,task2)
+            task5 = ApplyModel.invoke(self,task4,task1,task2)
+            task6 = ApplyCutoff.invoke(self,task5)
 
-            return [task0,task1,task2,task3,task4,task5]
+            return task6
     def requires(self):
         for l in range(self.n_IDlength):
-            tasks = self.pipelineMap(l)
-            yield tasks[5] 
+            yield self.pipelineMap(l)
     def output(self):
         return None
     def run(self):
 
         return None
     def invoke(obj):
-        return(runFullNovel(RFN_JobName=obj.RFN_JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
+        return(runFullNovel(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
                             IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,\
                             GTfile=obj.GTfile,EDprocess=obj.EDprocess,EDsplits=obj.EDsplits,EDcpu=obj.EDcpu,\
                             EDchunk=obj.EDchunk,EDmethodID=obj.EDmethodID,EDparamString=obj.EDparamString,\

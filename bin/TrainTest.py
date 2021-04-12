@@ -13,7 +13,7 @@ from getParams import *
 
 #Run a model on data that does not need to have labels. 
 
-TT_params = TT('TrainTest')
+TT_params = Load_Job('TrainTest')
 
 TT_params = FG(TT_params,'FormatFG')
 TT_params = GT(TT_params,'FormatGT')
@@ -41,21 +41,11 @@ TT_params.n_FGfile = n_FGparams.FGfile
 TT_params.n_IDlength = n_FGparams.IDlength
 TT_params.n_GTfile = n_FGparams.GTfile
 
-print(TT_params.n_FileGroupID)
-print(TT_params.n_FGfile)
-print(TT_params.n_FGfile[0])
-print(TT_params.n_GTfile)
-
-#don't think I need this, at least not right now? 
-#n_EDparams = ED(MasterINI,'n_EventDetector',ParamsRoot).getParams()
-#n_FEparams = ED(MasterINI,'n_EventDetector',ParamsRoot).getParams()
-
 class TrainTest(runFullNovel,PerfEval1,PerfEval2):
 
-    TT_JobName=luigi.Parameter()
+    JobName=luigi.Parameter()
     n_GTfile = luigi.Parameter()
     #nullify some inherited parameters:
-    RFN_JobName=None
 
     def pipelineMap(self):
             task0 = TrainModel.invoke(self)
@@ -93,7 +83,7 @@ class TrainTest(runFullNovel,PerfEval1,PerfEval2):
         tasks = self.pipelineMap
         print(tasks[1].outpath())
     def invoke(obj):
-        return(TrainTest(TT_JobName=obj.TT_JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
+        return(TrainTest(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
                             IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,\
                             GTfile=obj.GTfile,EDprocess=obj.EDprocess,EDsplits=obj.EDsplits,EDcpu=obj.EDcpu,\
                             EDchunk=obj.EDchunk,EDmethodID=obj.EDmethodID,EDparamString=obj.EDparamString,\

@@ -26,13 +26,13 @@ IoUThresh<-args[5]
 GTdata<-read.csv(paste(GTpath,"GTFormat.csv.gz",sep="/"))
 FGdata<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
 
-if(any(dir(DETpath)=='Detections.csv.gz')&any(dir(DETpath)=='DETwProbs.csv.gz')){
+if(any(dir(DETpath)=='DETx.csv.gz')&any(dir(DETpath)=='DETwProbs.csv.gz')){
   stop("INSTINCT can't handle files with both of these names in the same target folder")
 }
 
 #accept two different names
-if(any(dir(DETpath)=='Detections.csv.gz')){
-  outData<-read.csv(paste(DETpath,"Detections.csv.gz",sep="/"))
+if(any(dir(DETpath)=='DETx.csv.gz')){
+  outData<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
 }else if(any(dir(DETpath)=='DETwProbs.csv.gz')){
   outData<-read.csv(paste(DETpath,"DETwProbs.csv.gz",sep="/"))
   #remove unneeded info 
@@ -161,7 +161,7 @@ CombineTab<-rbind(GTlong,outLong)
 
 CombineTab<-CombineTab[order(CombineTab$StartFile,CombineTab$StartTime),]
 
-outName<-paste("DETwLabels.csv.gz",sep="_")
+outName<-paste("DETx.csv.gz",sep="_")
 
 write.csv(CombineTab,gzfile(paste(resultPath,outName,sep="/")),row.names = FALSE)
 
