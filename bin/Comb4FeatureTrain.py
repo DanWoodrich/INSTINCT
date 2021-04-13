@@ -24,15 +24,11 @@ C4FT_params = FE(C4FT_params,'FeatureExtraction')
 C4FT_params = AL(C4FT_params,'AssignLabels')
 C4FT_params = MFA(C4FT_params,'MergeFE_AL')
 
-C4FT_params.C4FT_WriteToOutputs='y'
-
 class Comb4FeatureTrain(FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
 
     JobName=luigi.Parameter()
     IDlength = luigi.IntParameter()
     FileGroupID = luigi.Parameter()
-
-    C4FT_WriteToOutputs=luigi.Parameter()
 
     #nullify some inherited parameters:
     upstream_task1=None
@@ -60,10 +56,7 @@ class Comb4FeatureTrain(FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_A
         return Helper.getParamHash2(' '.join(hashStrings),6)
         #Method + pipeline  hashes
     def outpath(self):
-        if self.C4FT_WriteToOutputs=='y':
-            return self.ProjectRoot +'Outputs/' + self.JobName 
-        elif self.C4FT_WriteToOutputs=='n':
-            return self.ProjectRoot + 'Cache/' + self.hashProcess()
+        return self.ProjectRoot + 'Cache/' + self.hashProcess()
     def requires(self):
         for l in range(self.IDlength):
             tasks = self.pipelineMap(l)
@@ -76,9 +69,6 @@ class Comb4FeatureTrain(FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_A
     def run(self):
 
         #concatenate outputs and summarize
-
-        print("*********************NOTICE ME****************************")
-
         #load in 
         dataframes = [None] * self.IDlength
         FGdf = [None] * self.IDlength
@@ -103,7 +93,7 @@ class Comb4FeatureTrain(FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_A
 
         #copy params to output folder
     def invoke(self):
-        return(Comb4FeatureTrain(JobName=self.JobName,SoundFileRootDir_Host=self.SoundFileRootDir_Host,C4FT_WriteToOutputs=self.C4FT_WriteToOutputs,\
+        return(Comb4FeatureTrain(JobName=self.JobName,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
                                  IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
                                  EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
                                  ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,\

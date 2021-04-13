@@ -25,10 +25,16 @@ resultPath <- args[4]
 GTdata<-read.csv(paste(GTpath,"GTFormat.csv.gz",sep="/"))
 FGdata<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
 
-outData<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
+outDataAll<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
+
+#retain probs
+if("probs" %in% colnames(outDataAll)){
+  outDataAll<-outDataAll[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile","probs")]
+  mergeProbsBack =TRUE
+}
 
 #extract necessary info
-#outData<-outData[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile")]
+outData<-outDataAll[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile")]
 
 
 
@@ -126,11 +132,26 @@ GTlong$Label<-NULL #I may want this later? But relevant labels past this point s
 
 outLong$SignalCode<-'out'
 
+str(outDataAll)
+str(outLong)
+str(GTlong)
+
+#add back in probs if present
+if(mergeProbsBack){
+  outDataAll<-outDataAll[order(outDataAll$StartFile,outDataAll$StartTime),]
+  outLong$probs<-outDataAll$probs
+  
+  GTlong$probs<-NA
+}
+
+print(str(outLong))
+
 CombineTab<-rbind(GTlong,outLong)
 
 CombineTab<-CombineTab[order(CombineTab$StartFile,CombineTab$StartTime),]
 
 CombineTab$meantime<-NULL
+
 
 outName<-paste("DETx.csv.gz",sep="_")
 

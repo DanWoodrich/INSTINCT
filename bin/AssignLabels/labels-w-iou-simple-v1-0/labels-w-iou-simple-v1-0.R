@@ -26,19 +26,16 @@ IoUThresh<-args[5]
 GTdata<-read.csv(paste(GTpath,"GTFormat.csv.gz",sep="/"))
 FGdata<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
 
-if(any(dir(DETpath)=='DETx.csv.gz')&any(dir(DETpath)=='DETwProbs.csv.gz')){
-  stop("INSTINCT can't handle files with both of these names in the same target folder")
+outDataAll<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
+
+#retain probs
+if("probs" %in% colnames(outDataAll)){
+  outDataAll<-outDataAll[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile","probs")]
+  mergeProbsBack =TRUE
 }
 
-#accept two different names
-if(any(dir(DETpath)=='DETx.csv.gz')){
-  outData<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
-}else if(any(dir(DETpath)=='DETwProbs.csv.gz')){
-  outData<-read.csv(paste(DETpath,"DETwProbs.csv.gz",sep="/"))
-  #remove unneeded info 
-  outData<-outData[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile")]
-}
-
+#extract necessary info
+outData<-outDataAll[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile")]
 
 #Probabalistic<-FALSE
 #introduce this in most sensible way once we get to 
@@ -156,6 +153,14 @@ GTlong$iou<-NULL
 outLong$iou<-NULL
 
 outLong$SignalCode<-'out'
+
+#add back in probs if present
+if(mergeProbsBack){
+  outDataAll<-outDataAll[order(outDataAll$StartFile,outDataAll$StartTime),]
+  outLong$probs<-outDataAll$probs
+  
+  GTlong$probs<-NA
+}
 
 CombineTab<-rbind(GTlong,outLong)
 

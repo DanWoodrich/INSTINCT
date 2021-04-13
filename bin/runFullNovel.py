@@ -58,7 +58,6 @@ class runFullNovel(ApplyModel,Comb4FeatureTrain,TrainModel,ApplyCutoff):
 
     #nullify some inherited parameters:
     PE2datType=None
-    C4FT_WriteToOutputs='n'
 
     upstream_task1=None
     upstream_task2=None

@@ -13,7 +13,7 @@ PE1s2path<-args[3]
 DataType<-args[4]
 
 
-data<-read.csv(paste(dataPath,"DETwProbs.csv.gz",sep="/"))
+data<-read.csv(paste(dataPath,"DETx.csv.gz",sep="/"))
 PE1data<-read.csv(paste(PE1s2path,"Stats.csv.gz",sep="/"))
 
 if(DataType=="All"){
@@ -21,6 +21,9 @@ if(DataType=="All"){
 }else if(DataType=="FG"){
   EDrecDiff<-1-PE1data$Recall[which(as.character(PE1data$FGID)==as.character(unique(data$FGID)))]
 }
+
+#drop FN labels. 
+data<-data[which(data$label %in% c("TP","FP")),]
 
 labelVec<-data$label=="TP"
 labelVec[labelVec]<-1

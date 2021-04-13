@@ -666,10 +666,10 @@ class MergeFE_AL(INSTINCT_Rmethod_Task):
 
 
 ############################################################
-#Performance stats based on specification dependent labels
+#Performance stats based on specification dependent labels. Split into two stage, one that computes stats and one that averages stats
 ############################################################
 
-class PerfEval1(INSTINCT_Rmethod_Task):
+class PerfEval1_s1(INSTINCT_Rmethod_Task):
 
     upstream_task1 = luigi.Parameter()
     upstream_task2 = luigi.Parameter()#FG
@@ -697,20 +697,60 @@ class PerfEval1(INSTINCT_Rmethod_Task):
         LABpath = self.uTask1path
         FGpath = self.uTask2path + '/'
         INTpath = 'NULL'
+            
         resultPath =  self.outpath()
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
         Paths = [FGpath,LABpath,INTpath,resultPath]
-        Args = [self.FileGroupID,'1']
+        Args = [self.FileGroupID,"FG"]
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
 
     def invoke(obj,upstream1,upstream2,n='default'):
         FileGroupID = Helper.tplExtract(obj.FileGroupID,n=n)
-        return(PerfEval1(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,uTask2path=upstream2.outpath(),\
+        return(PerfEval1_s1(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,uTask2path=upstream2.outpath(),\
                          FileGroupID=FileGroupID,PE1methodID=obj.PE1methodID,PE1process=obj.PE1process,system=obj.system,ProjectRoot=obj.ProjectRoot,\
                          r_version=obj.r_version))
+
+class PerfEval1_s2(INSTINCT_Rmethod_Task):
+
+    upstream_task1 = luigi.Parameter() #csv of PE1_s1
+    uTask1path = luigi.Parameter()
+    
+    PE1process = luigi.Parameter()
+    PE1methodID = luigi.Parameter()
+
+    def hashProcess(self):
+        hashLength = 6 
+        PE1paramsHash = Helper.getParamHash2(self.PE1methodID,hashLength)
+        return PE1paramsHash
+    def outpath(self):
+        return self.uTask1path + '/' + self.hashProcess()
+    def requires(self):
+        return self.upstream_task1
+    def output(self):
+        return luigi.LocalTarget(self.outpath() + '/Stats.csv.gz')
+    def run(self):
+
+        resultPath =  self.outpath()
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
+
+        FGpath = 'NULL'
+        LABpath = 'NULL'
+        INTpath =  self.uTask1path + '/Stats.csv.gz'
+        resultPath2 =   resultPath + '/Stats.csv.gz'
+        FGID = 'NULL'
+
+        Paths = [FGpath,LABpath,INTpath,resultPath2]
+        Args = [FGID,'All'] #run second stage of R script 
+
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
+
+    def invoke(obj,upstream1):
+        return(PerfEval1_s2(upstream_task1=upstream1,uTask1path=upstream1.outpath(),PE1methodID=obj.PE1methodID,PE1process=obj.PE1process,\
+                            system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
 
 ############################################################
 #Performance stats based on specification independent labels
@@ -721,7 +761,7 @@ class PerfEval2(INSTINCT_Rmethod_Task):
     upstream_task1 = luigi.Parameter() 
     upstream_task2 = luigi.Parameter() 
 
-    uTask1path = luigi.Parameter()#model output
+    uTask1path = luigi.Parameter()#model output (CV)
     uTask2path = luigi.Parameter()#pe1 or edperfeval output
 
     PE2process = luigi.Parameter()
@@ -851,6 +891,8 @@ class SplitForPE(INSTINCT_Task):
     uTask1path = luigi.Parameter() #FG path. Makes new folder at low level of FG path. 
 
     upstream_task2 = luigi.Parameter() #will refer to train model
+    uTask2path = luigi.Parameter() 
+
 
     FileGroupID = luigi.Parameter() #single value
 
@@ -867,7 +909,7 @@ class SplitForPE(INSTINCT_Task):
         #pseudocode:
         #split dataset into num of workers
 
-        DETwProbs = pd.read_csv(self.ProjectRoot + 'Cache/' + self.hashProcess() + '/DETx.csv.gz',compression='gzip')
+        DETwProbs = pd.read_csv(self.uTask2path + '/DETx.csv.gz',compression='gzip')
 
         if not os.path.exists(self.outpath()):
             os.makedirs(self.outpath(),exist_ok=True)
@@ -879,7 +921,7 @@ class SplitForPE(INSTINCT_Task):
     def invoke(obj,upstream1,upstream2,n='default'):
         
         FileGroupID = Helper.tplExtract(obj.FileGroupID,n=n)
-        return(SplitForPE(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,FileGroupID=FileGroupID,\
+        return(SplitForPE(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,uTask2path=upstream2.outpath(),FileGroupID=FileGroupID,\
                           ProjectRoot=obj.ProjectRoot))
 
 ##################################################################################
@@ -913,8 +955,6 @@ class TrainModel(INSTINCT_Rmethod_Task):
         return luigi.LocalTarget(self.outpath() + '/' + self.TM_outName)
     def run(self):
 
-        
-        
         FGpath = self.uTask1path + '/FileGroupFormat.csv.gz'
         TMpath = self.uTask1path + '/DETx.csv.gz'
         Mpath = 'NULL'

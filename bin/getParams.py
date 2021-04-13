@@ -103,7 +103,7 @@ def TM(self,ID,stage):
     self.TMprocess = 'TrainModel'
     self.TMstage = stage
     if self.TMstage == 'CV':
-        self.TM_outName = 'DETwProbs.csv.gz'
+        self.TM_outName = 'DETx.csv.gz'
     elif self.TMstage == 'train':
         self.TM_outName = 'RFmodel.rds'
 

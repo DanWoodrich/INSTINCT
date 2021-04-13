@@ -8,6 +8,8 @@ import numpy
 import subprocess
 import shlex
 from instinct import *
+from Comb4EDperf import *
+from Comb4FeatureTrain import *
 from getParams import * 
 
 #Performance evaluation from CV models,
@@ -15,7 +17,7 @@ from getParams import *
 #home/daniel.woodrich/Projects/instinct_dt/
 #C:/Apps/instinct_dt
 
-MPE_params = MPE('ModelPerfEval')
+MPE_params = Load_Job('ModelPerfEval')
 
 #add to MPE
 
@@ -33,7 +35,7 @@ MPE_params = PR(MPE_params,'PerformanceReport')
 
 MPE_params.MPE_WriteToOutputs = 'y'
 
-class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
+class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
     
     #macro job
     JobName=luigi.Parameter()
@@ -45,45 +47,45 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
 
     #nullify some inherited parameters:
     PE2datType=None
-
-    #downstream default (required for this to work correctly, but changeable when running EDpe1 as a job. 
-    EDpe1_WriteToOutputs='n'
-    C4FT_WriteToOutputs='n'
     
     def pipelineMap(self,l): #here is where you define pipeline structure
-        task0 = EDperfEval.invoke(self)
-        task1 = TrainModel.invoke(self)
-        task2 = PerfEval2.invoke(self,task1,task0,"All")
-        task3 = FormatFG.invoke(self,l)#redundant but lets SFPE,AL,PE1 continue their path
-        task4 = SplitForPE.invoke(self,task3,task1,l)
-        task5 = PerfEval2.invoke(self,task4,task0,"FG")
-        task6 = ApplyCutoff.invoke(self,task4)
-        task7 = FormatGT.invoke(self,task3,l)
-        task8 = AssignLabels.invoke(self,task6,task7,task3)
-        task9 = PerfEval1.invoke(self,task8,task3,n=l)
+        task0 = Comb4EDperf.invoke(self)
+        task1 = PerfEval1_s2.invoke(self,task0)
+        
+        task2 = Comb4FeatureTrain.invoke(self)
+        task3 = TrainModel.invoke(self,task2)
+        
+        task4 = PerfEval2.invoke(self,task3,task1,"All")
+        task5 = FormatFG.invoke(self,l)#redundant but lets SFPE,AL,PE1 continue their path
+        task6 = SplitForPE.invoke(self,task5,task3,l)
+        task7 = PerfEval2.invoke(self,task6,task1,"FG")
+        task8 = ApplyCutoff.invoke(self,task6)
+        task9 = FormatGT.invoke(self,task5,l)
+        task10 = AssignLabels.invoke(self,task8,task9,task5)
+        task11 = PerfEval1_s1.invoke(self,task10,task5,n=l)
 
-        return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9]
+        return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9,task10,task11]
     def hashProcess(self):
         hashStrings = [None] * self.IDlength
         for l in range(self.IDlength):
             tasks = self.pipelineMap(l)
             hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
                                        tasks[4].hashProcess(),tasks[5].hashProcess(),tasks[6].hashProcess(),tasks[7].hashProcess(),
-                                       tasks[8].hashProcess(),tasks[9].hashProcess()]) #maybe a more general way to do this? 
+                                       tasks[8].hashProcess(),tasks[9].hashProcess(),tasks[10].hashProcess(),tasks[11].hashProcess()]) #maybe a more general way to do this? 
     
         MPE_JobHash = Helper.getParamHash2(self.PRmethodID + ' ' + ' '.join(hashStrings),12)
         return(MPE_JobHash)
     def outpath(self):
         if self.MPE_WriteToOutputs=='y':
-            return self.ProjectRoot +'Outputs/' + self.MPE_JobName + '/' + self.hashProcess()
+            return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
         elif self.MPE_WriteToOutputs=='n':
             return self.ProjectRoot + 'Cache/' + self.hashProcess()
     def requires(self):
         for l in range(self.IDlength):
             tasks = self.pipelineMap(l)
-            yield tasks[2] #this yield feels wasteful, but no good way around it
-            yield tasks[5]
-            yield tasks[9]
+            yield tasks[4] #this yield feels wasteful, but no good way around it
+            yield tasks[7]
+            yield tasks[11]
     def output(self):
         #this is full performance report
         #return luigi.LocalTarget(OutputsRoot + self.JobName + '/' + self.JobHash + '/RFmodel.rds')
@@ -98,7 +100,7 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
         dataframes = [None] * self.IDlength
         for k in range(self.IDlength):
             tasks = self.pipelineMap(k)
-            dataframes[k] = pd.read_csv(tasks[9].outpath() + '/Stats.csv.gz',compression='gzip')
+            dataframes[k] = pd.read_csv(tasks[11].outpath() + '/Stats.csv.gz',compression='gzip')
         Modeleval = pd.concat(dataframes,ignore_index=True)
 
         #trying to get resultPath formated like normal, messed up paths a little bit need to fix!!! Pick up here. 
@@ -106,22 +108,20 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
         if not os.path.exists(resultCache):
             os.mkdir(resultCache)
 
-        Modeleval.to_csv(resultCache + '/Stats_Intermediate.csv',index=False)
+        Modeleval.to_csv(resultCache + '/Stats.csv.gz',index=False)
         #send back in to PE1
 
         FGpath = 'NULL'
         LABpath = 'NULL'
-        INTpath = resultCache + '/Stats_Intermediate.csv'
-        resultPath2 =  resultCache + '/Stats.csv.gz'
+        INTpath = resultCache + '/Stats.csv.gz'
+        resultPath2 =  self.outpath() + '/Stats.csv.gz'
         FGID = 'NULL'
 
         Paths = [FGpath,LABpath,INTpath,resultPath2]
-        Args = [FGID,'2']
+        Args = [FGID,'All']
         Params = ''
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params=Params)
-
-        os.remove(resultCache + '/Stats_Intermediate.csv')
 
         #now send the paths for all of the artifacts into the performance report R script.
 
@@ -134,14 +134,14 @@ class ModelPerfEval(EDperfEval,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
         #full model PR curve
         #full model AUC
 
-        EDstatPath= tasks[0].outpath() #reads off the last loop from earlier, doesn't matter as these don't change per loop 
+        EDstatPath= tasks[1].outpath() #reads off the last loop from earlier, doesn't matter as these don't change per loop 
         MDstatPath= self.ProjectRoot + 'Cache/' + self.hashProcess()
-        MDvisPath= tasks[2].outpath()
+        MDvisPath= tasks[4].outpath()
         
         FGvis_paths = [None] * self.IDlength
         for k in range(self.IDlength):
             tasks = self.pipelineMap(k)
-            FGvis_paths[k] = tasks[5].outpath()
+            FGvis_paths[k] = tasks[7].outpath()
         FGvis_paths = ','.join(FGvis_paths)
         FGIDs=','.join(self.FileGroupID)
 

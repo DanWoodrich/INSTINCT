@@ -20,10 +20,10 @@ FGID <- args[5]
 PE1stage <- args[6]
 
 
-if(PE1stage=="1"){
+if(PE1stage=="FG"){
 
 #don't really have to retain the signal code label, it is basically just a parameter (which influence hashes, but not)
-LABdata<-read.csv(paste(LABpath,"DETwLabels.csv.gz",sep="/"))
+LABdata<-read.csv(paste(LABpath,"DETx.csv.gz",sep="/"))
 FGdata<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
 
 #change in OB/MB statistic: now a # corresponding to ratio of GT and out TPs (larger ratio means more overbox, smaller ratio means more multibox)
@@ -62,7 +62,7 @@ Stats<-data.frame(cbind(FGID,detTotal,numTPtruth,numTP,numTPout,numFP,numFN,Reca
 
 write.csv(Stats,gzfile(paste(resultPath,"Stats.csv.gz",sep="/")),row.names = FALSE)
 
-}else if(PE1stage=="2"){
+}else if(PE1stage=="All"){
   
   INTdata<-read.csv(paste(INTpath))
   
