@@ -135,7 +135,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         #full model AUC
 
         EDstatPath= tasks[1].outpath() #reads off the last loop from earlier, doesn't matter as these don't change per loop 
-        MDstatPath= self.ProjectRoot + 'Cache/' + self.hashProcess()
+        MDstatPath= self.outpath()
         MDvisPath= tasks[4].outpath()
         
         FGvis_paths = [None] * self.IDlength
