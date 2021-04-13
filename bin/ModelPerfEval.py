@@ -62,7 +62,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         task8 = ApplyCutoff.invoke(self,task6)
         task9 = FormatGT.invoke(self,task5,l)
         task10 = AssignLabels.invoke(self,task8,task9,task5)
-        task11 = PerfEval1_s1.invoke(self,task10,task5,n=l)
+        task11 = PerfEval1_s1.invoke(self,task10,task5,task8,n=l,src="GT")
 
         return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9,task10,task11]
     def hashProcess(self):
@@ -110,6 +110,9 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
 
         Modeleval.to_csv(resultCache + '/Stats.csv.gz',index=False)
         #send back in to PE1
+
+        if not os.path.exists(self.outpath()):
+            os.mkdir(self.outpath())
 
         FGpath = 'NULL'
         LABpath = 'NULL'

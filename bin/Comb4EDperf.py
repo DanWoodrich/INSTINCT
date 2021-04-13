@@ -41,7 +41,7 @@ class Comb4EDperf(FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1_s1):
         task1 = FormatGT.invoke(self,task0,l)
         task2 = UnifyED.invoke(self,task0)
         task3 = AssignLabels.invoke(self,task2,task1,task0)
-        task4 = PerfEval1_s1.invoke(self,task3,task0,l)
+        task4 = PerfEval1_s1.invoke(self,task3,task0,task3,n=l,src="GT")
         return [task0,task1,task2,task3,task4]
     def hashProcess(self):
         #this is just composed of the component hashes (PE1, method being run here, is accounted for in pipeline).

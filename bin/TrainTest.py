@@ -30,7 +30,7 @@ TT_params = PE2(TT_params,'PerfEval2')
 #novel data params
 
 #FG for novel data
-n_TT_params = TT('TrainTest')
+n_TT_params = Load_Job('TrainTest')
 n_FGparams = FG(n_TT_params,'FormatFGapply')
 
 n_FGparams = GT(n_FGparams,'FormatGTapply')
@@ -41,47 +41,99 @@ TT_params.n_FGfile = n_FGparams.FGfile
 TT_params.n_IDlength = n_FGparams.IDlength
 TT_params.n_GTfile = n_FGparams.GTfile
 
-class TrainTest(runFullNovel,PerfEval1,PerfEval2):
+class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval2):
 
     JobName=luigi.Parameter()
-    n_GTfile = luigi.Parameter()
     #nullify some inherited parameters:
 
     def pipelineMap(self):
-            task0 = TrainModel.invoke(self)
-            task1 = FormatFG(FGfile = self.n_FGfile[0],ProjectRoot=self.ProjectRoot)
-            task2 = UnifyED.invoke(self,task1)
-            task3 = UnifyFE.invoke(self,task2,task1)
-            task4 = ApplyModel.invoke(self,task3,task0,task1)
-            task5 = ApplyCutoff.invoke(self,task4)
-            task6 = FormatGT(upstream_task1=task1,uTask1path=task1.outpath(),GTfile=self.n_GTfile[0],ProjectRoot=self.ProjectRoot) #I should remove uTaskpath param before too long
-            task7 = AssignLabels.invoke(self,task5,task6,task1)
-            task8 = PerfEval1.invoke(self,task7,task1,n=0)
-            task9 = PerfEval2.invoke(self,task0,task8,"FG") #this will not work currently, for a couple
-            #reasons. Assign labels incorrectly drops the prob column (have it retain by default).
-            #the name of the read file is also different. I should rename all detection files to be
-            #detx.csv.gz, and make R methods robust to unnecessary columns.
 
-            #Next to do: fix the R methods, think about splitting up TM and EDPE1 run methods into a process
-            #and 1. keeping their merge function (merge for EDPE1, merge for TM, merge for TT)?
-            #2. eliminating their pipeline structure entirely?.
+            #this does perf eval on the n_ data 
+            task0 = Comb4EDperf_TT.invoke(self)
+            task1 = PerfEval1_s2.invoke(self,task0)
+            
+            task2 = Comb4FeatureTrain.invoke(self)
+            task3 = TrainModel.invoke(self,task2)
 
-            #maybe could have a general merge class which just automerges data?
-
-            return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9]
+            #jesus, my brain is broken. Need to do an ED perf eval 1st, that gives us the adjustment factor, not the cutoff.
+            
+            task4 = FormatFG(FGfile = self.n_FGfile[0],ProjectRoot=self.ProjectRoot)
+            task5 = UnifyED.invoke(self,task4)
+            task6 = UnifyFE.invoke(self,task5,task4)
+            task7 = ApplyModel.invoke(self,task6,task3,task4)
+            task8 = FormatGT(upstream_task1=task4,uTask1path=task2.outpath(),GTfile=self.n_GTfile[0],ProjectRoot=self.ProjectRoot)
+            task9 = AssignLabels.invoke(self,task7,task8,task4)
+            task10 = ApplyCutoff.invoke(self,task8)
+            task11 = AssignLabels.invoke(self,task10,task8,task4)
+            task12 = PerfEval1_s1.invoke(self,task11,task4,task10,n=0)  #This is gonna read the wrong file group...
+            task13 = PerfEval2.invoke(self,task9,task1,"FG") #use the pre cutoff data
+            
+        return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9,task10]
+    def hashProcess(self):
+        hashStrings = [None] * self.n_IDlength
+        for l in range(self.IDlength):
+            tasks = self.pipelineMap(l)
+            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
+                                       tasks[4].hashProcess(),tasks[5].hashProcess(),tasks[6].hashProcess(),tasks[7].hashProcess(),
+                                       tasks[8].hashProcess(),tasks[9].hashProcess(),tasks[10].hashProcess(),tasks[11].hashProcess(),
+                                       tasks[12].hashProcess(),tasks[13].hashProcess()]) #maybe a more general way to do this? 
+    
+        MPE_JobHash = Helper.getParamHash2(' '.join(hashStrings),12)
+        return(MPE_JobHash)
+    def outpath(self):
+        if self.MPE_WriteToOutputs=='y':
+            return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
+        elif self.MPE_WriteToOutputs=='n':
+            return self.ProjectRoot + 'Cache/' + self.hashProcess()
     def requires(self):
         tasks=self.pipelineMap()
-        yield tasks[1]
-        yield tasks[6]
-        yield tasks[8]
-        yield tasks[9]
+        yield tasks[4]
+        yield tasks[12]
+        yield tasks[13]
     def output(self):
         return None
     def run(self):
+        
+        for k in range(self.IDlength):
+            tasks=self.pipelineMap(k)
+            dataframes[k] = pd.read_csv(tasks[9].outpath() + '/Stats.csv.gz',compression='gzip')
+        EDeval = pd.concat(dataframes,ignore_index=True)
 
-        #dummy just to make sure it runs and find output easier
-        tasks = self.pipelineMap
-        print(tasks[1].outpath())
+        resultPath = self.outpath()
+
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
+
+        EDeval.to_csv(resultPath + '/Stats.csv.gz',index=False,compression="gzip")
+
+        #combine AL for PE2 'all'
+
+        dataframes = [None] * self.IDlength
+        for k in range(self.IDlength):
+            tasks=self.pipelineMap(k)
+            dataframes[k] = pd.read_csv(tasks[9].outpath() + '/DETx.csv.gz',compression='gzip')
+        AllDat = pd.concat(dataframes,ignore_index=True)
+
+        AllDat.to_csv(resultPath + '/DETx.csv.gz',index=False,compression="gzip")
+
+        #can copypaste, or run as luigi task? Hard to do since we shortcut the combining path here, not a real task.
+        #the right way to do this may be to make a wrapper job to combine these, but a lot of work for now
+        #PerfEval2.invoke(self,tasks[],task1,"FG")
+
+        StatsPath = tasks[1].outpath()
+        resultPath = resultPath
+
+        DETpath = resultPath + '/DETx.csv.gz'
+
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
+
+        Paths = [DETpath,resultPath,StatsPath,self.PE2datType]
+
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE2process,MethodID=self.PE2methodID,Paths=Paths,Args='',Params='')
+
+        #test out the above when I get back
+        
     def invoke(obj):
         return(TrainTest(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
                             IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,\

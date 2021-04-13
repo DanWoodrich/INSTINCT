@@ -5,9 +5,10 @@
 MethodID<-"pe1-simple-v1-0"
 
 #test folder
-#FGpath<-"C:/Apps/instinct_dt/Cache/70e5c861ea326421aab0ce3c8015884b8e8e0f5f"
-#LABpath<-"C:/Apps/instinct_dt/Cache/70e5c861ea326421aab0ce3c8015884b8e8e0f5f/d939e0121a0c175b0d83dbb02b1c7f91c8b8d3b9/5e8a2e6c966b0b9685498e4d780e2581f828fa12/f0b726b269129987cf719f9cdf4fbe3b90d24827/68f38c62ea3287481d23966c9bb593df397c0178"
+#FGpath<-"C:/Apps/INSTINCT/Cache/2f38f7440b5b/"
+#LABpath<-"C:/Apps/INSTINCT/Cache/2f38f7440b5b/a04a78/04f178/813e20/c393b4/795a4d"
 #SignalCode="LM"
+#resultPath="C:/Apps/INSTINCT/Cache/2f38f7440b5b/a04a78/04f178/813e20/c393b4/795a4d/8b93bc"
 
 args<-commandArgs(trailingOnly = TRUE)
 

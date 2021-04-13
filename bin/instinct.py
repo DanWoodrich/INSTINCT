@@ -673,9 +673,10 @@ class PerfEval1_s1(INSTINCT_Rmethod_Task):
 
     upstream_task1 = luigi.Parameter()
     upstream_task2 = luigi.Parameter()#FG
+    upstream_task3 = luigi.Parameter()#AC (Doesn't care what value but used to hash) 
     uTask1path = luigi.Parameter()
     uTask2path = luigi.Parameter()
-
+    
     FileGroupID = luigi.Parameter()
     
     PE1process = luigi.Parameter()
@@ -683,13 +684,15 @@ class PerfEval1_s1(INSTINCT_Rmethod_Task):
 
     def hashProcess(self):
         hashLength = 6 
-        PE1paramsHash = Helper.getParamHash2(self.PE1methodID + ' ' + self.upstream_task1.hashProcess()+ ' ' + self.upstream_task2.hashProcess(),hashLength)
+        PE1paramsHash = Helper.getParamHash2(self.PE1methodID + ' ' + self.upstream_task1.hashProcess()+ ' ' + self.upstream_task2.hashProcess()+\
+                                             ' ' + self.upstream_task3.hashProcess(),hashLength)
         return PE1paramsHash
     def outpath(self):
         return self.uTask1path + '/' + self.hashProcess()
     def requires(self):
         yield self.upstream_task1
         yield self.upstream_task2
+        yield self.upstream_task3
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/Stats.csv.gz')
     def run(self):
@@ -707,9 +710,13 @@ class PerfEval1_s1(INSTINCT_Rmethod_Task):
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
 
-    def invoke(obj,upstream1,upstream2,n='default'):
-        FileGroupID = Helper.tplExtract(obj.FileGroupID,n=n)
-        return(PerfEval1_s1(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,uTask2path=upstream2.outpath(),\
+    def invoke(obj,upstream1,upstream2,upstream3,n='default',src=None):
+        if src == "GT":
+            FileGroupID=obj.FileGroupID
+        elif src == "n_":
+            FileGroupID=obj.n_FileGroupID
+        FileGroupID = Helper.tplExtract(FileGroupID,n=n)
+        return(PerfEval1_s1(upstream_task1=upstream1,uTask1path=upstream1.outpath(),upstream_task2=upstream2,upstream_task3=upstream3,uTask2path=upstream2.outpath(),\
                          FileGroupID=FileGroupID,PE1methodID=obj.PE1methodID,PE1process=obj.PE1process,system=obj.system,ProjectRoot=obj.ProjectRoot,\
                          r_version=obj.r_version))
 
@@ -812,7 +819,7 @@ class ApplyCutoff(INSTINCT_Task):
 
     def hashProcess(self):
         hashLength = 6 
-        ACcutoffHash = Helper.getParamHash2(self.ACcutoffString + ' ' + self.upstream_task1.hashProcess(),hashLength)
+        ACcutoffHash = Helper.getParamHash2(self.ACcutoffString,hashLength)
         return ACcutoffHash
     def outpath(self):
         return self.uTask1path + '/' + self.hashProcess()

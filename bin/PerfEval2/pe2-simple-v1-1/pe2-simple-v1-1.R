@@ -3,9 +3,9 @@ library(flux)
 
 args<-commandArgs(trailingOnly = TRUE)
 
-#dataPath<-"C:/instinct_dt/Cache/2bf717aef81044ab2e655e4351d4342cc08de10a/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157"
-#resultPath<-"C:/instinct_dt/Cache/9b83e604c10167e92547431790a3008f3db64157/testOut"
-#PE1s2path<-"C:/instinct_dt/Cache/07592b6298d81eb10f5044f0bb9a8d8a58fc9d31"
+#dataPath<-"C:/Apps/INSTINCT/Cache/2f38f7440b5b/a04a78/04f178/813e20"
+#resultPath<-"C:/Apps/INSTINCT/Cache/2f38f7440b5b/a04a78/04f178/813e20/53d3bb"
+#PE1s2path<-"C:/Apps/INSTINCT/Cache/2f38f7440b5b/a04a78/04f178/813e20/03bc3c/c393b4/6c4546"
 
 dataPath<-args[1]
 resultPath<-args[2]
@@ -19,11 +19,22 @@ PE1data<-read.csv(paste(PE1s2path,"Stats.csv.gz",sep="/"))
 if(DataType=="All"){
   EDrecDiff<-1-PE1data$Recall[nrow(PE1data)]
 }else if(DataType=="FG"){
-  EDrecDiff<-1-PE1data$Recall[which(as.character(PE1data$FGID)==as.character(unique(data$FGID)))]
+  #see if FGID even being tracked yet
+  if("FGID" %in% colnames(data)){
+    EDrecDiff<-1-PE1data$Recall[which(as.character(PE1data$FGID)==as.character(unique(data$FGID)))]
+  }else{ #if not, assume it is the correct one
+    EDrecDiff<-1-PE1data$Recall
+  }
 }
 
 #drop FN labels. 
 data<-data[which(data$label %in% c("TP","FP")),]
+
+#if still has species code labels, drop them
+
+if("SignalCode" %in% colnames(data)){
+  data<-data[which(data$SignalCode=="out"),]
+}
 
 labelVec<-data$label=="TP"
 labelVec[labelVec]<-1
