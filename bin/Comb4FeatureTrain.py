@@ -1,32 +1,8 @@
-import luigi
-import os
-import hashlib
-import configparser
-import pandas as pd
-import sys
-import numpy
-import subprocess
-import shlex
 from instinct import *
-from getParams import *
 
-#Combine FG data to prepare for model training 
-# C4FT = combine for feature train. Used to train RF/SVM models etc, not for DL.
-#for DL, would want to load detections w no features extracted. 
-
-#load params
-
-C4FT_params = Load_Job('Comb4FeatureTrain')
-C4FT_params = FG(C4FT_params,'FormatFG')
-C4FT_params = GT(C4FT_params,'FormatGT')
-C4FT_params = ED(C4FT_params,'EventDetector')
-C4FT_params = FE(C4FT_params,'FeatureExtraction')
-C4FT_params = AL(C4FT_params,'AssignLabels')
-C4FT_params = MFA(C4FT_params,'MergeFE_AL')
 
 class Comb4FeatureTrain(FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL):
 
-    JobName=luigi.Parameter()
     IDlength = luigi.IntParameter()
     FileGroupID = luigi.Parameter()
 
@@ -93,15 +69,11 @@ class Comb4FeatureTrain(FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_A
 
         #copy params to output folder
     def invoke(self):
-        return(Comb4FeatureTrain(JobName=self.JobName,SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
+        return(Comb4FeatureTrain(SoundFileRootDir_Host=self.SoundFileRootDir_Host,\
                                  IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
                                  EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
                                  ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,\
                                  FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamNames=self.FEparamNames,\
                                  FEsplits=self.FEsplits,FEcpu=self.FEcpu,MFAprocess=self.MFAprocess,MFAmethodID=self.MFAmethodID,\
                                  system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
-
-if __name__ == '__main__':
-    luigi.build([Comb4FeatureTrain.invoke(C4FT_params)], local_scheduler=True)
-
 

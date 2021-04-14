@@ -1,26 +1,4 @@
-import luigi
-import os
-import hashlib
-import configparser
-import pandas as pd
-import sys
-import numpy
-import subprocess
-import shlex
 from instinct import *
-from getParams import *
-
-#Right now this is loading params from MPE. Reason being, will use this config for full model development and doesn't make sense to reproduce EDPE1 config. 
-
-C4EP_params = Load_Job('ModelPerfEval')
-
-#add to MPE
-
-C4EP_params = FG(C4EP_params,'FormatFG')
-C4EP_params = GT(C4EP_params,'FormatGT')
-C4EP_params = ED(C4EP_params,'EventDetector')
-C4EP_params = AL(C4EP_params,'AssignLabels')
-
 #Ready a bunch of FGs for shared comparison with PE1 pt 2. 
 
 class Comb4EDperf(FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1_s1):
@@ -48,8 +26,11 @@ class Comb4EDperf(FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1_s1):
         hashStrings = [None] * self.IDlength
         for l in range(self.IDlength):
             tasks = self.pipelineMap(l)
-            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
-                                  tasks[4].hashProcess()])
+            taskStr = []
+            for f in range(len(tasks)):
+                taskStr.extend([tasks[f].hashProcess()])
+            
+            hashStrings[l] = ' '.join(taskStr)
     
         return Helper.getParamHash2(' '.join(hashStrings),6)
     def outpath(self):
@@ -86,8 +67,4 @@ class Comb4EDperf(FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1_s1):
                    PE1process=self.PE1process,PE1methodID=self.PE1methodID,\
                    ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
 
-
-
-if __name__ == '__main__':
-    luigi.build([Comb4EDperf.invoke(C4EP_params)], local_scheduler=True)
 

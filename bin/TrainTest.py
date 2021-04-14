@@ -10,6 +10,9 @@ import shlex
 from instinct import *
 from runFullNovel import *
 from getParams import *
+from Comb4EDperf_TT import *
+from Comb4FeatureTrain import *
+from Comb4PE2All import *
 
 #Run a model on data that does not need to have labels. 
 
@@ -25,7 +28,7 @@ TT_params = TM(TT_params,'TrainModel','train')
 TT_params = AC(TT_params,'ApplyCutoff')
 TT_params = PE1(TT_params,'PerfEval1')
 TT_params = PE2(TT_params,'PerfEval2')
-
+TT_params = PR(TT_params,'PerformanceReport')
 
 #novel data params
 
@@ -41,102 +44,127 @@ TT_params.n_FGfile = n_FGparams.FGfile
 TT_params.n_IDlength = n_FGparams.IDlength
 TT_params.n_GTfile = n_FGparams.GTfile
 
+TT_params.TT_WriteToOutputs = 'y'
+
+print(TT_params.n_IDlength)
+print(TT_params.IDlength)
+
 class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval2):
 
     JobName=luigi.Parameter()
+    TT_WriteToOutputs = luigi.Parameter()
     #nullify some inherited parameters:
 
-    def pipelineMap(self):
+    #PR
+    PRprocess=luigi.Parameter()
+    PRmethodID=luigi.Parameter()
 
-            #this does perf eval on the n_ data 
-            task0 = Comb4EDperf_TT.invoke(self)
-            task1 = PerfEval1_s2.invoke(self,task0)
-            
-            task2 = Comb4FeatureTrain.invoke(self)
-            task3 = TrainModel.invoke(self,task2)
+    #nullify some inherited parameters:
+    PE2datType=None
 
-            #jesus, my brain is broken. Need to do an ED perf eval 1st, that gives us the adjustment factor, not the cutoff.
+    #un-nullify some inherited parameters
+    IDlength=luigi.IntParameter()
+    FGfile=luigi.Parameter()
+    GTfile =luigi.Parameter()
+    FileGroupID=luigi.Parameter()
+
+    def pipelineMap(self,l):
+
+        #this does perf eval on the n_ data 
+        task0 = Comb4EDperf_TT.invoke(self)
+        task1 = PerfEval1_s2.invoke(self,task0)
+        
+        task2 = Comb4FeatureTrain.invoke(self)
+        task3 = TrainModel.invoke(self,task2)
+
+        task4 = Comb4PE2All.invoke(self)
+        task5 = PerfEval2.invoke(self,task4,task1,"All")
+        
+        task6 = FormatFG(FGfile = self.n_FGfile[l],ProjectRoot=self.ProjectRoot)
+        task7 = UnifyED.invoke(self,task6)
+        task8 = UnifyFE.invoke(self,task7,task6)
+        task9 = ApplyModel.invoke(self,task8,task3,task6)
+        task10 = FormatGT(upstream_task1=task6,uTask1path=task2.outpath(),GTfile=self.n_GTfile[l],ProjectRoot=self.ProjectRoot)
+        task11 = AssignLabels.invoke(self,task9,task10,task6)
+        task12 = ApplyCutoff.invoke(self,task11)
+        task13 = AssignLabels.invoke(self,task12,task10,task6)
+        task14 = PerfEval1_s1.invoke(self,task13,task6,task12,n=l,src="n_") 
+        task15 = PerfEval2.invoke(self,task11,task1,"FG") #use the pre cutoff data
             
-            task4 = FormatFG(FGfile = self.n_FGfile[0],ProjectRoot=self.ProjectRoot)
-            task5 = UnifyED.invoke(self,task4)
-            task6 = UnifyFE.invoke(self,task5,task4)
-            task7 = ApplyModel.invoke(self,task6,task3,task4)
-            task8 = FormatGT(upstream_task1=task4,uTask1path=task2.outpath(),GTfile=self.n_GTfile[0],ProjectRoot=self.ProjectRoot)
-            task9 = AssignLabels.invoke(self,task7,task8,task4)
-            task10 = ApplyCutoff.invoke(self,task8)
-            task11 = AssignLabels.invoke(self,task10,task8,task4)
-            task12 = PerfEval1_s1.invoke(self,task11,task4,task10,n=0)  #This is gonna read the wrong file group...
-            task13 = PerfEval2.invoke(self,task9,task1,"FG") #use the pre cutoff data
-            
-        return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9,task10]
-    def hashProcess(self):
-        hashStrings = [None] * self.n_IDlength
-        for l in range(self.IDlength):
-            tasks = self.pipelineMap(l)
-            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
-                                       tasks[4].hashProcess(),tasks[5].hashProcess(),tasks[6].hashProcess(),tasks[7].hashProcess(),
-                                       tasks[8].hashProcess(),tasks[9].hashProcess(),tasks[10].hashProcess(),tasks[11].hashProcess(),
-                                       tasks[12].hashProcess(),tasks[13].hashProcess()]) #maybe a more general way to do this? 
-    
-        MPE_JobHash = Helper.getParamHash2(' '.join(hashStrings),12)
-        return(MPE_JobHash)
+        return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9,task10,task11,task12,task13,task14,task15]
     def outpath(self):
-        if self.MPE_WriteToOutputs=='y':
+        if self.TT_WriteToOutputs=='y':
             return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
-        elif self.MPE_WriteToOutputs=='n':
+        elif self.TT_WriteToOutputs=='n':
             return self.ProjectRoot + 'Cache/' + self.hashProcess()
     def requires(self):
-        tasks=self.pipelineMap()
-        yield tasks[4]
-        yield tasks[12]
-        yield tasks[13]
+        for l in range(self.n_IDlength):
+            tasks = self.pipelineMap(l)
+            yield tasks[5]
+            yield tasks[14]
+            yield tasks[15]
     def output(self):
-        return None
+        return luigi.LocalTarget(self.outpath() + '/FullStats.csv')
     def run(self):
+
+        #guess I'm just calling the process in here. Might think about abstracting to C4 format, but also should
+        #do the same with MPE at that point. 
         
-        for k in range(self.IDlength):
+        for k in range(self.n_IDlength):
             tasks=self.pipelineMap(k)
-            dataframes[k] = pd.read_csv(tasks[9].outpath() + '/Stats.csv.gz',compression='gzip')
-        EDeval = pd.concat(dataframes,ignore_index=True)
+            dataframes[k] = pd.read_csv(tasks[14].outpath() + '/Stats.csv.gz',compression='gzip')
+        Modeleval = pd.concat(dataframes,ignore_index=True)
+
+        resultCache= self.ProjectRoot + 'Cache/' + self.hashProcess()
+        if not os.path.exists(resultCache):
+            os.mkdir(resultCache)
+
+        Modeleval.to_csv(resultCache + '/Stats.csv.gz',index=False)
 
         resultPath = self.outpath()
 
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
-        EDeval.to_csv(resultPath + '/Stats.csv.gz',index=False,compression="gzip")
+        FGpath = 'NULL'
+        LABpath = 'NULL'
+        INTpath = resultCache + '/Stats.csv.gz'
+        resultPath2 =  resultPath + '/Stats.csv.gz'
+        FGID = 'NULL'
 
-        #combine AL for PE2 'all'
+        Paths = [FGpath,LABpath,INTpath,resultPath2]
+        Args = [FGID,'All']
+        Params = ''
 
-        dataframes = [None] * self.IDlength
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params=Params)
+
+        EDstatPath= tasks[1].outpath() #reads off the last loop from earlier, doesn't matter as these don't change per loop 
+        MDstatPath= self.outpath()
+        MDvisPath= tasks[5].outpath()
+        
+        FGvis_paths = [None] * self.IDlength
         for k in range(self.IDlength):
-            tasks=self.pipelineMap(k)
-            dataframes[k] = pd.read_csv(tasks[9].outpath() + '/DETx.csv.gz',compression='gzip')
-        AllDat = pd.concat(dataframes,ignore_index=True)
+            tasks = self.pipelineMap(k)
+            FGvis_paths[k] = tasks[15].outpath()
+        FGvis_paths = ','.join(FGvis_paths)
+        FGIDs=','.join(self.FileGroupID)
 
-        AllDat.to_csv(resultPath + '/DETx.csv.gz',index=False,compression="gzip")
+        resultPath=self.outpath()
 
-        #can copypaste, or run as luigi task? Hard to do since we shortcut the combining path here, not a real task.
-        #the right way to do this may be to make a wrapper job to combine these, but a lot of work for now
-        #PerfEval2.invoke(self,tasks[],task1,"FG")
-
-        StatsPath = tasks[1].outpath()
-        resultPath = resultPath
-
-        DETpath = resultPath + '/DETx.csv.gz'
-
+        if not os.path.exists(self.outpath()):
+            os.mkdir(self.outpath())
+                    
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
-        Paths = [DETpath,resultPath,StatsPath,self.PE2datType]
+        Paths = [EDstatPath,MDstatPath,MDvisPath,resultPath]
+        Args = [FGvis_paths,FGIDs]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE2process,MethodID=self.PE2methodID,Paths=Paths,Args='',Params='')
-
-        #test out the above when I get back
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PRprocess,MethodID=self.PRmethodID,Paths=Paths,Args=Args,Params='')
         
     def invoke(obj):
         return(TrainTest(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
-                            IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,\
+                            IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,TT_WriteToOutputs=obj.TT_WriteToOutputs,\
                             GTfile=obj.GTfile,EDprocess=obj.EDprocess,EDsplits=obj.EDsplits,EDcpu=obj.EDcpu,\
                             EDchunk=obj.EDchunk,EDmethodID=obj.EDmethodID,EDparamString=obj.EDparamString,\
                             EDparamNames=obj.EDparamNames,ALprocess=obj.ALprocess,ALmethodID=obj.ALmethodID,\
@@ -146,6 +174,7 @@ class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval
                             TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
                             TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_FileGroupID=obj.n_FileGroupID,\
                             PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
+                            PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,\
                             n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,n_GTfile=obj.n_GTfile,system=obj.system,r_version=obj.r_version))
 
 
