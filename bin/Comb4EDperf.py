@@ -1,7 +1,7 @@
 from instinct import *
 #Ready a bunch of FGs for shared comparison with PE1 pt 2. 
 
-class Comb4EDperf(FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1_s1):
+class Comb4EDperf(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1_s1):
     
     JobName=luigi.Parameter()
     IDlength = luigi.IntParameter()
@@ -14,56 +14,20 @@ class Comb4EDperf(FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1_s1):
     uTask2path=None
     uTask3path=None
 
+    fileName = 'Stats.csv.gz'
+
     def pipelineMap(self,l): #here is where you define pipeline structure 
         task0 = FormatFG.invoke(self,l) 
         task1 = FormatGT.invoke(self,task0,l)
         task2 = UnifyED.invoke(self,task0)
         task3 = AssignLabels.invoke(self,task2,task1,task0)
         task4 = PerfEval1_s1.invoke(self,task3,task0,task3,n=l,src="GT")
-        return [task0,task1,task2,task3,task4]
-    def hashProcess(self):
-        #this is just composed of the component hashes (PE1, method being run here, is accounted for in pipeline).
-        hashStrings = [None] * self.IDlength
-        for l in range(self.IDlength):
-            tasks = self.pipelineMap(l)
-            taskStr = []
-            for f in range(len(tasks)):
-                taskStr.extend([tasks[f].hashProcess()])
-            
-            hashStrings[l] = ' '.join(taskStr)
-    
-        return Helper.getParamHash2(' '.join(hashStrings),6)
-    def outpath(self):
-        return self.ProjectRoot + 'Cache/' + self.hashProcess()
-    def requires(self):
-        for l in range(self.IDlength):
-            tasks = self.pipelineMap(l)
-
-            yield tasks[len(tasks)-1]
-    def output(self):
-        return luigi.LocalTarget(self.outpath() + '/Stats.csv.gz')
-    def run(self):
-        
-        #concatenate outputs and summarize
-
-        dataframes = [None] * self.IDlength
-        for k in range(self.IDlength):
-            tasks=self.pipelineMap(k)
-            dataframes[k] = pd.read_csv(tasks[4].outpath() + '/Stats.csv.gz',compression='gzip')
-        EDeval = pd.concat(dataframes,ignore_index=True)
-
-        resultPath = self.outpath()
-
-        if not os.path.exists(resultPath):
-            os.mkdir(resultPath)
-
-        EDeval.to_csv(resultPath + '/Stats.csv.gz',index=False,compression="gzip")
-        
+        return [task0,task1,task2,task3,task4]     
     def invoke(self):
         return(Comb4EDperf(JobName=self.JobName,SoundFileRootDir_Host=self.SoundFileRootDir_Host,IDlength=self.IDlength,\
                    GTfile=self.GTfile,FGfile=self.FGfile,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
                    EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
-                   ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,\
+                   ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,loopVar=self.IDlength,\
                    PE1process=self.PE1process,PE1methodID=self.PE1methodID,\
                    ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
 

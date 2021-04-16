@@ -37,7 +37,6 @@ MPE_params.MPE_WriteToOutputs = 'y'
 
 class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
     
-    #macro job
     JobName=luigi.Parameter()
     MPE_WriteToOutputs = luigi.Parameter()
 
@@ -65,23 +64,24 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         task11 = PerfEval1_s1.invoke(self,task10,task5,task8,n=l,src="GT")
 
         return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9,task10,task11]
-    def hashProcess(self):
-        hashStrings = [None] * self.IDlength
-        for l in range(self.IDlength):
-            tasks = self.pipelineMap(l)
-            hashStrings[l] = ' '.join([tasks[0].hashProcess(),tasks[1].hashProcess(),tasks[2].hashProcess(),tasks[3].hashProcess(),
-                                       tasks[4].hashProcess(),tasks[5].hashProcess(),tasks[6].hashProcess(),tasks[7].hashProcess(),
-                                       tasks[8].hashProcess(),tasks[9].hashProcess(),tasks[10].hashProcess(),tasks[11].hashProcess()]) #maybe a more general way to do this? 
-    
-        MPE_JobHash = Helper.getParamHash2(self.PRmethodID + ' ' + ' '.join(hashStrings),12)
-        return(MPE_JobHash)
     def outpath(self):
         if self.MPE_WriteToOutputs=='y':
             return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
         elif self.MPE_WriteToOutputs=='n':
             return self.ProjectRoot + 'Cache/' + self.hashProcess()
+    def hashProcess(self):
+        hashStrings = [None] * self.loopVar
+        for l in range(self.loopVar):
+            tasks = self.pipelineMap(l)
+            taskStr = []
+            for f in range(len(tasks)):
+                taskStr.extend([tasks[f].hashProcess()])
+            
+            hashStrings[l] = ' '.join(taskStr)
+            
+        return Helper.getParamHash2(self.PRmethodID + ' ' + ' '.join(hashStrings),6)
     def requires(self):
-        for l in range(self.IDlength):
+        for l in range(self.loopVar):
             tasks = self.pipelineMap(l)
             yield tasks[4] #this yield feels wasteful, but no good way around it
             yield tasks[7]
@@ -97,8 +97,8 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         
          #concatenate outputs and summarize
 
-        dataframes = [None] * self.IDlength
-        for k in range(self.IDlength):
+        dataframes = [None] * self.loopVar
+        for k in range(self.loopVar):
             tasks = self.pipelineMap(k)
             dataframes[k] = pd.read_csv(tasks[11].outpath() + '/Stats.csv.gz',compression='gzip')
         Modeleval = pd.concat(dataframes,ignore_index=True)
@@ -141,8 +141,8 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         MDstatPath= self.outpath()
         MDvisPath= tasks[4].outpath()
         
-        FGvis_paths = [None] * self.IDlength
-        for k in range(self.IDlength):
+        FGvis_paths = [None] * self.loopVar
+        for k in range(self.loopVar):
             tasks = self.pipelineMap(k)
             FGvis_paths[k] = tasks[7].outpath()
         FGvis_paths = ','.join(FGvis_paths)
@@ -170,7 +170,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
                              TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,TM_outName=obj.TM_outName,\
                              TMcpu=obj.TMcpu,PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
                              ACcutoffString=obj.ACcutoffString,PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,ProjectRoot=obj.ProjectRoot,system=obj.system,\
-                             r_version=obj.r_version))
+                             r_version=obj.r_version,loopVar = obj.IDlength))
     
 if __name__ == '__main__':
     luigi.build([ModelPerfEval.invoke(MPE_params)], local_scheduler=True)    

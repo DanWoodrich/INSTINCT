@@ -46,10 +46,7 @@ TT_params.n_GTfile = n_FGparams.GTfile
 
 TT_params.TT_WriteToOutputs = 'y'
 
-print(TT_params.n_IDlength)
-print(TT_params.IDlength)
-
-class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval2):
+class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
 
     JobName=luigi.Parameter()
     TT_WriteToOutputs = luigi.Parameter()
@@ -68,6 +65,7 @@ class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval
     GTfile =luigi.Parameter()
     FileGroupID=luigi.Parameter()
 
+
     def pipelineMap(self,l):
 
         #this does perf eval on the n_ data 
@@ -84,7 +82,7 @@ class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval
         task7 = UnifyED.invoke(self,task6)
         task8 = UnifyFE.invoke(self,task7,task6)
         task9 = ApplyModel.invoke(self,task8,task3,task6)
-        task10 = FormatGT(upstream_task1=task6,uTask1path=task2.outpath(),GTfile=self.n_GTfile[l],ProjectRoot=self.ProjectRoot)
+        task10 = FormatGT(upstream_task1=task6,uTask1path=task6.outpath(),GTfile=self.n_GTfile[l],ProjectRoot=self.ProjectRoot)
         task11 = AssignLabels.invoke(self,task9,task10,task6)
         task12 = ApplyCutoff.invoke(self,task11)
         task13 = AssignLabels.invoke(self,task12,task10,task6)
@@ -98,8 +96,9 @@ class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval
         elif self.TT_WriteToOutputs=='n':
             return self.ProjectRoot + 'Cache/' + self.hashProcess()
     def requires(self):
-        for l in range(self.n_IDlength):
+        for l in range(self.loopVar):
             tasks = self.pipelineMap(l)
+            yield tasks[1]
             yield tasks[5]
             yield tasks[14]
             yield tasks[15]
@@ -107,10 +106,9 @@ class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval
         return luigi.LocalTarget(self.outpath() + '/FullStats.csv')
     def run(self):
 
-        #guess I'm just calling the process in here. Might think about abstracting to C4 format, but also should
-        #do the same with MPE at that point. 
-        
-        for k in range(self.n_IDlength):
+        #this is basically same as MPE, maybe generalize this somehow... 
+        dataframes = [None] * self.loopVar
+        for k in range(self.loopVar):
             tasks=self.pipelineMap(k)
             dataframes[k] = pd.read_csv(tasks[14].outpath() + '/Stats.csv.gz',compression='gzip')
         Modeleval = pd.concat(dataframes,ignore_index=True)
@@ -120,6 +118,11 @@ class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval
             os.mkdir(resultCache)
 
         Modeleval.to_csv(resultCache + '/Stats.csv.gz',index=False)
+
+        if self.TT_WriteToOutputs=='y':
+            if not os.path.exists(self.ProjectRoot +'Outputs/' + self.JobName):
+                os.mkdir(self.ProjectRoot +'Outputs/' + self.JobName)
+                    
 
         resultPath = self.outpath()
 
@@ -142,18 +145,15 @@ class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval
         MDstatPath= self.outpath()
         MDvisPath= tasks[5].outpath()
         
-        FGvis_paths = [None] * self.IDlength
-        for k in range(self.IDlength):
+        FGvis_paths = [None] * self.loopVar
+        for k in range(self.loopVar):
             tasks = self.pipelineMap(k)
             FGvis_paths[k] = tasks[15].outpath()
         FGvis_paths = ','.join(FGvis_paths)
-        FGIDs=','.join(self.FileGroupID)
+        FGIDs=','.join(self.n_FileGroupID)
 
         resultPath=self.outpath()
 
-        if not os.path.exists(self.outpath()):
-            os.mkdir(self.outpath())
-                    
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
@@ -174,7 +174,7 @@ class TrainTest(Comb4EDperf_TT,Comb4FeatureTrain,ApplyCutoff,TrainModel,PerfEval
                             TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
                             TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_FileGroupID=obj.n_FileGroupID,\
                             PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
-                            PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,\
+                            PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,loopVar=obj.n_IDlength,\
                             n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,n_GTfile=obj.n_GTfile,system=obj.system,r_version=obj.r_version))
 
 

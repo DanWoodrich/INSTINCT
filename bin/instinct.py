@@ -162,7 +162,7 @@ class INSTINCT_Task(luigi.Task):
 
 class INSTINCT_detTask(INSTINCT_Task): #for task types that modifying detection .csvs
 
-       def output(self):
+    def output(self):
         return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
 
 class INSTINCT_Rmethod_Task(INSTINCT_Task):
@@ -170,6 +170,45 @@ class INSTINCT_Rmethod_Task(INSTINCT_Task):
     system= luigi.Parameter()
     r_version=luigi.Parameter()
 
+class Comb4Standard(luigi.Task):
+    loopVar = luigi.Parameter()
+
+    def hashProcess(self):
+        #this is just composed of the component hashes (PE1, method being run here, is accounted for in pipeline).
+        hashStrings = [None] * self.loopVar
+        for l in range(self.loopVar):
+            tasks = self.pipelineMap(l)
+            taskStr = []
+            for f in range(len(tasks)):
+                taskStr.extend([tasks[f].hashProcess()])
+            
+            hashStrings[l] = ' '.join(taskStr)
+    
+        return Helper.getParamHash2(' '.join(hashStrings),6)
+    def requires(self):
+        for l in range(self.loopVar):
+            tasks = self.pipelineMap(l)
+
+            yield tasks[len(tasks)-1]
+            #concatenate outputs and summarize
+    def outpath(self):
+        return self.ProjectRoot + 'Cache/' + self.hashProcess()
+    def output(self):
+        return luigi.LocalTarget(self.outpath() + '/' + self.fileName)   
+    def run(self):
+        
+        dataframes = [None] * self.loopVar
+        for k in range(self.loopVar):
+            tasks=self.pipelineMap(k)
+            dataframes[k] = pd.read_csv(tasks[len(tasks)-1].outpath() + '/' + self.fileName,compression='gzip')
+        Dat = pd.concat(dataframes,ignore_index=True)
+
+        resultPath = self.outpath()
+
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
+
+        Dat.to_csv(resultPath + '/' + self.fileName,index=False,compression="gzip")
     
 ########################
 #format metadata
@@ -617,7 +656,8 @@ class AssignLabels(INSTINCT_Rmethod_Task):
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ALprocess,MethodID=self.ALmethodID,Paths=Paths,Args=Args,Params=self.ALparamString)
         
     def invoke(obj,upstream1,upstream2,upstream3):
-        return(AssignLabels(upstream_task1 = upstream1,upstream_task2 = upstream2,uTask1path=upstream1.outpath(),uTask2path=upstream2.outpath(),upstream_task3 = upstream3,uTask3path=upstream3.outpath(),\
+        return(AssignLabels(upstream_task1 = upstream1,upstream_task2 = upstream2,uTask1path=upstream1.outpath(),\
+                            uTask2path=upstream2.outpath(),upstream_task3 = upstream3,uTask3path=upstream3.outpath(),\
                             ALmethodID=obj.ALmethodID,ALprocess=obj.ALprocess,ALparamString=obj.ALparamString,\
                             system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
 
@@ -951,7 +991,7 @@ class TrainModel(INSTINCT_Rmethod_Task):
 
     def hashProcess(self):
         hashLength = 6 
-        TM_hash = Helper.getParamHash2(self.TMparamString + ' ' + self.TMmethodID,hashLength)
+        TM_hash = Helper.getParamHash2(self.TMparamString + ' ' + self.TMmethodID + ' ' + self.upstream_task1.hashProcess(),hashLength)
         return TM_hash
     def outpath(self):
         return self.uTask1path + '/' + self.hashProcess() 

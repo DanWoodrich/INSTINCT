@@ -32,6 +32,8 @@ outDataAll<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
 if("probs" %in% colnames(outDataAll)){
   outDataAll<-outDataAll[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile","probs")]
   mergeProbsBack =TRUE
+}else{
+  mergeProbsBack=FALSE
 }
 
 #extract necessary info

@@ -1,14 +1,18 @@
 from instinct import *
-from Comb4FeatureTrain import *
+from Comb4FeatureTrain import * 
+#just run in TT, for now.
 
-#just run in TT, for now. 
-
-class Comb4PE2All(Comb4FeatureTrain,ApplyModel,TrainModel,ApplyCutoff):
+class Comb4PE2All(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,MergeFE_AL,ApplyModel,TrainModel,ApplyCutoff):
 
     n_IDlength=luigi.IntParameter()
     n_FGfile=luigi.Parameter()
     n_GTfile = luigi.Parameter()
 
+    IDlength=luigi.Parameter()
+    FileGroupID=luigi.Parameter()
+
+    fileName = 'DETx.csv.gz'
+    
     #nullify some inherited parameters:
     upstream_task1=None
     upstream_task2=None
@@ -29,46 +33,8 @@ class Comb4PE2All(Comb4FeatureTrain,ApplyModel,TrainModel,ApplyCutoff):
         task7 = AssignLabels.invoke(self,task5,task6,task2)
 
         return [task0,task1,task2,task3,task4,task5,task6,task7]
-    def hashProcess(self):
-        hashStrings = [None] * self.n_IDlength
-        for l in range(self.n_IDlength):
-            print(l)
-            self.n_FGfile
-            print(1)
-            tasks = self.pipelineMap(l)
-            taskStr = []
-            for f in range(len(tasks)):
-                taskStr.extend([tasks[f].hashProcess()])
-            
-            hashStrings[l] = ' '.join(taskStr)
-    
-        return Helper.getParamHash2(' '.join(hashStrings),6)
-    def outpath(self):
-        return self.ProjectRoot + 'Cache/' + self.hashProcess()
-    def requires(self):
-        for l in range(self.n_IDlength):
-            tasks = self.pipelineMap(l)
-
-            yield tasks[len(tasks)-1]
-    def output(self):
-        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz') 
-    def run(self):
-        
-        resultPath = self.outpath()
-
-        if not os.path.exists(resultPath):
-            os.mkdir(resultPath)
-            
-        dataframes = [None] * self.n_IDlength
-        for k in range(self.n_IDlength):
-            tasks=self.pipelineMap(k)
-            dataframes[k] = pd.read_csv(tasks[7].outpath() + '/DETx.csv.gz',compression='gzip')
-        AllDat = pd.concat(dataframes,ignore_index=True)
-
-        AllDat.to_csv(resultPath + '/DETx.csv.gz',index=False,compression="gzip")
-        
     def invoke(obj):
-        return(Comb4PE2All(ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
+        return(Comb4PE2All(ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,loopVar = obj.n_IDlength,\
                             IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,\
                             GTfile=obj.GTfile,EDprocess=obj.EDprocess,EDsplits=obj.EDsplits,EDcpu=obj.EDcpu,\
                             EDchunk=obj.EDchunk,EDmethodID=obj.EDmethodID,EDparamString=obj.EDparamString,\

@@ -134,10 +134,6 @@ GTlong$Label<-NULL #I may want this later? But relevant labels past this point s
 
 outLong$SignalCode<-'out'
 
-str(outDataAll)
-str(outLong)
-str(GTlong)
-
 #add back in probs if present
 if(mergeProbsBack){
   outDataAll<-outDataAll[order(outDataAll$StartFile,outDataAll$StartTime),]
@@ -146,7 +142,6 @@ if(mergeProbsBack){
   GTlong$probs<-NA
 }
 
-print(str(outLong))
 
 CombineTab<-rbind(GTlong,outLong)
 

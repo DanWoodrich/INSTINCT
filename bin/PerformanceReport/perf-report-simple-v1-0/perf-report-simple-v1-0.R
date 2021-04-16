@@ -9,6 +9,13 @@ args<-commandArgs(trailingOnly = TRUE)
 #FGIDs<- "AL16_AU_BS3_files_152-354.csv,AL16_AU_BS3_files_59-114.csv,BS13_AU_02a_files_343-408.csv,BS13_AU_02a_files_38-122.csv,BS13_AU_02a_files_510-628.csv,BS14_AU_04_files_189-285.csv,BS14_AU_04_files_304-430.csv,BS14_AU_04_files_45-188.csv"
 #resultPath<-"C:/instinct_dt/Outputs//ModelPerfEval/"
 
+EDstatsPath<-"C:/Apps/INSTINCT/Cache/210f68/6f7ebc" 
+ModelstatsPath<-"C:/Apps/INSTINCT/Outputs/TrainTest/612212" 
+ModelvisPath<-"C:/Apps/INSTINCT/Cache/bbfbeb/22a63a" 
+resultPath<-"C:/Apps/INSTINCT/Outputs/TrainTest/612212" 
+FGVisPaths<-"C:/Apps/INSTINCT/Cache/d11fba1ef3de/a04a78/886848/a2a7b1/c1e882/c01c47"
+FGIDs<-"AL16_AU_BS3_files_152-354.csv,AL16_AU_BS3_files_59-114.csv,BS13_AU_02a_files_343-408.csv,BS13_AU_02a_files_510-628.csv,BS14_AU_04_files_189-285.csv,BS14_AU_04_files_304-430.csv,BS14_AU_04_files_45-188.csv"
+
 EDstatsPath<-args[1]
 ModelstatsPath<-args[2]
 ModelvisPath<-args[3]
@@ -42,7 +49,7 @@ Modelstats<-read.csv(paste(ModelstatsPath,"/Stats.csv.gz",sep=""))
 EDstats$Stage<-"ED"
 EDstats$AveragePrecision<-NA
 Modelstats$Stage<-"AM"
-Modelstats$AveragePrecision<-c(FGdataQuick$AveragePrecision,read.table(paste(ModelvisPath,'PRcurve_auc.txt',sep="/"))[1,])
+Modelstats$AveragePrecision<-c(FGdataQuick$AveragePrecision[!is.na(FGdataQuick$AveragePrecision)],read.table(paste(ModelvisPath,'PRcurve_auc.txt',sep="/"))[1,])
 
 Stats<-rbind(EDstats,Modelstats)
 

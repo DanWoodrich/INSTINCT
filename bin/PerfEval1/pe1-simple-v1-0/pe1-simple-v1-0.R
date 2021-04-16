@@ -20,7 +20,6 @@ resultPath <- args[4]
 FGID <- args[5]
 PE1stage <- args[6]
 
-
 if(PE1stage=="FG"){
 
 #don't really have to retain the signal code label, it is basically just a parameter (which influence hashes, but not)
@@ -39,7 +38,7 @@ numFP <- nrow(LABdata[which(LABdata$label=="FP"),])
 numFN <- nrow(LABdata[which(LABdata$SignalCode!="out"&LABdata$label=="FN"),])
 
 Recall <- numTP/(numTP+numFN)                   
-Precision <- numTP/(detTotal)
+Precision <- numTPout/(detTotal) #changed this to numTP out, was getting inflated precision readings. 
 F1<- (2 * Precision * Recall) / (Precision + Recall)
 OMB<-(numTP/numTPout) #values over one indicate 
 
@@ -77,7 +76,7 @@ write.csv(Stats,gzfile(paste(resultPath,"Stats.csv.gz",sep="/")),row.names = FAL
   numFN <- sum(INTdata$numFN)
   
   Recall <- numTP/(numTP+numFN)                   
-  Precision <- numTP/(detTotal)
+  Precision <- numTPout/(detTotal) #changed this to numTP out, was getting inflated precision readings. 
   F1<- (2 * Precision * Recall) / (Precision + Recall)
   OMB<-(numTP/numTPout) #values over one indicate 
   
