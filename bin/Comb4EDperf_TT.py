@@ -29,17 +29,17 @@ class Comb4EDperf_TT(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,PerfEv
     n_FileGroupID= luigi.Parameter()
 
     def pipelineMap(self,l): #here is where you define pipeline structure
-        task0 = FormatFG(FGfile = self.n_FGfile[l],ProjectRoot=self.ProjectRoot)
-        task1 = FormatGT(upstream_task1=task0,uTask1path=task0.outpath(),GTfile=self.n_GTfile[l],ProjectRoot=self.ProjectRoot)
+        task0 = FormatFG.invoke(self,n=l,src="n_")
+        task1 = FormatGT.invoke(task0,n=l,src="n_")
         task2 = UnifyED.invoke(self,task0)
         task3 = AssignLabels.invoke(self,task2,task1,task0)
         task4 = PerfEval1_s1.invoke(self,task3,task0,task3,n=l,src="n_")
         return [task0,task1,task2,task3,task4]
     def invoke(self):
-        return(Comb4EDperf_TT(JobName=self.JobName,SoundFileRootDir_Host=self.SoundFileRootDir_Host,n_IDlength=self.n_IDlength,\
+        return(Comb4EDperf_TT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,n_IDlength=self.n_IDlength,\
                    n_GTfile=self.n_GTfile,n_FGfile=self.n_FGfile,n_FileGroupID=self.n_FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
                    EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
                    ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,loopVar = self.n_IDlength,\
-                   PE1process=self.PE1process,PE1methodID=self.PE1methodID,\
+                   PE1process=self.PE1process,PE1methodID=self.PE1methodID,,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                    ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
 

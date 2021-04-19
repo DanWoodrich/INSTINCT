@@ -59,7 +59,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         task6 = SplitForPE.invoke(self,task5,task3,l)
         task7 = PerfEval2.invoke(self,task6,task1,"FG")
         task8 = ApplyCutoff.invoke(self,task6)
-        task9 = FormatGT.invoke(self,task5,l)
+        task9 = FormatGT.invoke(self,task5,n=l)
         task10 = AssignLabels.invoke(self,task8,task9,task5)
         task11 = PerfEval1_s1.invoke(self,task10,task5,task8,n=l,src="GT")
 
@@ -170,7 +170,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
                              TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,TM_outName=obj.TM_outName,\
                              TMcpu=obj.TMcpu,PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
                              ACcutoffString=obj.ACcutoffString,PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,ProjectRoot=obj.ProjectRoot,system=obj.system,\
-                             r_version=obj.r_version,loopVar = obj.IDlength))
+                             r_version=obj.r_version,loopVar = obj.IDlength,decimatedata = obj.decimatedata))
     
 if __name__ == '__main__':
     luigi.build([ModelPerfEval.invoke(MPE_params)], local_scheduler=True)    

@@ -72,13 +72,32 @@ def FE(self,ID):
 def FG(self,ID):
     self.FGprocess = 'FormatFG'
     FileGroupID = self.MasterINI[ID]['FileGroupID']
-    self.SoundFileRootDir_Host = self.MasterINI[ID]['SoundFileRootDir_Host']
+    self.SoundFileRootDir_Host_Raw = self.MasterINI[ID]['SoundFileRootDir_Host']  #this is a little ugly, but make it convention for now
     self.FileGroupID = sorted(FileGroupID.split(','))
+    self.FGmethodID = self.MasterINI[ID]['MethodID']
+    self.decimatedata = self.MasterINI[ID]['DecimateData'] 
     
     self.IDlength = len(self.FileGroupID)
     self.FGfile = [None] * self.IDlength
     for l in range(self.IDlength):
         self.FGfile[l] = self.ProjectRoot +'Data/' + 'FileGroups/' + self.FileGroupID[l]
+
+    p_ini = readP_Params(self.ParamsRoot,self.FGmethodID)
+
+    paramList = getParamDeets(p_ini,self.FGprocess,1)
+    self.FGparamString = getParamString(paramList,self.FGmethodID)
+
+    p_ini_dct = dict(p_ini.items(self.FGprocess))
+
+    decVal = p_ini_dct.get('targetsamprate')
+    
+    #calculate Sf _Dec path here, based on if decimateData is y (if not, set to _Raw value), and if so, the sample rate. 
+    if self.decimatedata == 'y':
+        self.SoundFileRootDir_Host_Dec = self.SoundFileRootDir_Host_Raw + "/DecimatedWaves/" + decVal
+    elif self.decimatedata == 'n':
+        self.SoundFileRootDir_Host_Dec = self.SoundFileRootDir_Host_Raw + "Waves"
+
+    
     return self
 
 def GT(self,ID):

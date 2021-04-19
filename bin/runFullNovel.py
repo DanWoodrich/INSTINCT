@@ -70,7 +70,7 @@ class runFullNovel(ApplyModel,Comb4FeatureTrain,TrainModel,ApplyCutoff):
             task0 = Comb4FeatureTrain.invoke(self)
             task1 = TrainModel.invoke(self,task0)
             
-            task2 = FormatFG(FGfile = self.n_FGfile[l],ProjectRoot=self.ProjectRoot) #long form here: do I need return
+            task2 = FormatFG.invoke(self,n="l",src="n_") 
             task3 = UnifyED.invoke(self,task2)
             task4 = UnifyFE.invoke(self,task3,task2)
             task5 = ApplyModel.invoke(self,task4,task1,task2)
@@ -86,14 +86,14 @@ class runFullNovel(ApplyModel,Comb4FeatureTrain,TrainModel,ApplyCutoff):
 
         return None
     def invoke(obj):
-        return(runFullNovel(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
-                            IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,\
+        return(runFullNovel(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
+                            IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\
                             GTfile=obj.GTfile,EDprocess=obj.EDprocess,EDsplits=obj.EDsplits,EDcpu=obj.EDcpu,\
                             EDchunk=obj.EDchunk,EDmethodID=obj.EDmethodID,EDparamString=obj.EDparamString,\
                             EDparamNames=obj.EDparamNames,ALprocess=obj.ALprocess,ALmethodID=obj.ALmethodID,\
                             ALparamString=obj.ALparamString,FEprocess=obj.FEprocess,FEmethodID=obj.FEmethodID,\
                             FEparamString=obj.FEparamString,FEparamNames=obj.FEparamNames,FEsplits=obj.FEsplits,\
-                            FEcpu=obj.FEcpu,MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,\
+                            FEcpu=obj.FEcpu,MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,decimatedata = obj.decimatedata,\
                             TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
                             TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_FileGroupID=obj.n_FileGroupID,\
                             n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,system=obj.system,r_version=obj.r_version))

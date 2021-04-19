@@ -25,11 +25,11 @@ class Comb4PE2All(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,M
         task0 = Comb4FeatureTrain.invoke(self)
         task1 = TrainModel.invoke(self,task0)
         
-        task2 = FormatFG(FGfile = self.n_FGfile[l],ProjectRoot=self.ProjectRoot)
+        task2 = FormatFG.invoke(self,n=l,src="n_")
         task3 = UnifyED.invoke(self,task2)
         task4 = UnifyFE.invoke(self,task3,task2)
         task5 = ApplyModel.invoke(self,task4,task1,task2)
-        task6 = FormatGT(upstream_task1=task2,uTask1path=task2.outpath(),GTfile=self.n_GTfile[l],ProjectRoot=self.ProjectRoot)
+        task6 = FormatGT.invoke(self,n=l,src="n_")
         task7 = AssignLabels.invoke(self,task5,task6,task2)
 
         return [task0,task1,task2,task3,task4,task5,task6,task7]
@@ -43,6 +43,6 @@ class Comb4PE2All(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,M
                             FEparamString=obj.FEparamString,FEparamNames=obj.FEparamNames,FEsplits=obj.FEsplits,\
                             FEcpu=obj.FEcpu,MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,\
                             TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
-                            TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,\
+                            TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,decimatedata = obj.decimatedata\
                             n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,n_GTfile=obj.n_GTfile,system=obj.system,r_version=obj.r_version))
     

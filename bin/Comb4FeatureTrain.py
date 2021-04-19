@@ -52,10 +52,10 @@ class Comb4FeatureTrain(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,Uni
 
         #copy params to output folder
     def invoke(self):
-        return(Comb4FeatureTrain(SoundFileRootDir_Host=self.SoundFileRootDir_Host,loopVar=self.IDlength,\
+        return(Comb4FeatureTrain(SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,loopVar=self.IDlength,\
                                  IDlength=self.IDlength,GTfile=self.GTfile,FGfile=self.FGfile,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,\
                                  EDcpu=self.EDcpu,EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
-                                 ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,\
+                                 ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                                  FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamNames=self.FEparamNames,\
                                  FEsplits=self.FEsplits,FEcpu=self.FEcpu,MFAprocess=self.MFAprocess,MFAmethodID=self.MFAmethodID,\
                                  system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))

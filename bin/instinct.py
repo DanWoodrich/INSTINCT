@@ -217,10 +217,15 @@ class Comb4Standard(luigi.Task):
 class FormatFG(INSTINCT_Task):
     
     FGfile = luigi.Parameter()
+    SoundFileRootDir_Host_Raw=luigi.Parameter()
+    decimate = luigi.Parameter()
+    FGparamString = luigi.Parameter()
+    FGmethodID = luigi.Parameter()
 
     def hashProcess(self):
         hashLength = 12
-        return Helper.hashfile(self.FGfile,hashLength)
+        filehash = Helper.hashfile(self.FGfile,hashLength)
+        return Helper.getParamHash2(filehash + self.FGparamString + ' ' + self.FGmethodID,hashLength)
     def outpath(self):
         outpath = self.ProjectRoot + 'Cache/' + self.hashProcess()
         return outpath
@@ -236,9 +241,26 @@ class FormatFG(INSTINCT_Task):
         FG=Helper.getDifftime(FG)
         os.mkdir(self.outpath())
         FG.to_csv(self.outpath() + '/FileGroupFormat.csv.gz',index=False,compression='gzip')
-    def invoke(obj,n='default'): #shortcut to call this without specifying parameters which typically stay fixed.
-        FGfile = Helper.tplExtract(obj.FGfile,n=n)
-        return(FormatFG(FGfile = FGfile,ProjectRoot=obj.ProjectRoot))
+
+        if self.decimate = 'y':
+            #if decimating, run decimate. Check will matter in cases where MATLAB supporting library is not installed. 
+
+            FG['FullFilePaths'] = FG['FullPath']+ FG['FileName']
+
+            ffp = FG['FullFilePaths'].str.cat(sep="#")
+
+            #at a later date, integrate this with argparse
+            command = "./FormatFG/"+FGmethodID + "/" + FGmethodID  ".exe" + ' ' + FGparamString + ' ' + SoundFileRootDir_Host_Raw + ' ' + ffp
+
+            os.system(command)
+        
+    def invoke(obj,n='default',src="GT"): #shortcut to call this without specifying parameters which typically stay fixed.
+        if src == "GT":
+            FGfile=obj.FGfile
+        elif src == "n_":
+            FGfile=obj.n_FGfile
+        FGfile = Helper.tplExtract(FGfile,n=n)
+        return(FormatFG(FGfile = FGfile,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,FGparamString=obj.FGparamString,FGmethodID=obj.FGmethodID,decimate=obj.decimate))
 
 class FormatGT(INSTINCT_Task):
     
@@ -259,8 +281,12 @@ class FormatGT(INSTINCT_Task):
         os.mkdir(self.outpath())
         GT = pd.read_csv(self.GTfile)
         GT.to_csv(self.outpath() + '/GTFormat.csv.gz',index=False,compression='gzip')
-    def invoke(obj,upstream1,n='default'):
-        GTfile = Helper.tplExtract(obj.GTfile,n=n)
+    def invoke(obj,upstream1,n='default',src="GT"):
+        if src == "GT":
+            GTfile=obj.GTfile
+        elif src == "n_":
+            GTfile=obj.n_GTfile
+        GTfile = Helper.tplExtract(GTfile,n=n)
         return(FormatGT(upstream_task1=upstream1,uTask1path=upstream1.outpath(),GTfile=GTfile,ProjectRoot=obj.ProjectRoot)) 
         
 ###############################################################################
@@ -308,7 +334,7 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
     EDcpu = luigi.Parameter()
     EDchunk  = luigi.Parameter()
     
-    SoundFileRootDir_Host = luigi.Parameter()
+    SoundFileRootDir_Host_Dec = luigi.Parameter()
     EDparamString = luigi.Parameter()
     EDparamNames =luigi.Parameter()
 
@@ -329,7 +355,7 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
         #define volume arguments
         FGpath = self.uTask1path +'/'
         ReadFile = 'FileGroupFormat' + str(self.splitNum+1) + '.csv.gz'
-        DataPath = self.SoundFileRootDir_Host
+        DataPath = self.SoundFileRootDir_Host_Dec
         resultPath =  self.outpath()
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
@@ -344,7 +370,7 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
                      paramsNames=self.EDparamNames,Wrapper=True)
         
     def invoke(obj,n):
-        return(RunED(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,EDsplits=obj.EDsplits,splitNum=n,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
+        return(RunED(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,EDsplits=obj.EDsplits,splitNum=n,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\
                      EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDparamNames=obj.EDparamNames,EDparamString=obj.EDparamString,EDcpu=obj.EDcpu,EDchunk=obj.EDchunk,\
                      ProjectRoot=obj.ProjectRoot,system=obj.system,r_version=obj.r_version))
         
@@ -414,7 +440,7 @@ class UnifyED(RunED):
 
             FGpath = self.outpath()
             ReadFile = 'EDoutCorrect.csv.gz'
-            DataPath = self.SoundFileRootDir_Host
+            DataPath = self.SoundFileRootDir_Host_Dec
             resultPath =  self.outpath()
 
             Paths = [DataPath,FGpath,resultPath]
@@ -488,7 +514,7 @@ class UnifyED(RunED):
             os.remove(self.uTask1path + '/FileGroupFormat' + str(n+1) + '.csv.gz') #might want to rework this to make the files load in the current directory instead of the upstream directory. makes more atomic
 
     def invoke(obj,upstream1):
-        return(UnifyED(upstream_task1 = upstream1,uTask1path= upstream1.outpath(),EDsplits = obj.EDsplits,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,EDparamNames=obj.EDparamNames,\
+        return(UnifyED(upstream_task1 = upstream1,uTask1path= upstream1.outpath(),EDsplits = obj.EDsplits,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,EDparamNames=obj.EDparamNames,\
                        EDparamString=obj.EDparamString,EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDcpu=obj.EDcpu,\
                        EDchunk=obj.EDchunk,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
                 
@@ -546,7 +572,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
 
     FEcpu = luigi.Parameter()
     
-    SoundFileRootDir_Host = luigi.Parameter()
+    SoundFileRootDir_Host_Dec = luigi.Parameter()
 
     FEparamString = luigi.Parameter()
     FEparamNames = luigi.Parameter()
@@ -568,7 +594,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
         #define volume arguments
         FGpath = self.uTask2path + '/'
         DETpath = self.uTask1path
-        DataPath = self.SoundFileRootDir_Host
+        DataPath = self.SoundFileRootDir_Host_Dec
         resultPath = self.outpath()
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
@@ -581,7 +607,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
         
     def invoke(obj,n):
         return(RunFE(upstream_task1=obj.upstream_task1,uTask1path=obj.uTask1path,upstream_task2=obj.upstream_task2,uTask2path=obj.uTask2path,FEsplits=obj.FEsplits,splitNum=n,
-                     SoundFileRootDir_Host=obj.SoundFileRootDir_Host,FEparamString=obj.FEparamString,\
+                     SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,FEparamString=obj.FEparamString,\
                      FEparamNames=obj.FEparamNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEcpu=obj.FEcpu,\
                      ProjectRoot=obj.ProjectRoot,system=obj.system,r_version=obj.r_version))
 
@@ -610,7 +636,7 @@ class UnifyFE(RunFE):
     def invoke(obj,upstream1,upstream2):
         return(UnifyFE(upstream_task1 = upstream1,uTask1path=upstream1.outpath(),upstream_task2 = upstream2,uTask2path= upstream2.outpath(),
                        FEparamNames=obj.FEparamNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEparamString=obj.FEparamString,FEsplits=obj.FEsplits,FEcpu=obj.FEcpu,\
-                       SoundFileRootDir_Host=obj.SoundFileRootDir_Host,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version)) 
+                       SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version)) 
 
 ############################################################
 #Label detector outputs with GT using containerized method 
