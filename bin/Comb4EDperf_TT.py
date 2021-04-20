@@ -40,6 +40,7 @@ class Comb4EDperf_TT(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,PerfEv
                    n_GTfile=self.n_GTfile,n_FGfile=self.n_FGfile,n_FileGroupID=self.n_FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
                    EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
                    ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,loopVar = self.n_IDlength,\
-                   PE1process=self.PE1process,PE1methodID=self.PE1methodID,,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
+                   FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
+                   PE1process=self.PE1process,PE1methodID=self.PE1methodID,\
                    ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
 

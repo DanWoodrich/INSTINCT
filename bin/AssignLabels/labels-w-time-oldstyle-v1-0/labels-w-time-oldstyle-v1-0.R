@@ -35,6 +35,8 @@ if("probs" %in% colnames(outDataAll)){
   mergeProbsBack=FALSE
 }
 
+#exclude known metadat fileds from this 
+
 #extract necessary info
 outData<-outDataAll[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile")]
 
@@ -142,8 +144,10 @@ if(mergeProbsBack){
   GTlong$probs<-NA
 }
 
+#make sure columns match (throw out other metdata not relevant here)
+cols <- intersect(colnames(outLong), colnames(GTlong))
 
-CombineTab<-rbind(GTlong,outLong)
+CombineTab<-rbind(GTlong[,cols],outLong[,cols])
 
 CombineTab<-CombineTab[order(CombineTab$StartFile,CombineTab$StartTime),]
 

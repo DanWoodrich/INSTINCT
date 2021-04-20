@@ -7,11 +7,11 @@ MethodID<-"labels-w-iou-simple-v1-0"
 #should be same container method that runs on probabalistic outputs when a cutoff is provided. 
 
 #test folder
-#FGpath<-"C:/instinct_dt/Cache/2bf717aef81044ab2e655e4351d4342cc08de10a"
-#GTpath<-paste(FGpath,"/30d8a30d601cd9c9a9a8cd3d25b2dac37bbe9e7f",sep="")
-#DETpath<-paste(FGpath,"/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/b7223d9f9cb98b690649bad120eb492adc667d3a",sep="")
-#resultPath<-paste(FGpath,"/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/b7223d9f9cb98b690649bad120eb492adc667d3a/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5",sep="")
-#IoUThresh<-0.50
+#FGpath<-"C:/Apps/INSTINCT/Cache/2e77bc96796a/"
+#GTpath<-"C:/Apps/INSTINCT/Cache/2e77bc96796a/50ae7a/"
+#DETpath<-"C:/Apps/INSTINCT/Cache/2e77bc96796a/af5c26/3531e3/"
+#resultPath<-"C:/Apps/INSTINCT/Cache/2e77bc96796a/af5c26/3531e3/8bbfbd"
+#IoUThresh<-0.15
 #SignalCode="LM"
 
 args<-commandArgs(trailingOnly = TRUE)
@@ -164,7 +164,10 @@ if(mergeProbsBack){
   GTlong$probs<-NA
 }
 
-CombineTab<-rbind(GTlong,outLong)
+#make sure columns match (throw out other metdata not relevant here)
+cols <- intersect(colnames(outLong), colnames(GTlong))
+
+CombineTab<-rbind(GTlong[,cols],outLong[,cols])
 
 CombineTab<-CombineTab[order(CombineTab$StartFile,CombineTab$StartTime),]
 

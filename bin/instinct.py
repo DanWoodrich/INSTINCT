@@ -218,7 +218,7 @@ class FormatFG(INSTINCT_Task):
     
     FGfile = luigi.Parameter()
     SoundFileRootDir_Host_Raw=luigi.Parameter()
-    decimate = luigi.Parameter()
+    decimatedata = luigi.Parameter()
     FGparamString = luigi.Parameter()
     FGmethodID = luigi.Parameter()
 
@@ -240,27 +240,37 @@ class FormatFG(INSTINCT_Task):
         FG['StartTime'] = pd.to_datetime(FG['StartTime'], format='%y%m%d-%H%M%S')
         FG=Helper.getDifftime(FG)
         os.mkdir(self.outpath())
-        FG.to_csv(self.outpath() + '/FileGroupFormat.csv.gz',index=False,compression='gzip')
 
-        if self.decimate = 'y':
+        if self.decimatedata == 'y':
             #if decimating, run decimate. Check will matter in cases where MATLAB supporting library is not installed. 
 
-            FG['FullFilePaths'] = FG['FullPath']+ FG['FileName']
+            FullFilePaths = FG['FullPath'].astype('str') + FG['FileName'].astype('str')
 
-            ffp = FG['FullFilePaths'].str.cat(sep="#")
+            ffpPath=self.outpath() + '/FullFilePaths.csv'
+
+            FullFilePaths.to_csv(ffpPath,index=False,header = None) #don't do gz since don't want to deal with it in MATLAB!
 
             #at a later date, integrate this with argparse
-            command = "./FormatFG/"+FGmethodID + "/" + FGmethodID  ".exe" + ' ' + FGparamString + ' ' + SoundFileRootDir_Host_Raw + ' ' + ffp
-
+            command = self.ProjectRoot + "bin/FormatFG/" + self.FGmethodID + "/" + self.FGmethodID + ".exe" + ' ' + self.SoundFileRootDir_Host_Raw + ' ' + ffpPath + ' ' + self.FGparamString 
+            print(command)
+            
             os.system(command)
+
+            os.remove(ffpPath)
+
+            FG.to_csv(self.outpath() + '/FileGroupFormat.csv.gz',index=False,compression='gzip')
+        else:
+            #do it this way, so that task will not 'complete' if decimation is on and doesn't work
+            FG.to_csv(self.outpath() + '/FileGroupFormat.csv.gz',index=False,compression='gzip')
         
+
     def invoke(obj,n='default',src="GT"): #shortcut to call this without specifying parameters which typically stay fixed.
         if src == "GT":
             FGfile=obj.FGfile
         elif src == "n_":
             FGfile=obj.n_FGfile
         FGfile = Helper.tplExtract(FGfile,n=n)
-        return(FormatFG(FGfile = FGfile,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,FGparamString=obj.FGparamString,FGmethodID=obj.FGmethodID,decimate=obj.decimate))
+        return(FormatFG(FGfile = FGfile,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,FGparamString=obj.FGparamString,FGmethodID=obj.FGmethodID,decimatedata=obj.decimatedata))
 
 class FormatGT(INSTINCT_Task):
     

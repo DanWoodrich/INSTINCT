@@ -35,6 +35,8 @@ MPE_params = PR(MPE_params,'PerformanceReport')
 
 MPE_params.MPE_WriteToOutputs = 'y'
 
+print(MPE_params.FGfile)
+
 class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
     
     JobName=luigi.Parameter()
@@ -55,7 +57,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         task3 = TrainModel.invoke(self,task2)
         
         task4 = PerfEval2.invoke(self,task3,task1,"All")
-        task5 = FormatFG.invoke(self,l)#redundant but lets SFPE,AL,PE1 continue their path
+        task5 = FormatFG.invoke(self,n=l)#redundant but lets SFPE,AL,PE1 continue their path
         task6 = SplitForPE.invoke(self,task5,task3,l)
         task7 = PerfEval2.invoke(self,task6,task1,"FG")
         task8 = ApplyCutoff.invoke(self,task6)
@@ -111,6 +113,10 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         Modeleval.to_csv(resultCache + '/Stats.csv.gz',index=False)
         #send back in to PE1
 
+        if self.MPE_WriteToOutputs=='y':
+            if not os.path.exists(self.ProjectRoot +'Outputs/' + self.JobName):
+                os.mkdir(self.ProjectRoot +'Outputs/' + self.JobName)
+
         if not os.path.exists(self.outpath()):
             os.mkdir(self.outpath())
 
@@ -161,16 +167,17 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
 
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PRprocess,MethodID=self.PRmethodID,Paths=Paths,Args=Args,Params='')
     def invoke(obj):
-        return(ModelPerfEval(JobName=obj.JobName,MPE_WriteToOutputs=obj.MPE_WriteToOutputs,SoundFileRootDir_Host=obj.SoundFileRootDir_Host,\
+        return(ModelPerfEval(JobName=obj.JobName,MPE_WriteToOutputs=obj.MPE_WriteToOutputs,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\
                              IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,GTfile=obj.GTfile,EDprocess=obj.EDprocess,\
                              EDsplits=obj.EDsplits,EDcpu=obj.EDcpu,EDchunk=obj.EDchunk,EDmethodID=obj.EDmethodID,EDparamString=obj.EDparamString,\
                              EDparamNames=obj.EDparamNames,ALprocess=obj.ALprocess,ALmethodID=obj.ALmethodID,ALparamString=obj.ALparamString,\
                              FEprocess=obj.FEprocess,FEmethodID=obj.FEmethodID,FEparamString=obj.FEparamString,FEparamNames=obj.FEparamNames,\
                              FEsplits=obj.FEsplits,FEcpu=obj.FEcpu,MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,TMprocess=obj.TMprocess,\
-                             TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,TM_outName=obj.TM_outName,\
+                             TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,TM_outName=obj.TM_outName,FGparamString=obj.FGparamString,\
+                             FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                              TMcpu=obj.TMcpu,PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
                              ACcutoffString=obj.ACcutoffString,PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,ProjectRoot=obj.ProjectRoot,system=obj.system,\
-                             r_version=obj.r_version,loopVar = obj.IDlength,decimatedata = obj.decimatedata))
+                             r_version=obj.r_version,loopVar = obj.IDlength))
     
 if __name__ == '__main__':
     luigi.build([ModelPerfEval.invoke(MPE_params)], local_scheduler=True)    

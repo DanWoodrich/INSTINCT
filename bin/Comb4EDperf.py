@@ -27,8 +27,9 @@ class Comb4EDperf(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1
         return(Comb4EDperf(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,IDlength=self.IDlength,\
                    GTfile=self.GTfile,FGfile=self.FGfile,FileGroupID=self.FileGroupID,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
                    EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
-                   ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,loopVar=self.IDlength,decimatedata = obj.decimatedata,\
-                   PE1process=self.PE1process,PE1methodID=self.PE1methodID,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
+                   ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,loopVar=self.IDlength,\
+                   FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
+                   FGparamString=self.FGparamString,PE1process=self.PE1process,PE1methodID=self.PE1methodID,\
                    ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
 
 
