@@ -1055,3 +1055,45 @@ class TrainModel(INSTINCT_Rmethod_Task):
         return(TrainModel(upstream_task1=upstream1,uTask1path=upstream1.outpath(),TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparamString=self.TMparamString,\
                           TMstage=self.TMstage,TM_outName=self.TM_outName,TMcpu=self.TMcpu,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
 
+#####################################################################################
+#convert detx type to a format understandable by Raven Pro
+#####################################################################################
+
+class RavenViewDETx(INSTINCT_Rmethod_Task):
+    #outputs in format RAVENx.txt
+    
+    upstream_task1 = luigi.Parameter() #DETx
+    upstream_task2 = luigi.Parameter() #FG
+
+    SoundFileRootDir_Host_Dec = luigi.Parameter()
+
+    RVmethodID = luigi.Parameter()
+    
+    def hashProcess(self):
+        hashLength = 6 
+        return Helper.getParamHash2(self.RVmethodID + ' ' + self.upstream_task1.hashProcess(),hashLength)
+    def outpath(self):
+        return self.upstream_task1.outpath() + '/' + self.hashProcess() 
+    def requires(self):
+        return self.upstream_task1
+    def output(self):
+        #conditional on what this task is doing. 
+        return luigi.LocalTarget(self.outpath() + '/RAVENx.txt')
+    def run(self):
+        
+        DETpath = self.upstream_task1.outpath() 
+        FGpath = self.upstream_task2.outpath() 
+
+        resultPath=self.outpath()
+
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
+
+        Paths = [DETpath,FGpath,resultPath]
+        Params = self.SoundFileRootDir_Host_Dec
+        
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenViewDETx",MethodID=self.RVmethodID,Paths=Paths,Args='',Params=Params)
+        
+    def invoke(self,upstream1,upstream2):
+        return(RavenViewDETx(upstream_task1=upstream1,upstream_task2=upstream2,RVmethodID=self.RVmethodID,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version,
+                             SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec))

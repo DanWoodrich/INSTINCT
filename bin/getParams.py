@@ -160,6 +160,10 @@ def PR(self,ID):
     self.PRparamString = ''
     return self
 
+def RV(self,ID):
+    self.RVmethodID = self.MasterINI[ID]['MethodID']
+    return self
+
 class Load_Job:
     def __init__(self,Name):
         self.ProjectRoot=Helper.getProjRoot()
