@@ -10,9 +10,6 @@ VD_params = ED(VD_params,'EventDetector')
 VD_params = AL(VD_params,'AssignLabels')
 VD_params = RV(VD_params,'RavenViewDETx')
 
-print(VD_params.FGfile[0])
-
-
 class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
     
     JobName=luigi.Parameter()

@@ -4,12 +4,12 @@
 
 #3/3/20:
 #modify so it fits the NAS naming requirements (month subfolders)
-
+source(paste("C:/Apps/INSTINCT/bin/instinct_fxns.R",sep="")) 
 
 SpeciesDo<-"y"
-Species<-"LM"
-Decimate<-"No_whiten_decimate_by_128"
-DecimateShort<-"decimate_by_128"
+Species<-"RW"
+Decimate<-"No_whiten_decimate_by_16"
+DecimateShort<-"decimate_by_16"
 
 if(SpeciesDo=='y'){
   folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_files",Species,Decimate,sep="/")
@@ -32,9 +32,17 @@ SfilesName<-n
 
 data<-read.csv(paste(folderName,SfilesName,sep="/"))
 
+data$SFsh<-gsub("_", "-", data$SFsh)
+
 dash2<-gregexpr("-",data$SFsh[1])[[1]][2]
 dot1<-gregexpr("\\.",data$SFsh[1])[[1]][1]
 dateTimeFormat<-substr(data$SFsh,dash2+1,dot1-1)
+
+if(!any(!nchar(dateTimeFormat)==15)){
+  dateTimeFormat<-paste(substr(dateTimeFormat,3,12),"000",sep="")
+}
+
+data$SFsh<-paste(substr(data$SFsh,1,dash2),dateTimeFormat,".wav",sep="")
 
 und3<-gregexpr("_",data$MooringName[1])[[1]][2]
 siteID<-substr(data$MooringName,und3+1,nchar(as.character(data$MooringName[1])))
@@ -83,7 +91,7 @@ if(substr(data$SFsh[1],1,5)=="AU-AL"|substr(data$SFsh[1],1,5)=="AU-AW"){
 
 NASpath<-paste("/",data$MooringName,"/",month,"_",year,"/",sep="")
 
-outData<-cbind(as.character(data$SFsh),NASpath,dateTimeFormat,data$Duration,as.character(data$MooringName),siteID)
+outData<-data.frame(cbind(as.character(data$SFsh),NASpath,dateTimeFormat,data$Duration,as.character(data$MooringName),siteID))
 colnames(outData)<-c("FileName","FullPath","StartTime","Duration","Deployment","SiteID")
 
 #modify saved name as well 
@@ -92,7 +100,19 @@ saveName<-substr(SfilesName,gregexpr("_",SfilesName)[[1]][3],und5-1)
 
 saveName<-paste(data$MooringName[1],saveName,sep="")
 
-write.csv(outData,paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/INSTINCT/Data/FileGroups/",saveName,".csv",sep=""),row.names = FALSE)
+#before saving, need to loop through each file, call readwave2 to get duration. Then, remove redunant rows. 
+
+outData<-outData[which(!duplicated(outData$FileName)),]
+
+NASpath = "//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves"
+
+for(i in 1:nrow(outData)){
+  path = paste(NASpath,outData[i,"FullPath"],outData[i,"FileName"],sep="")
+  info<-readWave2(path,header = TRUE)
+  outData[i,"Duration"]<-round(info$samples/info$sample.rate)
+}
+
+write.csv(outData,paste("C:/Apps/INSTINCT/Data/FileGroups/",saveName,".csv",sep=""),row.names = FALSE)
 
 
 
@@ -103,7 +123,7 @@ write.csv(outData,paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/INSTINCT/Dat
 
 
 
-#Likely depreciated
+#depreciated
 
 if(transferSF=="y"){
   
@@ -120,7 +140,7 @@ if(transferSF=="y"){
   
   filesFullp<-paste(mooringFolderFull,dir(mooringFolderFull,pattern=".wav"),sep="") #[Filestart:Fileend]
   
-  path<- paste("C:/Apps/instinct_dt/Data/SoundFiles/",mooringFolder,sep="")
+  path<- paste("C:/Apps/INSTINCT/Data/SoundFiles/",mooringFolder,sep="")
   
   dir.create(path)
   file.copy(filesFullp,path)

@@ -4,9 +4,9 @@
 
 library(doParallel)
 
-Species<-"LM"
-Decimate<-"No_whiten_decimate_by_128"
-DecimateShort<-"decimate_by_128"
+Species<-"RW"
+Decimate<-"No_whiten_decimate_by_16"
+DecimateShort<-"decimate_by_16"
 
 
 folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_files",Species,Decimate,sep="/")
@@ -20,20 +20,35 @@ for(n in files){
   SfilesName<-n
   
   data<-read.csv(paste(folderName,SfilesName,sep="/"))
+  data$SFsh<-gsub("_", "-", data$SFsh)
+  
+  #for the outData, need to calculate difference to actual file start (sec in last 3 digits)
+  mss<-paste("0",substr(data$SFsh,nchar(data$SFsh)-6,nchar(data$SFsh)-4),sep="")
+  vals<-as.POSIXlt(mss,format="%M%S")
+  vals<- vals$sec+vals$min*60
   
   dash2<-gregexpr("-",data$SFsh[1])[[1]][2]
   dot1<-gregexpr("\\.",data$SFsh[1])[[1]][1]
   dateTimeFormat<-substr(data$SFsh,dash2+1,dot1-1)
   
+  if(!any(!nchar(dateTimeFormat)==15)){
+    dateTimeFormat<-paste(substr(dateTimeFormat,3,12),"000",sep="")
+  }
+  
+  data$SFsh<-paste(substr(data$SFsh,1,dash2),dateTimeFormat,".wav",sep="")
+  
+
   und3<-gregexpr("_",data$MooringName[1])[[1]][2]
   siteID<-substr(data$MooringName,und3+1,nchar(as.character(data$MooringName[1])))
   
-  outData<-data.frame(cbind(as.character(data$SFsh),"/",dateTimeFormat,data$Duration,as.character(data$MooringName),siteID))
-  colnames(outData)<-c("FileName","FullPath","StartTime","Duration","Deployment","SiteID")
+  outData<-data.frame(cbind(as.character(data$SFsh),"/",dateTimeFormat,data$Duration,as.character(data$MooringName),siteID,vals))
+  colnames(outData)<-c("FileName","FullPath","StartTime","Duration","Deployment","SiteID","pngFileDiff")
   
   outData$Duration<-as.numeric(as.character(outData$Duration))
+  
   outData$FileName<-as.character(outData$FileName)
   
+  outData$pngFileDiff<-vals
   
   und5<-gregexpr("_",SfilesName)[[1]][5]
   saveName<-substr(SfilesName,1,und5-1)
@@ -47,18 +62,24 @@ for(n in files){
   GTdata$Begin.Time..s.<-as.numeric(GTdata$Begin.Time..s.)
   GTdata$End.Time..s.<-as.numeric(GTdata$End.Time..s.)
   
+  
   outData$cumsum<- cumsum(outData$Duration)-outData$Duration[1]
+  outData$cumsum<- c(0,cumsum(outData$Duration)[1:(nrow(outData)-1)])
   #outData$cumsum<- cumsum(outData$Duration)
   
   #this is a super jenk way to do this but this part doesn't need to scale so I don't care
+
+  
   
   values<-foreach(i=1:nrow(GTdata)) %do% {
+  #for(i in 1:nrow(GTdata)){
     startFile<-"UK"
     k=1
     while(startFile=="UK"&k<=nrow(outData)){
       if(GTdata$Begin.Time..s.[i]<outData$cumsum[k]){
         startFile<-outData$FileName[k-1]
         startTime<-GTdata$Begin.Time..s.[i]-outData$cumsum[k-1]
+        startTime2<-startTime+outData$pngFileDiff[k-1]
       }else{
         k=k+1
       }
@@ -66,6 +87,7 @@ for(n in files){
     if(k>nrow(outData)){
       startFile<-outData$FileName[k-1]
       startTime<-GTdata$Begin.Time..s.[i]-outData$cumsum[k-1]
+      startTime2<-startTime+outData$pngFileDiff[k-1]
     }
     endFile<-"UK"
     k=1
@@ -73,6 +95,7 @@ for(n in files){
       if(GTdata$End.Time..s.[i]<outData$cumsum[k]){
         endFile<-outData$FileName[k-1]
         endTime<-GTdata$End.Time..s.[i]-outData$cumsum[k-1]
+        endTime2<-endTime+outData$pngFileDiff[k-1]
       }else{
         k=k+1
       }
@@ -80,9 +103,11 @@ for(n in files){
     if(k>nrow(outData)){
       endFile<-outData$FileName[k-1]
       endTime<-GTdata$End.Time..s.[i]-outData$cumsum[k-1]
+      endTime2<-endTime+outData$pngFileDiff[k-1]
+      
     }
     
-    return(c(startTime,endTime,startFile,endFile))
+    return(c(startTime2,endTime2,startFile,endFile))
     
   }
   
@@ -95,7 +120,8 @@ for(n in files){
   GTout$label<-"y"
   GTout$Type<-"i_neg"
   GTout$SignalCode<-Species
-  
+
+
   #modify stuff to be compatable with new NAS naming. change mooring name (save name), and wav names
   
   MooringName<-substr(SfilesName,1,gregexpr("_",SfilesName)[[1]][3]-1)
@@ -141,7 +167,7 @@ for(n in files){
   
   saveName<-paste(Species,MooringName,substr(SfilesName,gregexpr("_",SfilesName)[[1]][3]+1,und5-1),sep="_")
   
-  write.csv(GTout,paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/INSTINCT/Data/GroundTruth/",saveName,".csv",sep=""),row.names = FALSE)
+  write.csv(GTout,paste("C:/Apps/INSTINCT/Data/GroundTruth/",saveName,".csv",sep=""),row.names = FALSE)
   
 
 }
