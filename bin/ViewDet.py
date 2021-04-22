@@ -62,16 +62,7 @@ class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
         if not os.path.exists(self.outpath()):
             os.mkdir(self.outpath())
 
-        #very ugly here, watch out
-        if self.system =='win':
-            print('copy ' + filepath + ' ' + filedest)
-            shutil.copy(filepath, filedest)
-            #os.popen('copy ' + filepath + ' ' + filedest)
-        elif self.system =='lin':
-            os.popen('cp ' + filepath + ' ' + filedest) 
-
-# In Windows
-
+        shutil.copy(filepath, filedest)
         
     def invoke(self):
         return(ViewDet(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,IDlength=self.IDlength,\
