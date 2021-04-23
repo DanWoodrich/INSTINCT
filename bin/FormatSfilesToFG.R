@@ -26,6 +26,9 @@ transferSF<-"n"
 
 files<-dir(folderName)[grep(".csv",dir(folderName))]
 
+#just for RW, and temporary
+#files<-files[1:12]
+
 for(n in files){
 
 SfilesName<-n

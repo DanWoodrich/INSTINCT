@@ -1,5 +1,8 @@
 #set these variables in all containers:
-MethodName<-"feat-ext-hough-light-source-v1-0"
+MethodName<-"feat-ext-hough-light-source-v1-1"
+#v1-1
+#change catch in spectrogram rendering for something more general to other window lengths
+#change catch for using autoc feature
 
 #attempt at recreating the feature extraction protocol of INSTINCT.
 library(foreach) 
@@ -133,7 +136,7 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
     wav.specprop <- specprop(wav.spec) #
     wav.meanspec = meanspec(wav, plot=F,ovlp=Overlap,wl=WindowLength)#not sure what ovlp parameter does but initially set to 90 #
     #wav.meanspec.db = meanspec(wav, plot=F,ovlp=50,dB="max0",wl=128)#not sure what ovlp parameter does but initially set to 90 #,flim=c(specVar$Low.Freq..Hz.[z]/1000,specVar$High.Freq..Hz.[z]/1000)
-    if(samples>=64){
+    if(samples>=(WindowLength*2)){
       wav.autoc = autoc(wav, plot=F,ovlp=Overlap,wl=WindowLength) #
     }else{
       wav.autoc = 99999
@@ -151,7 +154,7 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
     featList[8] = sh(wav.spec) #shannon entropy
     featList[9] = roughness(wav.meanspec[,2]) #spectrum roughness
     #not sure if these aren't crashing or just producing a lot of NAs- if crashing maybe make catch based on # samples. 
-    if(samples>=64){ #little catch to hopefully avoid cases where window is too small 
+    if(samples>=(WindowLength*2)){ #little catch to hopefully avoid cases where window is too small 
       featList[10] = freqstat.normalize(mean(wav.autoc[,2], na.rm=T),featList[3],featList[4]) #autoc mean 
       featList[11] = freqstat.normalize(median(wav.autoc[,2], na.rm=T),featList[3],featList[4]) #autoc.median
       featList[12] = std.error(wav.autoc[,2], na.rm=T) #autoc se
@@ -180,7 +183,7 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
     featList[29] = M(wav,wl=WindowLength) #amp env median
     featList[30] = H(wav,wl=WindowLength) #total entropy
     #warbler params
-    if(samples>=64){
+    if(samples>=(WindowLength*2)){
       featList[31]<- (sum(sapply(2:length(wav.dfreq[,2]), function(j) abs(wav.dfreq[,2][j] - wav.dfreq[,2][j - 1])))/(Dfrange)) #modinx
     }else{
       featList[31]<-99999
@@ -206,16 +209,13 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
       )
       
       
-      P = abs(spectrogram$S)
+      P = abs(spectrogram)
+
+      #
       
-      #catch since I don't understand on what condition spectrogram freq doubles
-      if(length(spectrogram$f)==128){
-        P_high=featList[4]*2
-        P_low=featList[3]*2
-      }else if(length(spectrogram$f)!=128){
-        P_high=featList[4]
-        P_low=featList[3]
-      }
+      #calculate based on nearest value
+      P_high=which.min(abs(spectrogram$f-featList[4]))
+      P_low=which.min(abs(spectrogram$f-featList[3]))
       
       P<-P[(P_high):(P_low),]
       
@@ -241,13 +241,9 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
       
       P = abs(spectrogram$amp)
       
-      if(length(spectrogram$f)==128){
-        P_high=featList[4]*2
-        P_low=featList[3]*2
-      }else if(length(spectrogram$f)==64){
-        P_high=featList[4]
-        P_low=featList[3]
-      }
+      #calculate based on nearest value
+      P_high=which.min(abs(spectrogram$f-featList[4]))
+      P_low=which.min(abs(spectrogram$f-featList[3]))
       
       P<-P[(P_high):(P_low),]
       
@@ -256,8 +252,7 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
 
     }
     
-    print("test2")
-    
+
 
     #plot(spectrogram)
     #plot(spec2)
@@ -279,8 +274,6 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
     image1[TileAxisSize,1:TileAxisSize,1,1]<-FALSE #get rid of side border artifact 
     image1[1:TileAxisSize,TileAxisSize,1,1]<-FALSE 
     
-    print("test3")
-    
     
     if(length(unique(image1))!=1){
       
@@ -296,25 +289,16 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
       areaY<-unlist(areaY)
       
       
-      print("test3a")
-      
+
       #distinguish islands and calculate area
       labelsW<-label(image1)
-      print(image1)
-      print("test3a.1")
-      print(str(labelsW[1:TileAxisSize,1:TileAxisSize,1,1]))
       labelsW<-as.matrix(labelsW[1:TileAxisSize,1:TileAxisSize,1,1])
-      print("test3a.2")
-      
+
       threshBool<-as.matrix(image1[1:TileAxisSize,1:TileAxisSize,1,1])
-      print("test3a.3")
-      
+
       labelsW[threshBool]<-labelsW[threshBool]+1000000
-      print("test3a.4")
-      
+
       labelsW[which(labelsW<1000000)]<-0
-      
-      print("test3a.5")
       
       
       labelsInt<-as.integer(labelsW)
@@ -325,8 +309,7 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
       
       p=1
       
-      print("test3b")
-      
+
       
       if(nrow(areaW)>1){
         for(h in 2:nrow(areaW)){
@@ -346,8 +329,7 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
       IslIndex<-as.numeric(levels(areaW$labelsInt[1:worthyones]))[areaW$labelsInt[1:worthyones]]
       areaW<-as.vector(areaW[,2])
       
-      print("test3c")
-      
+
       
       #hough lines
       test9<-hough_line(image1,data.frame = TRUE)
@@ -410,8 +392,7 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
       featList[55]<-Bestline[4]#bestSlopeHough
       featList[56]<-Bestline[5]#bestBHough
       
-      print("test3d")
-      
+
       
       featListID<-57 #find median, mean, and variance of the following features: 
       for(c in 1:5){
@@ -443,8 +424,7 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
       featList[81]<-max(vpEven)#switchesYmax
       featList[82]<-min(vpEven)#switchesYmin
       
-      print("test3e")
-      
+
       
       
       #all stats: c("sTheta","sThetaSD","sRho","sRhoSD","sScore","sScoreSD","sSlope","sSlopeSD",
@@ -466,8 +446,7 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
       
     }
     
-    print("test4")
-    
+
     
     return(as.numeric(featList))
 

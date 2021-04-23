@@ -1,4 +1,11 @@
 
+
+
+
+args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/ef55426b1969/ C:/Apps/INSTINCT/Cache/ef55426b1969/92c9b2 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/ef55426b1969/92c9b2/1d0c34 1 99 method1 feat-ext-hough-light-source-v1-1 n 90 1 30 specgram 1024 48 0 256 0 feat-ext-hough-light-source-v1-1 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
+
+args<-strsplit(args,split=" ")[[1]]
+
 args<-commandArgs(trailingOnly = TRUE)
 
 ProjectRoot<-args[1]

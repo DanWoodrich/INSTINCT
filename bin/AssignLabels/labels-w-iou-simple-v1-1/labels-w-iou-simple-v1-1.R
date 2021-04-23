@@ -2,7 +2,12 @@
 #use IoU criteria: area of overlap over area of union 
 
 #set these variables in all containers:
-MethodID<-"labels-w-iou-simple-v1-0"
+MethodID<-"labels-w-iou-simple-v1-1"
+
+#v1-1
+#change how FG duration is calculated
+#clean up condition to test for IOU (still could do a lot of work here to optimize)
+#fix bug in determining if intersection is present. 
 
 args<-"C:/Apps/INSTINCT/Cache/5212fb2c6fe7/ C:/Apps/INSTINCT/Cache/5212fb2c6fe7/8ea39c/ C:/Apps/INSTINCT/Cache/5212fb2c6fe7/ab727a/ C:/Apps/INSTINCT/Cache/5212fb2c6fe7/ab727a/8f9e25  0.15 labels-w-iou-simple-v1-0"
 
@@ -54,13 +59,14 @@ FGdata$FileName<-as.character(FGdata$FileName)
 GTdata$StartFile<-as.character(GTdata$StartFile)
 GTdata$EndFile<-as.character(GTdata$EndFile)
 
-FGdata$cumsum<- cumsum(FGdata$Duration)-FGdata$Duration[1]
+FGdata$cumsum<- c(0,cumsum(FGdata$Duration)[1:(nrow(FGdata)-1)])
 
 
 #convert each dataset into time from FG start instead of offset 
 
 GTlong<-GTdata
 
+#these steps are long... could make much faster with a merge. To do
 for(i in 1:nrow(GTlong)){
   GTlong$StartTime[i]<-GTlong$StartTime[i]+FGdata$cumsum[which(FGdata$FileName==GTlong$StartFile[i])]
   GTlong$EndTime[i]<-GTlong$EndTime[i]+FGdata$cumsum[which(FGdata$FileName==GTlong$EndFile[i])]
@@ -89,18 +95,21 @@ outLong<-outLong[order(outLong$StartTime),]
 #calculate iou GT
 
 for(i in 1:nrow(GTlong)){
-  klow<-min(which((GTlong$StartTime[i]-(5*GTlong$Dur[i]))<outLong$EndTime))
-  khigh<-max(which((GTlong$EndTime[i]+(5*GTlong$Dur[i]))>outLong$StartTime))
+  
+  GTlongDur<-GTlong$EndTime[i]-GTlong$StartTime[i]
+  klow<-max(which((outLong$EndTime<(GTlong$StartTime[i]-GTlongDur)))) #give this a little buffer to avoid issues with small detections preventing longer det from 
+  khigh<-min(which((outLong$StartTime>(GTlong$EndTime[i]+GTlongDur)))) #fitting the criteria. if wanted to get fancy, could base the buffer length on IOU
   
   k=klow
-  while(GTlong$iou[i]<IoUThresh&k<=khigh){
+  for(k in klow:khigh){
+  #while(GTlong$iou[i]<IoUThresh&k<=khigh){
     #test for intersection
-    if((((GTlong$StartTime[i]<outLong$EndTime[k] & GTlong$StartTime[i]>=outLong$StartTime[k])|+
-       (GTlong$EndTime[i]>outLong$StartTime[k] & GTlong$StartTime[i]<outLong$StartTime[k]))|+
-       (GTlong$EndTime[i]>=outLong$EndTime[k] & GTlong$StartTime[i]<=outLong$StartTime[k])) &+ 
-       ((GTlong$LowFreq[i]<outLong$HighFreq[k] & GTlong$LowFreq[i]>=outLong$LowFreq[k])|+
-        (GTlong$HighFreq[i]>outLong$LowFreq[k] & GTlong$LowFreq[i]<outLong$LowFreq[k])) |+
-        (GTlong$HighFreq[i]>=outLong$HighFreq[k] & GTlong$LowFreq[i]<=outLong$EndTime[k]))
+    if((((GTlong$StartTime[i]<outLong$EndTime[k] & GTlong$StartTime[i]>=outLong$StartTime[k])| #GTstart is less than det end, and GT start is after or at start of det
+       (GTlong$EndTime[i]>outLong$StartTime[k] & GTlong$StartTime[i]<outLong$StartTime[k]))| #GTend is after det end, and GT start is before det start
+       (GTlong$EndTime[i]>=outLong$EndTime[k] & GTlong$StartTime[i]<=outLong$StartTime[k])) & #gt end is after or at det end, and gt start is at or before det start
+       (((GTlong$LowFreq[i]<outLong$HighFreq[k] & GTlong$LowFreq[i]>=outLong$LowFreq[k])|
+        (GTlong$HighFreq[i]>outLong$LowFreq[k] & GTlong$LowFreq[i]<outLong$LowFreq[k])) |
+        (GTlong$HighFreq[i]>=outLong$HighFreq[k] & GTlong$LowFreq[i]<=outLong$LowFreq[k])))
         {
 
       #test for IoU
@@ -118,7 +127,8 @@ for(i in 1:nrow(GTlong)){
       totArea = box1Area + box2Area - intArea
       
       iou = intArea / totArea
-
+      
+      #give GT the best IOU
       if(GTlong$iou[i]<iou){
         GTlong$iou[i]<-iou
       }
@@ -126,21 +136,21 @@ for(i in 1:nrow(GTlong)){
         outLong$iou[k]<-iou
       }
       
-      #plot(min(box1[1],box2[1]):(min(box1[1],box2[1])+15),min(box1[2],box2[2]):(min(box1[2],box2[2])+15))
-      #rect(box1[1],box1[2],box1[3],box1[4])
-      #Sys.sleep(1)
-      #rect(box2[1],box2[2],box2[3],box2[4])
-      #Sys.sleep(1)
+      #print(i)
+      
+      #plot(0,xlim=c(min(c(box1[1],box2[1]))-2,max(c(box1[3],box2[3]))+2),ylim=c(0,512),col="white")
+      #rect(box1[1],box1[2],box1[3],box1[4],col="green")
+      #Sys.sleep(0.25)
+      #rect(box2[1],box2[2],box2[3],box2[4],col="gray")
+      #Sys.sleep(0.25)
       #rect(intBox[1],intBox[2],intBox[3],intBox[4],col="red")
-      #text(min(box1[1],box2[1])+10,min(box1[2],box2[2])+1,iou)
-      #Sys.sleep(2)
+      #text(mean(c(min(c(box1[1],box2[1]))-2,max(c(box1[3],box2[3]))+2)),256,paste(iou,k))
+      #Sys.sleep(0.5)
       
-      k=k+1
-      
-    }else{
-      k=k+1
     }
   }
+  
+  
 }
 
 GTlong$StartTime<-GTdata$StartTime

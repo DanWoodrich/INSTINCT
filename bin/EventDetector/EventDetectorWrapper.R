@@ -1,7 +1,6 @@
 #set these variables in all containers:
 
-#To make this general to ED, need to pass method params instead of hard defining here. 
-args<-commandArgs(trailingOnly = TRUE)
+
 
 #windows test values
 #DataPath <-"//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves/"        #docker volume
@@ -31,6 +30,25 @@ args<-commandArgs(trailingOnly = TRUE)
 #Overlap<-as.numeric(0)
 #windowLength<-as.numeric(128)
 
+ProjectRoot<-"C:/Apps/INSTINCT/"
+DataPath <- "//161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024"
+FGpath <-"C:/Apps/INSTINCT/Cache/8fe3bdf1da0e/"
+resultPath <- "C:/Apps/INSTINCT/Cache/8fe3bdf1da0e/0f7df1"
+ReadFile<-"FileGroupFormat1.csv.gz"
+EDstage<-"1"
+
+crs<-99
+chunkSize<- 20
+
+MethodID<-"bled-and-combine-test-r-source-v1-0"
+
+paramArgsPre<-"0.5 Upsweep 2 350 100 100 1 0 2 0.25 15 12 50 1024 240 bled-and-combine-test-r-source-v1-0 band_ovlp combine_method db_add high_freq low_freq max_dur min_dur min_freq noise_hop_length noise_thresh noise_win_length num_bands overlap t_samp_rate window_length"
+
+args<-c(1:10,strsplit(paramArgsPre,split=" ")[[1]])
+
+#To make this general to ED, need to pass method params instead of hard defining here. 
+args<-commandArgs(trailingOnly = TRUE)
+
 #argument values
 ProjectRoot<-args[1]
 DataPath <- args[2]
@@ -41,6 +59,8 @@ EDstage<-args[6]
 
 crs<- as.numeric(args[7])
 chunkSize<- as.numeric(args[8])
+
+
 
 MethodID<-args[10]
 
