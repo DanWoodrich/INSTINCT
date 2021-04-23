@@ -22,7 +22,7 @@ GTpath <- args[2]
 DETpath <- args[3]
 resultPath <- args[4]
 
-GTdata<-read.csv(paste(GTpath,"GTFormat.csv.gz",sep="/"))
+GTdata<-read.csv(paste(GTpath,"DETx.csv.gz",sep="/"))
 FGdata<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
 
 outDataAll<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))

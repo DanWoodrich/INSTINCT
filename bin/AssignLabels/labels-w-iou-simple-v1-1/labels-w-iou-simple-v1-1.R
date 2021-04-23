@@ -7,7 +7,8 @@ MethodID<-"labels-w-iou-simple-v1-1"
 #v1-1
 #change how FG duration is calculated
 #clean up condition to test for IOU (still could do a lot of work here to optimize)
-#fix bug in determining if intersection is present. 
+#fix bug in determining if intersection is present.
+#
 
 args<-"C:/Apps/INSTINCT/Cache/5212fb2c6fe7/ C:/Apps/INSTINCT/Cache/5212fb2c6fe7/8ea39c/ C:/Apps/INSTINCT/Cache/5212fb2c6fe7/ab727a/ C:/Apps/INSTINCT/Cache/5212fb2c6fe7/ab727a/8f9e25  0.15 labels-w-iou-simple-v1-0"
 
@@ -32,7 +33,7 @@ DETpath <- args[3]
 resultPath <- args[4]
 IoUThresh<-args[5]
 
-GTdata<-read.csv(paste(GTpath,"GTFormat.csv.gz",sep="/"))
+GTdata<-read.csv(paste(GTpath,"DETx.csv.gz",sep="/"))
 FGdata<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
 
 outDataAll<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))

@@ -286,11 +286,11 @@ class FormatGT(INSTINCT_Task):
     def requires(self):
         return self.upstream_task1
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/GTFormat.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
         os.mkdir(self.outpath())
         GT = pd.read_csv(self.GTfile)
-        GT.to_csv(self.outpath() + '/GTFormat.csv.gz',index=False,compression='gzip')
+        GT.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
     def invoke(obj,upstream1,n='default',src="GT"):
         if src == "GT":
             GTfile=obj.GTfile
