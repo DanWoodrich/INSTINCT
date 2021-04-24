@@ -164,6 +164,11 @@ def RV(self,ID):
     self.RVmethodID = self.MasterINI[ID]['MethodID']
     return self
 
+def RD(self,ID):
+    self.RDmethodID = self.MasterINI[ID]['MethodID']
+    return self
+
+
 class Load_Job:
     def __init__(self,Name):
         self.ProjectRoot=Helper.getProjRoot()

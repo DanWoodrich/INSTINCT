@@ -288,7 +288,8 @@ class FormatGT(INSTINCT_Task):
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
-        os.mkdir(self.outpath())
+        if not os.path.exists(self.outpath()):
+            os.mkdir(self.outpath())
         GT = pd.read_csv(self.GTfile)
         GT.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
     def invoke(obj,upstream1,n='default',src="GT"):
@@ -1070,7 +1071,7 @@ class RavenViewDETx(INSTINCT_Rmethod_Task):
     RVmethodID = luigi.Parameter()
     
     def hashProcess(self):
-        hashLength = 6 
+        hashLength = 6
         return Helper.getParamHash2(self.RVmethodID + ' ' + self.upstream_task1.hashProcess(),hashLength)
     def outpath(self):
         return self.upstream_task1.outpath() + '/' + self.hashProcess() 
@@ -1097,3 +1098,39 @@ class RavenViewDETx(INSTINCT_Rmethod_Task):
     def invoke(self,upstream1,upstream2):
         return(RavenViewDETx(upstream_task1=upstream1,upstream_task2=upstream2,RVmethodID=self.RVmethodID,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version,
                              SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec))
+
+class RavenToDETx(INSTINCT_Rmethod_Task):
+    upstream_task1 = luigi.Parameter() #RAVx
+    upstream_task2 = luigi.Parameter() #FG
+
+    RDmethodID = luigi.Parameter()
+
+    def hashProcess(self):
+        hashLength = 6
+        #hash the previous file to see if it was edited
+        fileHash = Helper.hashfile(self.upstream_task1.outpath() + '/RAVENx.txt',hashLength)
+
+        return Helper.getParamHash2(self.RDmethodID + ' ' + fileHash+ ' ' + self.upstream_task1.hashProcess(),hashLength)
+    def outpath(self):
+        return self.upstream_task1.outpath() + '/' + self.hashProcess() 
+    def requires(self):
+        return self.upstream_task1
+    def output(self):
+        #conditional on what this task is doing. 
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
+    def run(self):
+        
+        RAVpath = self.upstream_task1.outpath() 
+        FGpath = self.upstream_task2.outpath() 
+
+        resultPath=self.outpath()
+
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
+
+        Paths = [RAVpath,FGpath,resultPath]
+        
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenToDETx",MethodID=self.RDmethodID,Paths=Paths,Args='',Params='')
+        
+    def invoke(self,upstream1,upstream2):
+        return(RavenToDETx(upstream_task1=upstream1,upstream_task2=upstream2,RDmethodID=self.RDmethodID,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
