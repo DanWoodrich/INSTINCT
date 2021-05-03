@@ -65,4 +65,8 @@ class ViewGT(FormatFG,FormatGT,RavenViewDETx):
                    FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
 
 if __name__ == '__main__':
-    luigi.build([ViewGT.invoke(VG_params)], local_scheduler=True)    
+    inv=ViewGT.invoke(VG_params)
+    
+    luigi.build([inv], local_scheduler=True)    
+
+    print(inv.hashProcess())

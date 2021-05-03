@@ -70,4 +70,6 @@ class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
                    FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
 
 if __name__ == '__main__':
-    luigi.build([ViewDet.invoke(VD_params)], local_scheduler=True)    
+    luigi.build([ViewDet.invoke(VD_params)], local_scheduler=True)
+
+    print(ViewDet.invoke(VD_params).hashProcess())

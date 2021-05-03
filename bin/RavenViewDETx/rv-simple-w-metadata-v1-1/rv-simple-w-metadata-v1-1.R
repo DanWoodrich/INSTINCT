@@ -61,8 +61,11 @@ colnames(FG)[which(colnames(FG)=="StartFile")]<-"EndFile"
 EFFP<-merge(Dets,FG,by="EndFile")
 EFFP<-EFFP[order(EFFP$StartFile,EFFP$StartTime),]
 
-DetsFG$StartFile<-paste(dataPath,DetsFG$FullPath,DetsFG$StartFile,sep="")
-DetsFG$EndFile<-paste(dataPath,EFFP$FullPath,DetsFG$EndFile,sep="") 
+if(nrow(DetsFG)>=1){
+  DetsFG$StartFile<-paste(dataPath,DetsFG$FullPath,DetsFG$StartFile,sep="")
+  DetsFG$EndFile<-paste(dataPath,EFFP$FullPath,DetsFG$EndFile,sep="") 
+}
+
 
 #strike several metadata fields
 dropCols<-c("DiffTime","FullPath","Deployment","SiteID","cumsum","Duration")
@@ -74,8 +77,15 @@ DetsFGxtra<-data.frame(DetsFG[,which(!colnames(DetsFG) %in% keepCols)])
 
 colnames(DetsFGxtra)<-colnames(DetsFG)[which(!colnames(DetsFG) %in% keepCols)]
 
+if(nrow(DetsFG)>=1){
 out<-data.frame(1:nrow(DetsFG),"Spectrogram 1",1,DetsFG$StartTime,DetsFG$EndTime,DetsFG$LowFreq,DetsFG$HighFreq,DetsFG$StartFile,
                 DetsFG$EndFile,DetsFG$FileOffset,DetsFG$DeltaTime,DetsFGxtra)
+}else{
+  out<-data.frame(matrix(ncol = 11+length(DetsFGxtra), nrow = 0))
+  if(length(DetsFGxtra)>0){
+    colnames(out)[12:(11+length(DetsFGxtra))]<-names(DetsFGxtra)
+  }
+}
 
 colnames(out)[1:11]<-c("Selection","View","Channel","Begin Time (s)","End Time (s)","Low Freq (Hz)","High Freq (Hz)",
                       "Begin Path","End Path","File Offset (s)","Delta Time (s)")
