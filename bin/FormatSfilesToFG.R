@@ -41,9 +41,26 @@ dash2<-gregexpr("-",data$SFsh[1])[[1]][2]
 dot1<-gregexpr("\\.",data$SFsh[1])[[1]][1]
 dateTimeFormat<-substr(data$SFsh,dash2+1,dot1-1)
 
-if(!any(!nchar(dateTimeFormat)==15)){
-  dateTimeFormat<-paste(substr(dateTimeFormat,3,12),"000",sep="")
+#add in a segstart column to save the start time 
+
+if(!any(!nchar(dateTimeFormat)==15)){ #split this conditional into 2 parts, one that strips the yy and one that tests for non-000 files
+  dateTimeFormat<-substr(dateTimeFormat,3,15)
+  #  dateTimeFormat<-paste(substr(dateTimeFormat,3,12),"000",sep="")
+
 }
+
+#find the time difference from file name to 000. Save this as a vector in SegStart. 
+
+mss<-paste("0",substr(dateTimeFormat,11,15),sep="")
+vals<-as.POSIXlt(mss,format="%M%S")
+vals<- vals$sec+vals$min*60
+
+data$SegStart<-vals
+data$SegDur<-data$Duration
+
+#Then, convert all dateTimeFormat to 000
+
+dateTimeFormat<-paste(substr(dateTimeFormat,1,10),"000",sep="")
 
 data$SFsh<-paste(substr(data$SFsh,1,dash2),dateTimeFormat,".wav",sep="")
 
@@ -94,8 +111,8 @@ if(substr(data$SFsh[1],1,5)=="AU-AL"|substr(data$SFsh[1],1,5)=="AU-AW"){
 
 NASpath<-paste("/",data$MooringName,"/",month,"_",year,"/",sep="")
 
-outData<-data.frame(cbind(as.character(data$SFsh),NASpath,dateTimeFormat,data$Duration,as.character(data$MooringName),siteID))
-colnames(outData)<-c("FileName","FullPath","StartTime","Duration","Deployment","SiteID")
+outData<-data.frame(cbind(as.character(data$SFsh),NASpath,dateTimeFormat,data$Duration,as.character(data$MooringName),data$SegStart,data$SegDur,siteID))
+colnames(outData)<-c("FileName","FullPath","StartTime","Duration","Deployment","SegStart","SegDur","SiteID")
 
 #modify saved name as well 
 und5<-gregexpr("_",SfilesName)[[1]][5]
@@ -108,6 +125,8 @@ saveName<-paste(data$MooringName[1],saveName,sep="")
 outData<-outData[which(!duplicated(outData$FileName)),]
 
 NASpath = "//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves"
+
+#this will be file duration, but save original duration as 'segDur'. 
 
 for(i in 1:nrow(outData)){
   path = paste(NASpath,outData[i,"FullPath"],outData[i,"FileName"],sep="")
