@@ -13,7 +13,7 @@ import shlex
 #########################
 
 class Helper:
-    def peek(self,fn_type,fp_type,st_type,dur_type,comp_type=0):
+    def peek(self,fn_type,fp_type,st_type,dur_type,comp_type=0):#this is out of date- don't think I need to have fxn variables for how I load in the standard metadata.
         if comp_type != 0:
             heads = pd.read_csv(self, nrows=1,compression=comp_type)
         else:
@@ -22,7 +22,9 @@ class Helper:
         heads.remove('FileName')
         heads.remove('StartTime')
         heads.remove('Duration')
-        hdict = {'FileName': fn_type, 'FullPath': fp_type, 'StartTime': st_type, 'Duration': dur_type}
+        heads.remove('SegStart')
+        heads.remove('SegDur')
+        hdict = {'FileName': fn_type, 'FullPath': fp_type, 'StartTime': st_type, 'Duration': dur_type, 'SegStart': 'float64', 'SegDur': 'float64'}
         if len(heads) != 0:
             metadict = dict.fromkeys(heads , 'category')
             hdict.update(metadict)
@@ -38,9 +40,11 @@ class Helper:
                 sha1.update(data)
         return sha1.hexdigest()[0:hlen]
     def getDifftime(self):
-        self=self.sort_values(['StartTime'], ascending=[True])
-        self['EndTime'] = self['StartTime']+pd.to_timedelta(self['Duration'], unit='s')
-        self['DiffTime'] = self['EndTime'][0:(len(self['EndTime'])-1)] - self['StartTime'][1:len(self['StartTime'])].values
+        self=self.sort_values(['Deployment','StartTime','SegStart'], ascending=[True,True,True])
+        self['TrueStart'] = self['StartTime']+pd.to_timedelta(self['SegStart'], unit='s')
+        self['TrueEnd'] = self['TrueStart']+pd.to_timedelta(self['SegDur'], unit='s')
+        #self['EndTime'] = self['StartTime']+pd.to_timedelta(self['Duration'], unit='s')
+        self['DiffTime'] = self['TrueEnd'][0:(len(self['TrueEnd'])-1)] - self['TrueStart'][1:len(self['TrueStart'])].values
         self['DiffTime'] = self['DiffTime']>pd.to_timedelta(-2,unit='s') #makes the assumption that if sound files are 1 second apart they are actually consecutive (deals with rounding differences)
         consecutive = numpy.empty(len(self['DiffTime']), dtype=int)
         consecutive[0] = 1
@@ -52,7 +56,8 @@ class Helper:
             else:
                 consecutive[n + 1] = iterator
         self['DiffTime'] = consecutive
-        self = self.drop(columns='EndTime')
+        self = self.drop(columns='TrueStart')
+        self = self.drop(columns='TrueEnd')
         return(self)
     def paramString(self):
         string_out = ""
@@ -242,9 +247,14 @@ class FormatFG(INSTINCT_Task):
         os.mkdir(self.outpath())
 
         if self.decimatedata == 'y':
-            #if decimating, run decimate. Check will matter in cases where MATLAB supporting library is not installed. 
+            #if decimating, run decimate. Check will matter in cases where MATLAB supporting library is not installed.
+            #note that this can be pretty slow if not on a VM! Might want to figure out another way to perform this
+            #to speed up if running on slow latency.
 
             FullFilePaths = FG['FullPath'].astype('str') + FG['FileName'].astype('str')
+
+            #remove duplicates
+            FullFilePaths=pd.Series(FullFilePaths.unique())
 
             ffpPath=self.outpath() + '/FullFilePaths.csv'
 
@@ -428,6 +438,14 @@ class UnifyED(RunED):
             EDfin = ED[['StartTime','EndTime','LowFreq','HighFreq','StartFile','EndFile']]
             ED.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
         else:
+
+            sys.exit("As of FG changes 5/3/2021 does not support splitting ED process. To be fixed at a later date.")
+
+            #This section uses logic that Startfile corresponds to the data that needs to be redone, which it does not. Would need to
+            #add in a character column which is startfile + startseg and use the same logic.
+            #But since I am not using this right now anyways, save for later since it's not worth testing.
+
+
             EDfin = ED.loc[indecesED._values]
             #reduce this to just file names to pass to Energy detector (FG style)
 
