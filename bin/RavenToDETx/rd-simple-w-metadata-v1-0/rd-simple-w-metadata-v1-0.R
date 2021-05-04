@@ -1,6 +1,6 @@
 MethodID<-"rd-simple-w-metadata-v1-0"
 
-args="C:/Apps/INSTINCT/Outputs/EditGTwRaven/9af322 C:/Apps/INSTINCT/Cache/f3b760ad8bec C:/Apps/INSTINCT/Outputs/EditGTwRaven/9af322/70d959"
+args="C:/Apps/INSTINCT/Outputs/EditGTwRaven/50fc3a C:/Apps/INSTINCT/Cache/c5da6a9fe0cc C:/Apps/INSTINCT/Outputs/EditGTwRaven/50fc3a/499dea"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -13,6 +13,9 @@ resultPath <- args[3]
 RavGT<-read.delim(paste(RAVpath,"RAVENx.txt",sep="/"))
 FG<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
 
+#throw out the segment info. 
+FG<-FG[which(!duplicated(FG$FileName)),]
+
 #reduce RavGT files to just names, not locations. 
 
 RavGT<-RavGT[which(RavGT$View!="Waveform 1"),]
@@ -21,15 +24,20 @@ RavGT<-RavGT[,which(!colnames(RavGT) %in% c("Selection","View","Channel"))]
 
 RavGT<-RavGT[order(RavGT$Begin.Time..s.),]
 
+#get rid of not considered
+
+RavGT<-RavGT[which(RavGT$SignalCode!="Not Considered"),]
+
+#changed this from backslash to forward slash, but not sure why it is coming out different...
 for(i in 1:nrow(RavGT)){
-  slashes<-length(gregexpr("\\\\",RavGT$Begin.Path[i])[[1]])
-  lastSlash<-gregexpr("\\\\",RavGT$Begin.Path[i])[[1]][slashes]
+  slashes<-length(gregexpr("/|\\\\",RavGT$Begin.Path[i])[[1]])
+  lastSlash<-gregexpr("/|\\\\",RavGT$Begin.Path[i])[[1]][slashes]
   RavGT$Begin.Path[i]<-substr(RavGT$Begin.Path[i],lastSlash+1,nchar(RavGT$Begin.Path[i]))
 }
 
 for(i in 1:nrow(RavGT)){
-  slashes<-length(gregexpr("\\\\",RavGT$End.Path[i])[[1]])
-  lastSlash<-gregexpr("\\\\",RavGT$End.Path[i])[[1]][slashes]
+  slashes<-length(gregexpr("/|\\\\",RavGT$End.Path[i])[[1]])
+  lastSlash<-gregexpr("/|\\\\",RavGT$End.Path[i])[[1]][slashes]
   RavGT$End.Path[i]<-substr(RavGT$End.Path[i],lastSlash+1,nchar(RavGT$End.Path[i]))
 }
 

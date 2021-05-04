@@ -52,11 +52,11 @@ FNvec<-as.numeric(table(c(LABdata[which(LABdata$SignalCode!="out"&LABdata$label=
 HitMissCor<-cor(TPvec,FNvec)
 
 #stats related to dispersion of calls over time 
-EffortHours<-sum(FGdata$Duration)/3600
-TPperHour<-numTPtruth/(sum(FGdata$Duration)/3600)
-TPdetperHour<-numTP/(sum(FGdata$Duration)/3600)
-FPperHours<-numFP/(sum(FGdata$Duration)/3600)
-numFNperHOur<-numFN/(sum(FGdata$Duration)/3600)
+EffortHours<-sum(FGdata$SegDur)/3600
+TPperHour<-numTPtruth/(sum(FGdata$SegDur)/3600)
+TPdetperHour<-numTP/(sum(FGdata$SegDur)/3600)
+FPperHours<-numFP/(sum(FGdata$SegDur)/3600)
+numFNperHOur<-numFN/(sum(FGdata$SegDur)/3600)
 
 Stats<-data.frame(cbind(FGID,detTotal,numTPtruth,numTP,numTPout,numFP,numFN,Recall,Precision,F1,OMB,HitMissCor,EffortHours,TPperHour,TPdetperHour,FPperHours,numFNperHOur))
 

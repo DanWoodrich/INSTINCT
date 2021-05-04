@@ -122,16 +122,24 @@ saveName<-paste(data$MooringName[1],saveName,sep="")
 
 #before saving, need to loop through each file, call readwave2 to get duration. Then, remove redunant rows. 
 
-outData<-outData[which(!duplicated(outData$FileName)),]
+#need to edit this: could combine into fewer segments, but should work fine without this step 
+#outData<-outData[which(!duplicated(outData$FileName)),]
 
 NASpath = "//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves"
 
 #this will be file duration, but save original duration as 'segDur'. 
-
+pathsave=""
 for(i in 1:nrow(outData)){
   path = paste(NASpath,outData[i,"FullPath"],outData[i,"FileName"],sep="")
-  info<-readWave2(path,header = TRUE)
-  outData[i,"Duration"]<-round(info$samples/info$sample.rate)
+  if(path!=pathsave){
+    info<-readWave2(path,header = TRUE)
+    outData[i,"Duration"]<-round(info$samples/info$sample.rate)
+  }else{
+    outData[i,"Duration"]<-round(info$samples/info$sample.rate)
+  }
+  
+  pathsave=path
+  
 }
 
 write.csv(outData,paste("C:/Apps/INSTINCT/Data/FileGroups/",saveName,".csv",sep=""),row.names = FALSE)

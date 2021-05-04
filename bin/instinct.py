@@ -439,7 +439,7 @@ class UnifyED(RunED):
             ED.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
         else:
 
-            sys.exit("As of FG changes 5/3/2021 does not support splitting ED process. To be fixed at a later date.")
+            #sys.exit("As of FG changes 5/3/2021 does not support splitting ED process. To be fixed at a later date.")
 
             #This section uses logic that Startfile corresponds to the data that needs to be redone, which it does not. Would need to
             #add in a character column which is startfile + startseg and use the same logic.
@@ -453,9 +453,9 @@ class UnifyED(RunED):
             #load in the processed FG
 
 
-            FG_cols = ['FileName','FullPath','StartTime','Duration','DiffTime']
+            FG_cols = ['FileName','FullPath','StartTime','Duration','DiffTime','Deployment','SegStart','SegDur']
 
-            FG_dict = {'FileName': 'string','FullPath': 'category', 'StartTime': 'string','Duration': 'int', 'DiffTime':'int'}
+            FG_dict = {'FileName': 'string','FullPath': 'category', 'StartTime': 'string','Duration': 'int','Deployment':'string','SegStart':'int','SegDur':'int','DiffTime':'int'}
             FG = pd.read_csv(self.uTask1path +'/FileGroupFormat.csv.gz', dtype=FG_dict, usecols=FG_cols)
 
             #retain only the file names, and use these to subset original FG
@@ -529,7 +529,7 @@ class UnifyED(RunED):
             #combine ED and EDpatch
             
             ED = pd.concat([EDpatchsub,ED],ignore_index=True)
-            ED = ED.sort_values(['StartTime'], ascending=True)
+            ED = ED.sort_values(['StartFile','StartTime'], ascending=[True,True])
 
             os.remove(FGpath + '/DETx.csv.gz') 
 

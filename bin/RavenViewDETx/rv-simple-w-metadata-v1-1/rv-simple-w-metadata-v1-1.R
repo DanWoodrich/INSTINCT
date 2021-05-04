@@ -1,6 +1,8 @@
 MethodID<-"rv-simple-w-metadata-v1-1"
 
-args="C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c/e08d0c C:/Apps/INSTINCT/Cache/1fecac0f763c C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c/e08d0c/f875d6  //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048"
+library(foreach)
+
+args="C:/Apps/INSTINCT/Cache/c5da6a9fe0cc/6c666b C:/Apps/INSTINCT/Cache/c5da6a9fe0cc C:/Apps/INSTINCT/Cache/c5da6a9fe0cc/6c666b/3ac6ee //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -16,6 +18,10 @@ dataPath <- args[4]
 
 Dets<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
 FG<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
+
+FGfull<-FG
+
+FG<-FG[which(!duplicated(FG$FileName)),]
 
 #need to do the following: 
 #make sure script still works with old FG
@@ -33,7 +39,66 @@ colnames(FG)[which(colnames(FG)=="FileName")]<-"StartFile"
 
 FG$StartTime<-NULL
 
-FG$cumsum=cumsum(FG$Duration)-FG$Duration[1]
+FG$cumsum=c(0,cumsum(FG$Duration)[1:(nrow(FG)-1)])
+
+#stick the null space data onto dets, so it gets formatted the same way!
+#calculate the empty spaces in each file. 
+#can't think of a more elegant way to do this, so do a big ugly loop 
+
+allFiles<-unique(c(Dets$StartFile,Dets$EndFile))
+
+outNeg<-foreach(i=1:length(allFiles)) %do% {
+  segs<-FGfull[which(FGfull$FileName==allFiles[i]),]
+  segVec<-c(segs$SegStart[1],segs$SegStart[1]+segs$SegDur[1])
+  if(nrow(segs)>1){
+    for(p in 2:nrow(segs)){
+      segVec<-c(segVec,segs$SegStart[p],segs$SegStart[p]+segs$SegDur[p])
+    }    
+  }
+  segVec<-c(0,segVec,segs$Duration[1])
+  segVec<-segVec[which(!(duplicated(segVec)|duplicated(segVec,fromLast = TRUE)))]
+  
+  if(length(segVec)>0){
+    outs<-foreach(f=seq(1,length(segVec),2)) %do% {
+      segsRow<-c(segVec[f],segVec[f+1],0,5000,segs$FileName[1],segs$FileName[1],NA,"Not Considered",NA)
+      return(segsRow)
+    }
+    
+    outs<-do.call("rbind",outs)
+  }else{
+    outs<-NULL
+  }
+
+  
+  return(outs)
+  #chop up by 2s, write as negative space and rbind to outputs. 
+  
+}
+
+outNeg<-do.call("rbind",outNeg)
+outNeg<-data.frame(outNeg)
+
+colnames(outNeg)[1:6]<-reqCols
+colnames(outNeg)[7]<-'label'
+colnames(outNeg)[8]<-'SignalCode'
+colnames(outNeg)[9]<-'Type'
+
+
+#test if Dets have labels, or not. 
+
+dropCols<-c("label","SignalCode","Type") #drops any that aren't present in Dets
+
+if(any(!colnames(Dets) %in% dropCols)){
+  dropColsDo<-dropCols %in% colnames(Dets)
+  outNeg<-outNeg[,which(!colnames(outNeg) %in% dropCols[!dropColsDo])]
+}
+
+outNeg$StartTime<-as.numeric(outNeg$StartTime)
+outNeg$EndTime<-as.numeric(outNeg$EndTime)
+outNeg$LowFreq<-as.numeric(outNeg$LowFreq)
+outNeg$HighFreq<-as.numeric(outNeg$HighFreq)
+
+Dets<-rbind(Dets,outNeg)
 
 DetsFG<-merge(Dets,FG,by="StartFile")
 
@@ -71,7 +136,7 @@ if(nrow(DetsFG)>=1){
 
 
 #strike several metadata fields
-dropCols<-c("DiffTime","FullPath","Deployment","SiteID","cumsum","Duration")
+dropCols<-c("DiffTime","FullPath","Deployment","SiteID","cumsum","Duration","SegStart","SegDur")
 
 DetsFG<-DetsFG[,which(!colnames(DetsFG) %in% dropCols)]
 
@@ -92,5 +157,6 @@ out<-data.frame(1:nrow(DetsFG),"Spectrogram 1",1,DetsFG$StartTime,DetsFG$EndTime
 
 colnames(out)[1:11]<-c("Selection","View","Channel","Begin Time (s)","End Time (s)","Low Freq (Hz)","High Freq (Hz)",
                       "Begin Path","End Path","File Offset (s)","Delta Time (s)")
+
 
 write.table(out,paste(Resultpath,'/RAVENx.txt',sep=""),quote=FALSE,sep = "\t",row.names=FALSE)

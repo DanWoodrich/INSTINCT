@@ -19,6 +19,10 @@ splitNum<-args[6]
 ReadFile2<-paste('DETx',splitNum,'.csv.gz',sep="")
 
 FG<-read.csv(paste(FGpath,'FileGroupFormat.csv.gz',sep="/"))
+
+#Not sure if this will be a good fix? Trying it, but be careful... 
+FG<-FG[which(!duplicated(FG$FileName)),]
+
 colnames(FG)[3]<-"RealTime"
 
 tmpPath<-paste(resultPath,splitNum,sep="/")
