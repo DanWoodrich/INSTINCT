@@ -148,7 +148,7 @@ startLocalPar(crs,"crs","tmpPath","lastFeature","freqstat.normalize","FG","targe
 out2<-foreach(f=1:crs,.packages=c("tuneR","imager","doParallel","seewave","pracma","plotrix","signal")) %dopar% {
   
   #for(f in 1:16){
-    #print(f)
+  #  print(f)
   dataIn<-read.csv(paste(tmpPath,"/chunk",f,".csv.gz",sep=""))
   
   #attempt to use IO/readwav more effeciently by reusing wav objects between iterations
