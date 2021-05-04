@@ -1,8 +1,5 @@
 
-
-
-
-args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/ef55426b1969/ C:/Apps/INSTINCT/Cache/ef55426b1969/92c9b2 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/ef55426b1969/92c9b2/1d0c34 1 99 method1 feat-ext-hough-light-source-v1-1 n 90 1 30 specgram 1024 48 0 256 0 feat-ext-hough-light-source-v1-1 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
+args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/c08e20f6e97a/ C:/Apps/INSTINCT/Cache/c08e20f6e97a/92c9b2 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/c08e20f6e97a/92c9b2/fe834f 1 99 method1 feat-ext-hough-light-source-v1-1 n 90 1 30 specgram 1024 48 0 32 0 feat-ext-hough-light-source-v1-1 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -149,6 +146,9 @@ for(n in 1:crs){
 startLocalPar(crs,"crs","tmpPath","lastFeature","freqstat.normalize","FG","targetSampRate","readWave2","decimateData","resampINST","decDo","prime.factor","ParamArgs","FeatureExtracteR","lastFeature","getMinBBox","freqstat.normalize")
 
 out2<-foreach(f=1:crs,.packages=c("tuneR","imager","doParallel","seewave","pracma","plotrix","signal")) %dopar% {
+  
+  #for(f in 1:16){
+    #print(f)
   dataIn<-read.csv(paste(tmpPath,"/chunk",f,".csv.gz",sep=""))
   
   #attempt to use IO/readwav more effeciently by reusing wav objects between iterations

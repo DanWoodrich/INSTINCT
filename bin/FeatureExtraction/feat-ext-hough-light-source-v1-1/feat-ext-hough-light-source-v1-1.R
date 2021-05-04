@@ -209,7 +209,11 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
       )
       
       
-      P = abs(spectrogram)
+      if(length(spectrogram)==3){
+        P = abs(spectrogram$S)
+      }else{
+        P = abs(spectrogram)
+      }
 
       #
       
