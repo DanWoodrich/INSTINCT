@@ -42,9 +42,9 @@ chunkSize<- 20
 
 MethodID<-"bled-and-combine-test-r-source-v1-0"
 
-paramArgsPre<-"0.5 Upsweep 2 350 100 100 1 0 2 0.25 15 12 50 1024 240 bled-and-combine-test-r-source-v1-0 band_ovlp combine_method db_add high_freq low_freq max_dur min_dur min_freq noise_hop_length noise_thresh noise_win_length num_bands overlap t_samp_rate window_length"
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048 C:/Apps/INSTINCT/Cache/1fecac0f763c/ C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c FileGroupFormat1.csv.gz 1 99 20 method1 bled-and-combine-test-r-source-v1-1 0.5 Downsweep 6 900 40 100 0.1 150 0.5 0.25 4 12 90 2048 512 bled-and-combine-test-r-source-v1-1 band_ovlp combine_method db_add high_freq low_freq max_dur min_dur min_freq noise_hop_length noise_thresh noise_win_length num_bands overlap t_samp_rate window_length"
 
-args<-c(1:10,strsplit(paramArgsPre,split=" ")[[1]])
+args<-strsplit(paramArgsPre,split=" ")[[1]]
 
 #To make this general to ED, need to pass method params instead of hard defining here. 
 args<-commandArgs(trailingOnly = TRUE)
@@ -133,6 +133,7 @@ detOut<-foreach(i=1:BigChunks) %do% {
   startLocalPar(crs,"FilezAssign","data","EventDetectoR","specgram","splitID","StartFile","EndFile","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2")
   
   Detections<-foreach(n=1:crs,.packages=c("tuneR","doParallel","signal")) %dopar% {
+
     dataIn<-data[StartFile:EndFile,][which(FilezAssign==n),]
     #process per diffTime chunk
     outList <- vector(mode = "list")
@@ -142,17 +143,24 @@ detOut<-foreach(i=1:BigChunks) %do% {
       
       #load the sound file(s) into memory
       dataMini<-dataIn[which(dataIn$DiffTime==h),]
-      dataMini$cumsum<-cumsum(dataMini$Duration)-dataMini$Duration[1]
-      filePaths<-paste(DataPath,paste(dataMini$FullPath,dataMini$FileName,sep=""),sep="")
       if(nrow(dataMini)==1){
-        soundFile=readWave2(filePaths)
+        dataMini$cumsum<-0
       }else{
-        SoundList <- vector(mode = "list", length = nrow(dataMini))
-        for(g in 1:nrow(dataMini)){
-          SoundList[[g]]<-readWave2(filePaths[g])
-        }
-        soundFile<-do.call(bind, SoundList)
+        dataMini$cumsum<-c(0,cumsum(dataMini$SegDur)[1:(nrow(dataMini)-1)])
       }
+      filePaths<-paste(DataPath,paste(dataMini$FullPath,dataMini$FileName,sep=""),sep="")
+
+      SoundList <- vector(mode = "list", length = nrow(dataMini))
+      
+      #here, could decide to load in a little more context if available? Then trim detections at the end? might be nice, but 
+      #may not be worth addressing yet. 
+      
+      #decided not to load in full wav and retain between loops. This means more reads, but shorter file length reads. Could change this. 
+      for(g in 1:nrow(dataMini)){
+        SoundList[[g]]<-readWave2(filePaths[g],from=dataMini$SegStart[g],to=dataMini$SegStart[g]+dataMini$SegDur[g],unit="seconds")
+      }
+      
+      soundFile<-do.call(bind, SoundList)
       
       soundFile<-decimateData(soundFile,targetSampRate)
       
@@ -168,15 +176,19 @@ detOut<-foreach(i=1:BigChunks) %do% {
       
       if(length(outputs)>0){
 
-      Cums<-data.frame(cut(outputs[,1],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$cumsum),
-                          cut(outputs[,2],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$cumsum),
-                       cut(outputs[,1],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$FileName),
-                       cut(outputs[,2],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$FileName))
+      Cums<-data.frame(cut(outputs[,1],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$cumsum),
+                          cut(outputs[,2],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$cumsum),
+                       cut(outputs[,1],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$FileName),
+                       cut(outputs[,2],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$FileName),
+                       cut(outputs[,1],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$SegStart),
+                       cut(outputs[,2],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$SegStart))
       Cums[,1]<-as.numeric(levels(Cums[,1])[Cums[,1]])
       Cums[,2]<-as.numeric(levels(Cums[,2])[Cums[,2]])
+      Cums[,5]<-as.numeric(levels(Cums[,5])[Cums[,5]])
+      Cums[,6]<-as.numeric(levels(Cums[,6])[Cums[,6]])
       
-      StartMod<-outputs[,1]-Cums[,1]
-      EndMod<-outputs[,2]-Cums[,2]
+      StartMod<-outputs[,1]+Cums[,5]-Cums[,1]
+      EndMod<-outputs[,2]+Cums[,6]-Cums[,2]
 
       #convert outputs to have startfile, starttime, endfile, endtime. 
       outputs<-data.frame(StartMod,EndMod,outputs[,3],outputs[,4],Cums[,3],Cums[,4],processTag)
@@ -218,7 +230,7 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
     
     SoundList <- vector(mode = "list", length = nrow(dataMini))
     for(g in 1:nrow(dataMini)){
-      SoundList[[g]]<-readWave2(filePaths[g])
+      SoundList[[g]]<-readWave2(filePaths[g],from=dataMini$SegStart[g],to=dataMini$SegStart[g]+dataMini$SegDur[g],unit="seconds")
     }
     soundFile<-do.call(bind, SoundList)
     
@@ -236,15 +248,19 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
     outputs<-EventDetectoR(soundFile,spectrogram=NULL,dataMini,ParamArgs)
     
     if(length(outputs)>0){
-    Cums<-data.frame(cut(outputs[,1],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$cumsum),
-                     cut(outputs[,2],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$cumsum),
-                     cut(outputs[,1],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$FileName),
-                     cut(outputs[,2],breaks=c(0,dataMini$cumsum+dataMini$Duration[1]),labels=dataMini$FileName))
-    Cums[,1]<-as.numeric(levels(Cums[,1])[Cums[,1]])
-    Cums[,2]<-as.numeric(levels(Cums[,2])[Cums[,2]])
-    
-    StartMod<-outputs[,1]-Cums[,1]
-    EndMod<-outputs[,2]-Cums[,2]
+      Cums<-data.frame(cut(outputs[,1],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$cumsum),
+                       cut(outputs[,2],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$cumsum),
+                       cut(outputs[,1],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$FileName),
+                       cut(outputs[,2],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$FileName),
+                       cut(outputs[,1],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$SegStart),
+                       cut(outputs[,2],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$SegStart))
+      Cums[,1]<-as.numeric(levels(Cums[,1])[Cums[,1]])
+      Cums[,2]<-as.numeric(levels(Cums[,2])[Cums[,2]])
+      Cums[,5]<-as.numeric(levels(Cums[,5])[Cums[,5]])
+      Cums[,6]<-as.numeric(levels(Cums[,6])[Cums[,6]])
+      
+      StartMod<-outputs[,1]+Cums[,5]-Cums[,1]
+      EndMod<-outputs[,2]+Cums[,6]-Cums[,2]
     
     #convert outputs to have startfile, starttime, endfile, endtime. 
     outputs<-data.frame(StartMod,EndMod,outputs[,3],outputs[,4],Cums[,3],Cums[,4],n)

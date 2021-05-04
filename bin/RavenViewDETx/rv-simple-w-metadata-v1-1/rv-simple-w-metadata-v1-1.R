@@ -1,9 +1,8 @@
 MethodID<-"rv-simple-w-metadata-v1-1"
 
-DETpath<-"C:/Apps/INSTINCT/Cache/760e06eaabd4/a04a78/f16d98"
-FGpath<-"C:/Apps/INSTINCT/Cache/760e06eaabd4/"
+args="C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c/e08d0c C:/Apps/INSTINCT/Cache/1fecac0f763c C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c/e08d0c/f875d6  //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048"
 
-dataPath<-"//161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/128"
+args<-strsplit(args,split=" ")[[1]]
 
 args<-commandArgs(trailingOnly = TRUE)
 
@@ -17,6 +16,10 @@ dataPath <- args[4]
 
 Dets<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
 FG<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
+
+#need to do the following: 
+#make sure script still works with old FG
+#add functionality that blacks out not considered GT data when viewing in Raven. 
 
 
 #mandatory column names

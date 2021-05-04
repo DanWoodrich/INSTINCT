@@ -10,7 +10,7 @@ MethodID<-"labels-w-iou-simple-v1-1"
 #fix bug in determining if intersection is present.
 #
 
-args<-"C:/Apps/INSTINCT/Cache/5212fb2c6fe7/ C:/Apps/INSTINCT/Cache/5212fb2c6fe7/8ea39c/ C:/Apps/INSTINCT/Cache/5212fb2c6fe7/ab727a/ C:/Apps/INSTINCT/Cache/5212fb2c6fe7/ab727a/8f9e25  0.15 labels-w-iou-simple-v1-0"
+args<-"C:/Apps/INSTINCT/Cache/1fecac0f763c/ C:/Apps/INSTINCT/Cache/1fecac0f763c/6c666b/ C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c/ C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c/e08d0c  0.25 labels-w-iou-simple-v1-1"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -35,6 +35,10 @@ IoUThresh<-args[5]
 
 GTdata<-read.csv(paste(GTpath,"DETx.csv.gz",sep="/"))
 FGdata<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
+
+#convert FG back to old format
+
+#FGdata<-FGdata[which()]
 
 outDataAll<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
 
@@ -98,8 +102,16 @@ outLong<-outLong[order(outLong$StartTime),]
 for(i in 1:nrow(GTlong)){
   
   GTlongDur<-GTlong$EndTime[i]-GTlong$StartTime[i]
-  klow<-max(which((outLong$EndTime<(GTlong$StartTime[i]-GTlongDur)))) #give this a little buffer to avoid issues with small detections preventing longer det from 
-  khigh<-min(which((outLong$StartTime>(GTlong$EndTime[i]+GTlongDur)))) #fitting the criteria. if wanted to get fancy, could base the buffer length on IOU
+  if(any(outLong$EndTime<(GTlong$StartTime[i]-GTlongDur))){
+    klow<-max(which((outLong$EndTime<(GTlong$StartTime[i]-GTlongDur)))) #give this a little buffer to avoid issues with small detections preventing longer det from 
+  }else{
+    klow=1
+  }
+  if(any((outLong$StartTime>(GTlong$EndTime[i]+GTlongDur)))){
+    khigh<-min(which((outLong$StartTime>(GTlong$EndTime[i]+GTlongDur)))) #fitting the criteria. if wanted to get fancy, could base the buffer length on IOU
+  }else{
+    khigh=nrow(outLong)
+  }
   
   k=klow
   for(k in klow:khigh){
