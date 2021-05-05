@@ -16,4 +16,4 @@ tmp/
 Cache/
 old/
 etc/Projects/*
-!etc/Projects/
+!etc/Projects/README.txt
