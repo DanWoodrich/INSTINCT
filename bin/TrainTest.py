@@ -13,38 +13,6 @@ from Comb4EDperf_TT import *
 from Comb4FeatureTrain import *
 from Comb4PE2All import *
 
-#Run a model on data that does not need to have labels. 
-
-TT_params = Load_Job('TrainTest')
-
-TT_params = FG(TT_params,'FormatFG')
-TT_params = GT(TT_params,'FormatGT')
-TT_params = ED(TT_params,'EventDetector')
-TT_params = FE(TT_params,'FeatureExtraction')
-TT_params = AL(TT_params,'AssignLabels')
-TT_params = MFA(TT_params,'MergeFE_AL')
-TT_params = TM(TT_params,'TrainModel','train')
-TT_params = AC(TT_params,'ApplyCutoff')
-TT_params = PE1(TT_params,'PerfEval1')
-TT_params = PE2(TT_params,'PerfEval2')
-TT_params = PR(TT_params,'PerformanceReport')
-
-#novel data params
-
-#FG for novel data
-n_TT_params = Load_Job('TrainTest')
-n_FGparams = FG(n_TT_params,'FormatFGapply')
-
-n_FGparams = GT(n_FGparams,'FormatGTapply')
-
-#only retain these ones. 
-TT_params.n_FileGroupID = n_FGparams.FileGroupID
-TT_params.n_FGfile = n_FGparams.FGfile
-TT_params.n_IDlength = n_FGparams.IDlength
-TT_params.n_GTfile = n_FGparams.GTfile
-
-TT_params.TT_WriteToOutputs = 'y'
-
 class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
 
     JobName=luigi.Parameter()
@@ -176,8 +144,39 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
                             PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,loopVar=obj.n_IDlength,\
                             FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                             n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,n_GTfile=obj.n_GTfile,system=obj.system,r_version=obj.r_version))
+    def getParams(args):
+        params = Load_Job('TrainTest',args)
 
+        params = FG(params,'FormatFG')
+        params = GT(params,'FormatGT')
+        params = ED(params,'EventDetector')
+        params = FE(params,'FeatureExtraction')
+        params = AL(params,'AssignLabels')
+        params = MFA(params,'MergeFE_AL')
+        params = TM(params,'TrainModel','train')
+        params = AC(params,'ApplyCutoff')
+        params = PE1(params,'PerfEval1')
+        params = PE2(params,'PerfEval2')
+        params = PR(params,'PerformanceReport')
 
+        #novel data params
+
+        #FG for novel data
+        n_params = Load_Job('TrainTest',args)
+        n_params = FG(n_params,'FormatFGapply')
+
+        n_params = GT(n_params,'FormatGTapply')
+
+        #only retain these ones. 
+        params.n_FileGroupID = n_params.FileGroupID
+        params.n_FGfile = n_params.FGfile
+        params.n_IDlength = n_params.IDlength
+        params.n_GTfile = n_params.GTfile
+
+        params.TT_WriteToOutputs = 'y'
+
+        return params
+    
 if __name__ == '__main__':
-    luigi.build([TrainTest.invoke(TT_params)], local_scheduler=True)
+    deployJob(TrainTest,sys.argv)
 

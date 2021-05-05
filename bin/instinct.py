@@ -163,6 +163,7 @@ def deployJob(self,args):
     Params =self.getParams(args)
     inv = self.invoke(Params)
     luigi.build([inv], local_scheduler=True)
+    
     print("                          Output file location path:\n" + "                " +inv.outpath())
     print(r"""
                                  ','. '. ; : ,','
@@ -170,12 +171,14 @@ def deployJob(self,args):
                                     ';.'  ,'
                                        ;;
                                        ;'
-                      :._   _.------------.___
-              __      :__:-'                  '--.
-       __   ,' .'    .'             ______________'.
-     /__ '.-  _\___.'          0  .' .'  .'  _.-_.'
-       '._                     .-': .' _.' _.'_.'
-     snd  '----'._____________.'_'._:_:_.-'--'
+                      :._   _.------------.__
+              __      |  :-'                 '\
+       __   ,' .'    .'                ___     \ 
+     /__ '.-   \___.'              o  /   \_    |
+       '._                  ~~     ._/      \__/
+         '----'.___________    \._           .'
+                           .    \ '--.____.-' 
+             INSTINCT       \.__/
     """)
 
     

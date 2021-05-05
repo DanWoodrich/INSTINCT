@@ -3,14 +3,6 @@ from getParams import *
 from ViewGT import * 
 import shutil
 
-#Ready a bunch of FGs for shared comparison with PE1 pt 2.
-
-EG_params = Load_Job('EditGTwRaven')
-EG_params = FG(EG_params,'FormatFG')
-EG_params = GT(EG_params,'FormatGT')
-EG_params = RV(EG_params,'RavenViewDETx')
-EG_params = RD(EG_params,'RavenToDETx')
-
 class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
     
     JobName=luigi.Parameter()
@@ -68,6 +60,16 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
                    GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,RDmethodID=self.RDmethodID,FileGroupID=self.FileGroupID,\
                    FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                    FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
+    def getParams(args):
+        
+        params = Load_Job('EditGTwRaven',args)
+        
+        params = FG(params,'FormatFG')
+        params = GT(params,'FormatGT')
+        params = RV(params,'RavenViewDETx')
+        params = RD(params,'RavenToDETx')
+
+        return params
 
 if __name__ == '__main__':
-    luigi.build([EditGT.invoke(EG_params)], local_scheduler=True)    
+    deployJob(EditGT,sys.argv)

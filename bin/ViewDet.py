@@ -1,7 +1,6 @@
 from instinct import *
 from getParams import *
 import shutil
-#Ready a bunch of FGs for shared comparison with PE1 pt 2.
 
 class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
     
@@ -64,14 +63,14 @@ class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
     
     def getParams(args):
 
-        VD_params = Load_Job('ViewDet',args)
-        VD_params = FG(VD_params,'FormatFG')
-        VD_params = GT(VD_params,'FormatGT')
-        VD_params = ED(VD_params,'EventDetector')
-        VD_params = AL(VD_params,'AssignLabels')
-        VD_params = RV(VD_params,'RavenViewDETx')
+        params = Load_Job('ViewDet',args)
+        params = FG(params,'FormatFG')
+        params = GT(params,'FormatGT')
+        params = ED(params,'EventDetector')
+        params = AL(params,'AssignLabels')
+        params = RV(params,'RavenViewDETx')
         
-        return VD_params
+        return params
     
 if __name__ == '__main__':
     deployJob(ViewDet,sys.argv)

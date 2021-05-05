@@ -12,31 +12,6 @@ from Comb4EDperf import *
 from Comb4FeatureTrain import *
 from getParams import * 
 
-#Performance evaluation from CV models,
-#run PE2 stage 1 from instinct.py, and run PE2 stage 2 from def run(self):.
-#home/daniel.woodrich/Projects/instinct_dt/
-#C:/Apps/instinct_dt
-
-MPE_params = Load_Job('ModelPerfEval')
-
-#add to MPE
-
-MPE_params = FG(MPE_params,'FormatFG')
-MPE_params = GT(MPE_params,'FormatGT')
-MPE_params = ED(MPE_params,'EventDetector')
-MPE_params = FE(MPE_params,'FeatureExtraction')
-MPE_params = AL(MPE_params,'AssignLabels')
-MPE_params = PE1(MPE_params,'PerfEval1')
-MPE_params = MFA(MPE_params,'MergeFE_AL')
-MPE_params = PE2(MPE_params,'PerfEval2')
-MPE_params = TM(MPE_params,'TrainModel','CV')
-MPE_params = AC(MPE_params,'ApplyCutoff')
-MPE_params = PR(MPE_params,'PerformanceReport')
-
-MPE_params.MPE_WriteToOutputs = 'y'
-
-print(MPE_params.FGfile)
-
 class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,PerfEval2):
     
     JobName=luigi.Parameter()
@@ -178,7 +153,25 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
                              TMcpu=obj.TMcpu,PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
                              ACcutoffString=obj.ACcutoffString,PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,ProjectRoot=obj.ProjectRoot,system=obj.system,\
                              r_version=obj.r_version,loopVar = obj.IDlength))
-    
+    def getParams(args):    
+        params = Load_Job('ModelPerfEval',args)
+
+        params = FG(params,'FormatFG')
+        params = GT(params,'FormatGT')
+        params = ED(params,'EventDetector')
+        params = FE(params,'FeatureExtraction')
+        params = AL(params,'AssignLabels')
+        params = PE1(params,'PerfEval1')
+        params = MFA(params,'MergeFE_AL')
+        params = PE2(params,'PerfEval2')
+        params = TM(params,'TrainModel','CV')
+        params = AC(params,'ApplyCutoff')
+        params = PR(params,'PerformanceReport')
+
+        params.MPE_WriteToOutputs = 'y'
+
+        return params
+
 if __name__ == '__main__':
-    luigi.build([ModelPerfEval.invoke(MPE_params)], local_scheduler=True)    
+    deployJob(ModelPerfEval,sys.argv)
 

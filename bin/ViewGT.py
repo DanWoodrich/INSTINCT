@@ -2,14 +2,6 @@ from instinct import *
 from getParams import *
 import shutil
 
-#Ready a bunch of FGs for shared comparison with PE1 pt 2.
-
-VG_params = Load_Job('EditGTwRaven')
-VG_params = FG(VG_params,'FormatFG')
-VG_params = GT(VG_params,'FormatGT')
-VG_params = RV(VG_params,'RavenViewDETx')
-
-
 class ViewGT(FormatFG,FormatGT,RavenViewDETx):
     
     JobName=luigi.Parameter()
@@ -63,10 +55,14 @@ class ViewGT(FormatFG,FormatGT,RavenViewDETx):
                    GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,\
                    FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                    FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
+    def getParams(args):
+
+        params = Load_Job('EditGTwRaven',args)
+        params = FG(params,'FormatFG')
+        params = GT(params,'FormatGT')
+        params = RV(params,'RavenViewDETx')
+
+        return params
 
 if __name__ == '__main__':
-    inv=ViewGT.invoke(VG_params)
-    
-    luigi.build([inv], local_scheduler=True)    
-
-    print(inv.hashProcess())
+    deployJob(ViewGT,sys.argv)
