@@ -1,4 +1,8 @@
-This is where you can store project specific params. Access params in this folder using additional command line arguments
+This is where (in your local copy) you can store project specific params. Create a new directory corresponding to 
+your project name, and place project job params in this directory. 
+Project params are ignored from git for safer version control and individual use.
+
+Access params in this folder using additional command line arguments:
 
 command arg1 arg2
 
