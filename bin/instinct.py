@@ -154,6 +154,20 @@ class argParse:
     #this will determine if needs 
 #    def run(MethodID,Paths,Args,Params):
 
+##########################
+#misc function definitions
+##########################
+
+def deployJob(self,args):
+
+
+    Params =self.getParams(args)
+    inv = self.invoke(Params)
+    luigi.build([inv], local_scheduler=True)
+
+    print("Output file location path:\n"+inv.outpath())
+    
+
 ########################
 #instinct base fxns
 ########################

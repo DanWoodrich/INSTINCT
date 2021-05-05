@@ -170,10 +170,27 @@ def RD(self,ID):
 
 
 class Load_Job:
-    def __init__(self,Name):
+    def __init__(self,Name,args):
+
         self.ProjectRoot=Helper.getProjRoot()
-        self.JobName = Name
-        self.ParamsRoot=self.ProjectRoot + 'etc/' + self.JobName + '/'
+        ##if there are 3 args: if one is a ., it is considered the default
+        ##1st indicates param path, 2nd indicates job name
+
+        if len(args)==3:
+            if args[2] == ".":
+                self.JobName = Name
+            else:
+                self.JobName = args[2]
+            if args[1] == ".":
+                self.ParamsRoot=self.ProjectRoot + 'etc/' + self.JobName + '/'
+            else:
+                self.ParamsRoot=self.ProjectRoot + 'etc/Projects/' + args[1]+ '/' + self.JobName + '/' 
+        else:
+            self.JobName = Name
+            self.ParamsRoot=self.ProjectRoot + 'etc/' + self.JobName + '/'
+        print(self.JobName)
+        print(self.ParamsRoot)
+        
         MasterINI = configparser.ConfigParser()
         MasterINI.read(self.ParamsRoot + 'Master.ini')
         self.MasterINI = MasterINI

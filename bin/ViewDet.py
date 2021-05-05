@@ -3,13 +3,6 @@ from getParams import *
 import shutil
 #Ready a bunch of FGs for shared comparison with PE1 pt 2.
 
-VD_params = Load_Job('ViewDet')
-VD_params = FG(VD_params,'FormatFG')
-VD_params = GT(VD_params,'FormatGT')
-VD_params = ED(VD_params,'EventDetector')
-VD_params = AL(VD_params,'AssignLabels')
-VD_params = RV(VD_params,'RavenViewDETx')
-
 class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
     
     JobName=luigi.Parameter()
@@ -68,8 +61,17 @@ class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
                    ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,RVmethodID=self.RVmethodID,\
                    FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                    FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
+    
+    def getParams(args):
 
+        VD_params = Load_Job('ViewDet',args)
+        VD_params = FG(VD_params,'FormatFG')
+        VD_params = GT(VD_params,'FormatGT')
+        VD_params = ED(VD_params,'EventDetector')
+        VD_params = AL(VD_params,'AssignLabels')
+        VD_params = RV(VD_params,'RavenViewDETx')
+        
+        return VD_params
+    
 if __name__ == '__main__':
-    luigi.build([ViewDet.invoke(VD_params)], local_scheduler=True)
-
-    print(ViewDet.invoke(VD_params).hashProcess())
+    deployJob(ViewDet,sys.argv)
