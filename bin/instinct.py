@@ -439,10 +439,13 @@ class UnifyED(RunED):
             ED.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
         else:
 
-            #sys.exit("As of FG changes 5/3/2021 does not support splitting ED process. To be fixed at a later date.")
+            #awesome code for debuging below###
+            #import code
+            #code.interact(local=locals())
+            ###
 
             #This section uses logic that Startfile corresponds to the data that needs to be redone, which it does not. Would need to
-            #add in a character column which is startfile + startseg and use the same logic.
+            #add in a character column which is startfile + startseg and uSse the same logic.
             #But since I am not using this right now anyways, save for later since it's not worth testing.
 
 
@@ -459,8 +462,11 @@ class UnifyED(RunED):
             FG = pd.read_csv(self.uTask1path +'/FileGroupFormat.csv.gz', dtype=FG_dict, usecols=FG_cols)
 
             #retain only the file names, and use these to subset original FG
-            FG = FG[FG.FileName.isin(EDfin['StartFile'])]
-            #recalculate difftime based on new files included
+            #subset with DiffTime
+            FG = FG[FG.DiffTime.isin(EDfin['ProcessTag2'].astype('int32'))&FG.FileName.isin(EDfin['StartFile'])] #subset based on both of these: if a long difftime, will only
+            #take the relevant start files, but will also go shorter than two files in the case of longer segments.
+            
+            #recalculate difftime based on new files included. <- metacomment: not sure why we need to do this? 
             FG['StartTime'] = pd.to_datetime(FG['StartTime'], format='%Y-%m-%d %H:%M:%S')
             FG = Helper.getDifftime(FG)
             

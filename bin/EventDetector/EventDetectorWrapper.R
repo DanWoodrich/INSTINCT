@@ -42,7 +42,7 @@ chunkSize<- 20
 
 MethodID<-"bled-and-combine-test-r-source-v1-0"
 
-paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048 C:/Apps/INSTINCT/Cache/1fecac0f763c/ C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c FileGroupFormat1.csv.gz 1 99 20 method1 bled-and-combine-test-r-source-v1-1 0.5 Downsweep 6 900 40 100 0.1 150 0.5 0.25 4 12 90 2048 512 bled-and-combine-test-r-source-v1-1 band_ovlp combine_method db_add high_freq low_freq max_dur min_dur min_freq noise_hop_length noise_thresh noise_win_length num_bands overlap t_samp_rate window_length"
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/c08e20f6e97a/92c9b2 C:/Apps/INSTINCT/Cache/c08e20f6e97a/92c9b2 EDoutCorrect.csv.gz 2 99 20 method1 bled-and-combine-test-r-source-v1-1 0.5 Upsweep 8 260 60 100 0.25 0 0.5 0.25 3 7 90 1024 256 bled-and-combine-test-r-source-v1-1 band_ovlp combine_method db_add high_freq low_freq max_dur min_dur min_freq noise_hop_length noise_thresh noise_win_length num_bands overlap t_samp_rate window_length"
 
 args<-strsplit(paramArgsPre,split=" ")[[1]]
 
@@ -225,7 +225,11 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
   
   detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel","signal")) %dopar% {
     dataMini<-data[which(data$DiffTime==n),]
-    dataMini$cumsum<-cumsum(dataMini$Duration)-dataMini$Duration[1]
+    if(nrow(dataMini)==1){
+      dataMini$cumsum<-0
+    }else{
+      dataMini$cumsum<-c(0,cumsum(dataMini$SegDur)[1:(nrow(dataMini)-1)])
+    }
     filePaths<-paste(DataPath,paste(dataMini$FullPath,dataMini$FileName,sep=""),sep="")
     
     SoundList <- vector(mode = "list", length = nrow(dataMini))
