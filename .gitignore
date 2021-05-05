@@ -16,4 +16,3 @@ tmp/
 Cache/
 old/
 etc/Projects/*
-!etc/Projects/**/
