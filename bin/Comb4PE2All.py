@@ -29,7 +29,7 @@ class Comb4PE2All(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,M
         task3 = UnifyED.invoke(self,task2)
         task4 = UnifyFE.invoke(self,task3,task2)
         task5 = ApplyModel.invoke(self,task4,task1,task2)
-        task6 = FormatGT.invoke(self,n=l,src="n_")
+        task6 = FormatGT.invoke(self,task2,n=l,src="n_")
         task7 = AssignLabels.invoke(self,task5,task6,task2)
 
         return [task0,task1,task2,task3,task4,task5,task6,task7]

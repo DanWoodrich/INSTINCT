@@ -123,7 +123,9 @@ class argParse:
                 #paths and args determined by process, such as 
 
                 command = command1 + ' ' + command2
-                print(command)
+                print("******************************\nRunning R method " + MethodID + " for process " + ProcessID + "\n******************************")
+
+                print("******************************\nCommand params (can copy and paste): " + command2 +"\n******************************")
                 subprocess.run(shlex.split(command))
                 return None
             elif(Program!='R'):

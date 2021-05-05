@@ -8,7 +8,6 @@ import numpy
 import subprocess
 import shlex
 from instinct import *
-from runFullNovel import *
 from getParams import *
 from Comb4EDperf_TT import *
 from Comb4FeatureTrain import *
@@ -78,11 +77,11 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         task4 = Comb4PE2All.invoke(self)
         task5 = PerfEval2.invoke(self,task4,task1,"All")
         
-        task6 = FormatFG(FGfile = self.n_FGfile[l],ProjectRoot=self.ProjectRoot)
+        task6 = FormatFG.invoke(self,n=l,src="n_") #FormatFG(FGfile = self.n_FGfile[l],ProjectRoot=self.ProjectRoot)
         task7 = UnifyED.invoke(self,task6)
         task8 = UnifyFE.invoke(self,task7,task6)
         task9 = ApplyModel.invoke(self,task8,task3,task6)
-        task10 = FormatGT(upstream_task1=task6,uTask1path=task6.outpath(),GTfile=self.n_GTfile[l],ProjectRoot=self.ProjectRoot)
+        task10 = FormatGT.invoke(self,task6,n=l,src="n_")#FormatGT(upstream_task1=task6,uTask1path=task6.outpath(),GTfile=self.n_GTfile[l],ProjectRoot=self.ProjectRoot)
         task11 = AssignLabels.invoke(self,task9,task10,task6)
         task12 = ApplyCutoff.invoke(self,task11)
         task13 = AssignLabels.invoke(self,task12,task10,task6)
@@ -170,7 +169,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
                             EDparamNames=obj.EDparamNames,ALprocess=obj.ALprocess,ALmethodID=obj.ALmethodID,\
                             ALparamString=obj.ALparamString,FEprocess=obj.FEprocess,FEmethodID=obj.FEmethodID,\
                             FEparamString=obj.FEparamString,FEparamNames=obj.FEparamNames,FEsplits=obj.FEsplits,\
-                            FEcpu=obj.FEcpu,MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,\
+                            FEcpu=obj.FEcpu,MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,FGparamString=obj.FGparamString,\
                             TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
                             TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_FileGroupID=obj.n_FileGroupID,\
                             PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
