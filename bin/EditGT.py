@@ -37,7 +37,7 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
     def getOutName(self):
         return self.GT_signal_code + '_' + self.FileGroupID[0][0:(len(self.FileGroupID[0])-4)] + '_edit.csv'
     def outpath(self):
-        return self.ProjectRoot +'Data/GroundTruth'
+        return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/' + self.getOutName())
     def run(self):

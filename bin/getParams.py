@@ -175,21 +175,20 @@ class Load_Job:
         self.ProjectRoot=Helper.getProjRoot()
         ##if there are 3 args: if one is a ., it is considered the default
         ##1st indicates param path, 2nd indicates job name
-
+        self.JobName = Name
+        
         if len(args)==3:
+            ParamPath = args[2]
             if args[2] == ".":
-                self.JobName = Name
+                ParamPath = Name
             else:
-                self.JobName = args[2]
+                ParamPath = args[2]
             if args[1] == ".":
-                self.ParamsRoot=self.ProjectRoot + 'etc/' + self.JobName + '/'
+                self.ParamsRoot=self.ProjectRoot + 'etc/' + ParamPath + '/'
             else:
-                self.ParamsRoot=self.ProjectRoot + 'etc/Projects/' + args[1]+ '/' + self.JobName + '/' 
+                self.ParamsRoot=self.ProjectRoot + 'etc/Projects/' + args[1]+ '/' + ParamPath + '/' 
         else:
-            self.JobName = Name
             self.ParamsRoot=self.ProjectRoot + 'etc/' + self.JobName + '/'
-        print(self.JobName)
-        print(self.ParamsRoot)
         
         MasterINI = configparser.ConfigParser()
         MasterINI.read(self.ParamsRoot + 'Master.ini')

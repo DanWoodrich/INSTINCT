@@ -2,7 +2,7 @@ MethodID<-"rv-simple-w-metadata-v1-1"
 
 library(foreach)
 
-args="C:/Apps/INSTINCT/Cache/c5da6a9fe0cc/6c666b C:/Apps/INSTINCT/Cache/c5da6a9fe0cc C:/Apps/INSTINCT/Cache/c5da6a9fe0cc/6c666b/3ac6ee //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048"
+args="C:/Apps/INSTINCT/Cache/bc7523b44acd/9c29bc/c3a8ca C:/Apps/INSTINCT/Cache/bc7523b44acd C:/Apps/INSTINCT/Cache/bc7523b44acd/9c29bc/c3a8ca/a08413  //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/128"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -78,27 +78,33 @@ outNeg<-foreach(i=1:length(allFiles)) %do% {
 outNeg<-do.call("rbind",outNeg)
 outNeg<-data.frame(outNeg)
 
-colnames(outNeg)[1:6]<-reqCols
-colnames(outNeg)[7]<-'label'
-colnames(outNeg)[8]<-'SignalCode'
-colnames(outNeg)[9]<-'Type'
+if(nrow(outNeg)>0){
+  colnames(outNeg)[1:6]<-reqCols
+  colnames(outNeg)[7]<-'label'
+  colnames(outNeg)[8]<-'SignalCode'
+  colnames(outNeg)[9]<-'Type'
+  
+  dropCols<-c("label","SignalCode","Type") #drops any that aren't present in Dets
+  
+  if(any(!colnames(Dets) %in% dropCols)){
+    dropColsDo<-dropCols %in% colnames(Dets)
+    outNeg<-outNeg[,which(!colnames(outNeg) %in% dropCols[!dropColsDo])]
+  }
+  
+  outNeg$StartTime<-as.numeric(outNeg$StartTime)
+  outNeg$EndTime<-as.numeric(outNeg$EndTime)
+  outNeg$LowFreq<-as.numeric(outNeg$LowFreq)
+  outNeg$HighFreq<-as.numeric(outNeg$HighFreq)
+  
+  Dets<-rbind(Dets,outNeg)
+  
+}
+
 
 
 #test if Dets have labels, or not. 
 
-dropCols<-c("label","SignalCode","Type") #drops any that aren't present in Dets
 
-if(any(!colnames(Dets) %in% dropCols)){
-  dropColsDo<-dropCols %in% colnames(Dets)
-  outNeg<-outNeg[,which(!colnames(outNeg) %in% dropCols[!dropColsDo])]
-}
-
-outNeg$StartTime<-as.numeric(outNeg$StartTime)
-outNeg$EndTime<-as.numeric(outNeg$EndTime)
-outNeg$LowFreq<-as.numeric(outNeg$LowFreq)
-outNeg$HighFreq<-as.numeric(outNeg$HighFreq)
-
-Dets<-rbind(Dets,outNeg)
 
 DetsFG<-merge(Dets,FG,by="StartFile")
 
