@@ -488,8 +488,7 @@ class UnifyED(RunED):
         else:
 
             #awesome code for debuging below###
-            #import code
-            #code.interact(local=locals())
+            
             ###
 
             #This section uses logic that Startfile corresponds to the data that needs to be redone, which it does not. Would need to
@@ -542,25 +541,30 @@ class UnifyED(RunED):
             PatchList = [None] * len(EDpatches['DiffTime'].unique().tolist())
             for n in range(len(EDpatches['DiffTime'].unique().tolist())):
                 EDpatchN= EDpatches[[x == EDpatches['DiffTime'].unique().tolist()[n] for x in EDpatches['DiffTime']]]
+                FGpatch = FG[FG['DiffTime']==(n+1)]
                 FirstFile = EDpatchN.iloc[[0]]['StartFile'].astype('string').iloc[0]
-                FirstDur = FG.loc[FG['FileName'] == FirstFile]['Duration'].iloc[0]
-                FirstDurHalf=FirstDur/2
+                LastFile = EDpatchN.iloc[[-1]]['StartFile'].astype('string').iloc[0]
 
-            
-                LastFile = EDpatchN.iloc[[-1]]['EndFile'].astype('string').iloc[0]
-                LastDur = FG.loc[FG['FileName'] == LastFile]['Duration'].iloc[0]
-                LastDurHalf=LastDur/2
+                BeginRangeStart= FGpatch.iloc[0]['SegStart']
+                BeginRangeEnd = BeginRangeStart+FGpatch.iloc[0]['SegDur']/2
 
-                #subset EDpatch
-                EDpatchN = EDpatchN[((EDpatchN['StartTime'] > FirstDurHalf) & (EDpatchN['StartFile'] == FirstFile)) | (EDpatchN['StartFile'] != FirstFile)]
-                EDpatchN = EDpatchN[((EDpatchN['EndTime'] < LastDurHalf) & (EDpatchN['EndFile'] == LastFile)) | (EDpatchN['EndFile'] != LastFile)]
+                LastRangeStart= FGpatch.iloc[-1]['SegStart']
+                LastRangeEnd = LastRangeStart+FGpatch.iloc[-1]['SegDur']/2
+
+                EDpatchN = EDpatchN[((EDpatchN['StartTime'] > BeginRangeEnd) & (EDpatchN['StartFile'] == FirstFile)) | (EDpatchN['StartFile'] != FirstFile)]
+                EDpatchN = EDpatchN[((EDpatchN['StartTime'] < LastRangeEnd) & (EDpatchN['StartFile'] == LastFile)) | (EDpatchN['StartFile'] != LastFile)]
 
                 EDpatchN=EDpatchN.drop(columns="DiffTime")
 
+                #import code
+                #code.interact(local=locals())
 
                 #subset ED
-                ED = ED[((ED['StartTime'] <= FirstDurHalf) & (ED['StartFile'] == FirstFile)) | (ED['StartFile'] != FirstFile)]
-                ED = ED[((ED['EndTime'] >= LastDurHalf) & (ED['EndFile'] == LastFile)) | (ED['EndFile'] != LastFile)]
+                ED1 = ED.copy()[(ED['StartTime'] <= BeginRangeEnd) & (ED['StartFile'] == FirstFile)] #get all before patch
+                ED2 = ED.copy()[(ED['StartTime'] >= LastRangeEnd) & (ED['StartFile'] == LastFile)]         #get all after patch
+                ED3 = ED.copy()[(ED['StartFile'] != FirstFile) & (ED['StartFile'] != LastFile)]
+
+                ED = pd.concat([ED1,ED2,ED3],ignore_index=True)
 
                 EDpNfiles = pd.Series(EDpatchN['StartFile'].append(EDpatchN['EndFile']).unique()) #switched to numpy array on an unknown condition, pd.Series forces it to stay this datatype. Needs testing
 
