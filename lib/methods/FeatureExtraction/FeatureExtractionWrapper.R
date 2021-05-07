@@ -46,12 +46,15 @@ ParamNames<-args[(10+argsSep+1):length(args)]
 targetSampRate<-as.integer(ParamArgs[which(ParamNames=="t_samp_rate")])
 TMB<-as.integer(ParamArgs[which(ParamNames=="time_min_buffer")])
 
+mIDind<-gregexpr("-",MethodID)[[1]][length(gregexpr("-",MethodID)[[1]])-1]
+MethodIDcut<-substr(MethodID,0,mIDind-1)
+
 #populate with needed fxns for ED
-SourcePath<-paste(ProjectRoot,"/bin/FeatureExtraction/",MethodID,"/",MethodID,".R",sep="")
+SourcePath<-paste(ProjectRoot,"/lib/methods/FeatureExtraction/",MethodIDcut,"/",MethodID,".R",sep="")
 source(SourcePath) 
 
 #and general fxns
-source(paste(ProjectRoot,"/bin/instinct_fxns.R",sep="")) 
+source(paste(ProjectRoot,"/lib/supporting/instinct_fxns.R",sep="")) 
 
 #Merge FG and data so data has full paths 
 data<- merge(data, FG, by.x = "StartFile", by.y = "FileName")

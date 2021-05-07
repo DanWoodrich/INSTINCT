@@ -1,4 +1,6 @@
 #functions related to running jobs 
+import time
+import luigi
 
 def secToDHMS(time):
     day = time // (24 * 3600)
@@ -30,7 +32,7 @@ def deployJob(self,args):
                                        ;'
                       :._   _.------------.__
               __      |  :-'              ## '\
-       __   ,' .'    .'             #        ##\ 
+       __   ,' .'    .'                      ##\ 
      /__ '.-   \___.'              o  .----.  # |
        '._                  ~~     ._/   ## \__/
          '----'.____           \      ##     .'

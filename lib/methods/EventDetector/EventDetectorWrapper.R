@@ -81,13 +81,16 @@ targetSampRate<-as.integer(ParamArgs[which(ParamNames=="t_samp_rate")])
 windowLength<-as.integer(ParamArgs[which(ParamNames=="window_length")])
 Overlap<-as.integer(ParamArgs[which(ParamNames=="overlap")])
 
+#
+mIDind<-gregexpr("-",MethodID)[[1]][length(gregexpr("-",MethodID)[[1]])-1]
+MethodIDcut<-substr(MethodID,0,mIDind-1)
 
 #populate with needed fxns for ED
-SourcePath<-paste(ProjectRoot,"/bin/EventDetector/",MethodID,"/",MethodID,".R",sep="")
+SourcePath<-paste(ProjectRoot,"/lib/methods/EventDetector/",MethodIDcut,"/",MethodID,".R",sep="")
 source(SourcePath) 
 
 #and general fxns
-source(paste(ProjectRoot,"/bin/instinct_fxns.R",sep="")) 
+source(paste(ProjectRoot,"/lib/supporting/instinct_fxns.R",sep="")) 
 
 data<-read.csv(paste(FGpath,ReadFile,sep="/"))
 

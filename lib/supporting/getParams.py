@@ -107,7 +107,7 @@ def GT(self,ID):
     self.GTfile = [None] * self.IDlength
 
     for l in range(self.IDlength):
-        self.GTfile[l] = self.ProjectRoot +'Data/' + 'GroundTruth/' + self.GT_signal_code + '_' +self.FileGroupID[l]
+        self.GTfile[l] = self.ProjectRoot +'Data/' + 'GroundTruth/' + self.GT_signal_code + '/' + self.GT_signal_code + '_' +self.FileGroupID[l]
     return self
 
 

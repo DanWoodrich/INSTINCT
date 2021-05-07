@@ -167,7 +167,7 @@ for(n in files){
   
   saveName<-paste(Species,MooringName,substr(SfilesName,gregexpr("_",SfilesName)[[1]][3]+1,und5-1),sep="_")
   
-  write.csv(GTout,paste("C:/Apps/INSTINCT/Data/GroundTruth/",saveName,".csv",sep=""),row.names = FALSE)
+  write.csv(GTout,paste("C:/Apps/INSTINCT/Data/GroundTruth/",Species,"/",saveName,".csv",sep=""),row.names = FALSE)
   
 
 }
