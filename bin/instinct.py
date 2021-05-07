@@ -188,13 +188,13 @@ def deployJob(self,args):
                                        ;;
                                        ;'
                       :._   _.------------.__
-              __      |  :-'                 '\
-       __   ,' .'    .'                ___     \ 
-     /__ '.-   \___.'              o  /   \_    |
-       '._                  ~~     ._/      \__/
-         '----'.___________    \._           .'
-                           .    \ '--.____.-' 
-             INSTINCT       \.__/
+              __      |  :-'              ## '\
+       __   ,' .'    .'                ___   ##\ 
+     /__ '.-   \___.'              o  /   \_  # |
+       '._                  ~~     ._/   ## \__/
+         '----'.____           \      ##     .'
+                    '-----.\    \._____.----' 
+             INSTINCT       \.__/  
     """)
 
     
@@ -462,7 +462,7 @@ class UnifyED(RunED):
         #save df
 
         #define data types
-        EDdict = {'StartTime': 'float64', 'EndTime': 'float64','LowFreq': 'int', 'HighFreq': 'int', 'StartFile': 'category','EndFile': 'category','ProcessTag': 'category'}
+        EDdict = {'StartTime': 'float64', 'EndTime': 'float64','LowFreq': 'float64', 'HighFreq': 'float64', 'StartFile': 'category','EndFile': 'category','ProcessTag': 'category'}
         
         dataframes = [None] * self.EDsplits
         for k in range(self.EDsplits):
@@ -535,7 +535,7 @@ class UnifyED(RunED):
             ED = ED.drop(columns="ProcessTag")
             ED = ED.drop(columns="ProcessTag2")
 
-            EDdict2 = {'StartTime': 'float64', 'EndTime': 'float64','LowFreq': 'int', 'HighFreq': 'int', 'StartFile': 'category','EndFile': 'category','DiffTime': 'int'}
+            EDdict2 = {'StartTime': 'float64', 'EndTime': 'float64','LowFreq': 'float64', 'HighFreq': 'float64', 'StartFile': 'category','EndFile': 'category','DiffTime': 'int'}
             #now load in result,
             EDpatches = pd.read_csv(FGpath+'/DETx.csv.gz',dtype=EDdict2)
             PatchList = [None] * len(EDpatches['DiffTime'].unique().tolist())
@@ -635,7 +635,7 @@ class SplitFE(luigi.Task):
         #pseudocode:
         #split dataset into num of workers
 
-        DETdict = {'StartTime': 'float64', 'EndTime': 'float64','LowFreq': 'int', 'HighFreq': 'int', 'StartFile': 'category','EndFile': 'category'}
+        DETdict = {'StartTime': 'float64', 'EndTime': 'float64','LowFreq': 'float64', 'HighFreq': 'float64', 'StartFile': 'category','EndFile': 'category'}
         DET = pd.read_csv(self.uTask1path + '/DETx.csv.gz', dtype=DETdict,compression='gzip')
         
         if self.FEsplits == 1:

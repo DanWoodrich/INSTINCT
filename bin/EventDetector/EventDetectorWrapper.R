@@ -129,9 +129,12 @@ detOut<-foreach(i=1:BigChunks) %do% {
   
   
   #foreach into chunks 
+  
+  #probably should make packages loaded in dynamically
+  
   startLocalPar(crs,"FilezAssign","data","EventDetectoR","specgram","splitID","StartFile","EndFile","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2")
   
-  Detections<-foreach(n=1:crs,.packages=c("tuneR","doParallel","signal")) %dopar% {
+  Detections<-foreach(n=1:crs,.packages=c("tuneR","doParallel","signal","imager","pracma")) %dopar% {
 
     dataIn<-data[StartFile:EndFile,][which(FilezAssign==n),]
     #process per diffTime chunk
@@ -222,7 +225,7 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
   
   startLocalPar(crs,"data","EventDetectoR","specgram","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2")
   
-  detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel","signal")) %dopar% {
+  detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel","signal","imager","pracma")) %dopar% {
     dataMini<-data[which(data$DiffTime==n),]
     if(nrow(dataMini)==1){
       dataMini$cumsum<-0
