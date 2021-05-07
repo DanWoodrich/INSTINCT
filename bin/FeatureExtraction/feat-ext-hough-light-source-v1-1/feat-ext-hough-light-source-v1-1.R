@@ -278,7 +278,6 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
     image1[TileAxisSize,1:TileAxisSize,1,1]<-FALSE #get rid of side border artifact 
     image1[1:TileAxisSize,TileAxisSize,1,1]<-FALSE 
     
-    
     if(length(unique(image1))!=1){
       
       #calculate area chunks x and y 
