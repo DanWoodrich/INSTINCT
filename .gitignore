@@ -18,5 +18,5 @@ old/
 etc/Projects/*
 !etc/Projects/README.txt
 cloud_archive
-lib/archive
-lib/junk
+lib/Archive/*
+lib/junk/*
