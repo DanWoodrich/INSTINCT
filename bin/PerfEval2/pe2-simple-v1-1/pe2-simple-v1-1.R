@@ -1,6 +1,11 @@
 library(PRROC)
 library(flux)
 
+
+args<-"C:/Apps/INSTINCT/Cache/4b78a778998c/a2df6f C:/Apps/INSTINCT/Cache/4b78a778998c/a2df6f/7b04eb C:/Apps/INSTINCT/Cache/8a08b7/6f7ebc FG"
+
+args<-strsplit(args,split=" ")[[1]]
+
 args<-commandArgs(trailingOnly = TRUE)
 
 #dataPath<-"C:/Apps/INSTINCT/Cache/2f38f7440b5b/a04a78/04f178/813e20"

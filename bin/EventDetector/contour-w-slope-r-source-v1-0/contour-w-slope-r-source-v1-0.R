@@ -18,7 +18,8 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   Overlap<-as.numeric(ParamArgs[6]) #can be handled in wrapper
   pixThresh<-as.numeric(ParamArgs[7])#25
   pixThreshDiv<-as.numeric(ParamArgs[8])#2
-  windowLength<-as.numeric(ParamArgs[9]) #can be handled in wrapper
+  #t samp rate!
+  windowLength<-as.numeric(ParamArgs[10]) #can be handled in wrapper
   
   #idea: find some noise value for segments. Normalize from high to low freq probably. (whiten)
   #then, just run the countour() algorithm to return detections. 
@@ -42,12 +43,15 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   P = spectrogram$S
   P = abs(P)
   
+  #this really needs an update, will probably be pretty powerful afterwards once the below is figured out!
+  #################
   #could replace this with a moving window for more precise calculation
   #or, with a 'smart' window that doesn't average between big swings, and instead averages within these (such as in the case of mooring noise)
   for(k in 1:nrow(P)){
     ##P[k,]<-P[k,]-mean(P[k,])
     P[k,]<-P[k,]-median(P[k,])
   }
+  #################
   
   #test Phor and Pvert
   #Pvert<-P
@@ -57,7 +61,15 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   #}
   
   #P<-Phor+Pvert
+  #start=20
+  #end=30
   
+  
+  tAdjust=length(soundFile@left)/soundFile@samp.rate/length(spectrogram$t)
+  fAdjust=(highFreq-lowFreq)/length(spectrogram$f)
+  
+  #P=spectrogram$S[,(start/tAdjust):(end/tAdjust)]
+  #P=abs(P)
 
   image1<-as.cimg(as.numeric(t(P)),x=dim(P)[2],y=dim(P)[1])
   #image1<-resize(image1,size_x=TileAxisSize,size_y=TileAxisSize) #this distorts the image, may or may not matter. Allows for standardized 
@@ -105,18 +117,22 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
     cont2<-cont[which(size>pixThresh|(slope==slopeTest & (size>pixThresh/pixThreshDiv)))]
   }
 
-  plot(image1)
-  purrr::walk(cont2,function(v) lines(v$x,v$y,col="red",lwd=4))
-  
-  tAdjust=length(soundFile@left)/soundFile@samp.rate/length(spectrogram$t)
-  fAdjust=(highFreq-lowFreq)/length(spectrogram$f)
+  #plot(image1)
+  #for(n in 32:length(cont2)){
+  #  print(n)
+  #  lines(cont2[[n]]$x,cont2[[n]]$y,col="red",lwd=4)
+  #  Sys.sleep(0.5)
+  #  
+  #}
+  #purrr::walk(cont2,function(v) lines(v$x,v$y,col="red",lwd=4))
+
   
   
   Detections<-foreach(i=1:length(cont2)) %do% {
     x1=min(cont2[[i]]$x)*tAdjust
     x2=max(cont2[[i]]$x)*tAdjust
-    y1=highFreq-(max(cont2[[i]]$y)*fAdjust)
-    y2=highFreq-(min(cont2[[i]]$y)*fAdjust)
+    y1=round(highFreq-(max(cont2[[i]]$y)*fAdjust))
+    y2=round(highFreq-(min(cont2[[i]]$y)*fAdjust))
     return(c(x1,x2,y1,y2))
   }
   

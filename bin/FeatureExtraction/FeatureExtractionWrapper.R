@@ -164,7 +164,7 @@ out2<-foreach(f=1:crs,.packages=c("tuneR","imager","doParallel","seewave","pracm
   
   
   out1<-foreach(r=1:nrow(dataIn)) %do% {
-   # for(r in 1:nrow(dataIn)){
+    #for(r in 1:16){
     #check if start file is correct file, try to use loaded end file if it is the new start file
     if(StartNameL!=dataIn$StartFile[r]){
       if(dataIn$StartFile[r]==EndNameL){
