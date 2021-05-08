@@ -177,7 +177,7 @@ class Load_Job:
         ##1st indicates param path, 2nd indicates job name
         self.JobName = Name
         
-        if len(args)==3:
+        if len(args)>=3:
             ParamPath = args[2]
             if args[2] == ".":
                 ParamPath = Name

@@ -1,6 +1,6 @@
+import shutil
 from supporting.instinct import *
 from supporting.getParams import *
-import shutil
 from supporting.job_fxns import * 
 
 class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
