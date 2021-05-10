@@ -78,7 +78,7 @@ class Helper:
         appPath=appPath.replace('\\', '/')
         return(appPath + '/')
     def tplExtract(val,n):
-        if(n=='default'):
+        if(type(val)==str):
             #do nothing
             valOut=val
         else:

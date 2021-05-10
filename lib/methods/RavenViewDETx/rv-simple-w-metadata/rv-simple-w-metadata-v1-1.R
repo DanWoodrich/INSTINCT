@@ -2,7 +2,7 @@ MethodID<-"rv-simple-w-metadata-v1-1"
 
 library(foreach)
 
-args="C:/Apps/INSTINCT/Cache/bc7523b44acd/9c29bc/c3a8ca C:/Apps/INSTINCT/Cache/bc7523b44acd C:/Apps/INSTINCT/Cache/bc7523b44acd/9c29bc/c3a8ca/a08413  //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/128"
+args="C:/Apps/INSTINCT/Cache/23a717eb7fe6/1ae03e/636865/62b76b C:/Apps/INSTINCT/Cache/23a717eb7fe6 C:/Apps/INSTINCT/Cache/23a717eb7fe6/1ae03e/636865/62b76b/660747  //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -95,6 +95,13 @@ if(nrow(outNeg)>0){
   outNeg$EndTime<-as.numeric(outNeg$EndTime)
   outNeg$LowFreq<-as.numeric(outNeg$LowFreq)
   outNeg$HighFreq<-as.numeric(outNeg$HighFreq)
+  
+  #add dummy cols to outNeg to match Dets
+  addCols<-colnames(Dets)[!(colnames(Dets) %in% colnames(outNeg))]
+  dummy<-data.frame(addCols)
+  colnames(dummy)<-addCols
+  dummy[,]<-NA
+  outNeg<-cbind(outNeg,dummy)
   
   Dets<-rbind(Dets,outNeg)
   

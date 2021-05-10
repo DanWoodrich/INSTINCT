@@ -7,24 +7,25 @@ from supporting.job_fxns import *
 class ViewFGfromCV(Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,RavenViewDETx):
     
     JobName=luigi.Parameter()
+    topLoop=luigi.Parameter()
     
-    def pipelineMap(self): #here is where you define pipeline structure
+    def pipelineMap(self,l): #here is where you define pipeline structure
         task0 = Comb4FeatureTrain.invoke(self)
         task1 = TrainModel.invoke(self,task0)
         
-        task2 = FormatFG.invoke(self,n=0)#redundant but lets SFPE,AL,PE1 continue their path
-        task3 = SplitForPE.invoke(self,task2,task1,n=0)
+        task2 = FormatFG.invoke(self,n=l)#redundant but lets SFPE,AL,PE1 continue their path
+        task3 = SplitForPE.invoke(self,task2,task1,n=l)
         task4 = ApplyCutoff.invoke(self,task3)
-        task5 = FormatGT.invoke(self,task2,n=0)
+        task5 = FormatGT.invoke(self,task2,n=l)
         task6 = AssignLabels.invoke(self,task4,task5,task2)
         task7 = RavenViewDETx.invoke(self,task6,task2)
 
-        return [task0,task1,task2,task3,task4,task5,task6,task7,task8]
+        return [task0,task1,task2,task3,task4,task5,task6,task7]
     def outpath(self):
         return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
     def hashProcess(self):
         taskStr = []
-        tasks = self.pipelineMap()
+        tasks = self.pipelineMap(self.topLoop)
         for f in range(len(tasks)):
             taskStr.extend([tasks[f].hashProcess()])
             
@@ -32,8 +33,8 @@ class ViewFGfromCV(Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,RavenView
 
         return Helper.getParamHash2(' '.join(hashStrings),6)
     def requires(self):
-        tasks = self.pipelineMap()
-        return tasks[8]
+        tasks = self.pipelineMap(self.topLoop)
+        return tasks[7]
     def output(self):
         #this is full performance report
         #return luigi.LocalTarget(OutputsRoot + self.JobName + '/' + self.JobHash + '/RFmodel.rds')
@@ -41,8 +42,8 @@ class ViewFGfromCV(Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,RavenView
     def run(self):
 
         #move file
-        tasks = self.pipelineMap()
-        filepath = tasks[8].outpath() + '/RAVENx.txt'
+        tasks = self.pipelineMap(self.topLoop)
+        filepath = tasks[7].outpath() + '/RAVENx.txt'
         filedest = self.outpath() + '/RAVENx.txt'
 
         if not os.path.exists(self.ProjectRoot +'Outputs/' + self.JobName):
@@ -63,7 +64,7 @@ class ViewFGfromCV(Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,RavenView
                              TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,TM_outName=obj.TM_outName,FGparamString=obj.FGparamString,\
                              FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                              TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,ProjectRoot=obj.ProjectRoot,system=obj.system,RVmethodID=obj.RVmethodID,\
-                             r_version=obj.r_version,loopVar = obj.IDlength))
+                             r_version=obj.r_version,loopVar = obj.IDlength,topLoop=obj.topLoop))
     def getParams(args):    
         params = Load_Job('ViewFGfromCV',args)
 
@@ -82,15 +83,7 @@ class ViewFGfromCV(Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,RavenView
             print(params.FileGroupID)
             ind=params.FileGroupID.index(args[3])
             assert isinstance(ind, int)
-            params.FileGroupID=params.FileGroupID[ind]
-            print(params.FileGroupID)
-
-            params.FGfile=params.FGfile[ind]
-            print(params.FGfile)
-
-            #something is happening where the single FG is being read as the first character of the path ('C'). Not here, further down the line
-
-            params.IDlength = ind
+            params.topLoop=ind
             
         return params
 
