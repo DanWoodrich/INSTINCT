@@ -69,19 +69,26 @@ def FE(self,ID):
     self.FEparamNames=' '.join(paramNames)
     return self
 
-def FG(self,ID):
+def FG(self,ID,ind=None):
     self.FGprocess = 'FormatFG'
     FileGroupID = self.MasterINI[ID]['FileGroupID']
     self.SoundFileRootDir_Host_Raw = self.MasterINI[ID]['SoundFileRootDir_Host']  #this is a little ugly, but make it convention for now
     self.FileGroupID = sorted(FileGroupID.split(','))
+    self.IDlength = len(self.FileGroupID)
     self.FGmethodID = self.MasterINI[ID]['MethodID']
     self.decimatedata = self.MasterINI[ID]['DecimateData'] 
     
-    self.IDlength = len(self.FileGroupID)
     self.FGfile = [None] * self.IDlength
     for l in range(self.IDlength):
         self.FGfile[l] = self.ProjectRoot +'Data/' + 'FileGroups/' + self.FileGroupID[l]
 
+    if ind!=None:
+        self.FileGroupID=[self.FileGroupID[ind]]
+        self.FGfile=[self.FGfile[ind]]
+        #note that overriding IDlength can cause other effects in proccess that are using this var for training: recommend using params.topLoop instead
+        #for more complex jobs (see ViewFGfromCV Job) 
+        self.IDlength = len([ind])
+        
     p_ini = readP_Params(self.ParamsRoot,self.FGmethodID)
 
     paramList = getParamDeets(p_ini,self.FGprocess,1)

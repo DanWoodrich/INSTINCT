@@ -66,6 +66,9 @@ class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
 
         params = Load_Job('ViewDet',args)
         params = FG(params,'FormatFG')
+        if len(args)==4:
+            ind=params.FileGroupID.index(args[3])
+            params = FG(params,'FormatFG',ind=ind)
         params = GT(params,'FormatGT')
         params = ED(params,'EventDetector')
         params = AL(params,'AssignLabels')

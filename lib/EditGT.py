@@ -64,6 +64,9 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
         params = Load_Job('EditGTwRaven',args)
         
         params = FG(params,'FormatFG')
+        if len(args)==4:
+            ind=params.FileGroupID.index(args[3])
+            params = FG(params,'FormatFG',ind=ind)
         params = GT(params,'FormatGT')
         params = RV(params,'RavenViewDETx')
         params = RD(params,'RavenToDETx')
