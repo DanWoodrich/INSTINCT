@@ -12,9 +12,6 @@ class Comb4EDperf_TT(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,PerfEv
     upstream_task1=None
     upstream_task2=None
     upstream_task3=None
-    uTask1path=None
-    uTask2path=None
-    uTask3path=None
 
     FGfile=None
     GTfile = None

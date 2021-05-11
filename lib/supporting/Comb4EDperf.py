@@ -10,9 +10,6 @@ class Comb4EDperf(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1
     upstream_task1=None
     upstream_task2=None
     upstream_task3=None
-    uTask1path=None
-    uTask2path=None
-    uTask3path=None
 
     fileName = 'Stats.csv.gz'
 

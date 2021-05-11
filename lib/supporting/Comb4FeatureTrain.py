@@ -9,12 +9,9 @@ class Comb4FeatureTrain(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,Uni
     upstream_task1=None
     upstream_task2=None
     upstream_task3=None
-    uTask1path=None
-    uTask2path=None
-    uTask3path=None
 
     def pipelineMap(self,l): #here is where you define pipeline structure
-        task0 = FormatFG.invoke(self,l) 
+        task0 = FormatFG.invoke(self,n=l) 
         task1 = FormatGT.invoke(self,task0,l)
         task2 = UnifyED.invoke(self,task0)
         task3 = AssignLabels.invoke(self,task2,task1,task0)

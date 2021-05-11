@@ -17,9 +17,7 @@ class Comb4PE2All(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,M
     upstream_task1=None
     upstream_task2=None
     upstream_task3=None
-    uTask1path=None
-    uTask2path=None
-    uTask3path=None
+
     
     def pipelineMap(self,l):
         task0 = Comb4FeatureTrain.invoke(self)

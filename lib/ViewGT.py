@@ -11,8 +11,6 @@ class ViewGT(FormatFG,FormatGT,RavenViewDETx):
     #nullify some inherited parameters:
     upstream_task1=None
     upstream_task2=None
-    uTask1path=None
-    uTask2path=None
 
     def pipelineMap(self): #here is where you define pipeline structure 
         task0 = FormatFG.invoke(self,n=0) 
