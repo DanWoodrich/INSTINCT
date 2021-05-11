@@ -307,7 +307,14 @@ class FormatGT(INSTINCT_Task):
 
     def hashProcess(self):
         hashLength = 6
-        return Helper.hashfile(self.GTfile,hashLength)
+        #this is a little goofy...
+        if os.path.isfile(self.GTfile):
+            return Helper.hashfile(self.GTfile,hashLength)
+        else: 
+            GT = pd.DataFrame(columns = ["StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile","label","Type","SignalCode"])
+            #this is a side effect... be careful...
+            GT.to_csv(self.GTfile,index=False)
+            return Helper.hashfile(self.GTfile,hashLength)
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
@@ -316,11 +323,8 @@ class FormatGT(INSTINCT_Task):
         if not os.path.exists(self.outpath()):
             os.mkdir(self.outpath())
 
-        if os.path.isfile(self.GTfile):
-            GT = pd.read_csv(self.GTfile)
-        else:
-            GT = pd.DataFrame()
-            GT['Name'] = ["StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile","label","Type","SignalCode"]
+        GT = pd.read_csv(self.GTfile)
+
         GT.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
     def invoke(obj,upstream1,n='default',src="GT"):
         if src == "GT":
@@ -1134,14 +1138,16 @@ class QueryData(INSTINCT_Rmethod_Task):
     QDsource = luigi.Parameter()
     QDstatement = luigi.Parameter()
     SoundFileRootDir_Host_Raw=luigi.Parameter()
-    #FileGroupID = luigi.Parameter()
+    GT_signal_code=luigi.Parameter()
+    FileGroupID = luigi.Parameter()
     
     def hashProcess(self):
         hashLength = 6
         return Helper.getParamHash2(self.QDmethodID + ' ' + self.QDsource +  ' ' + self.QDstatement,hashLength)
+    def outpath(self):
+        return self.ProjectRoot + 'Data/GroundTruth/' + self.GT_signal_code
     def output(self):
-        #conditional on what this task is doing. 
-        return luigi.LocalTarget(self.outpath() + "/FGfile.csv")
+        return luigi.LocalTarget(self.outpath() + "/" + self.FileGroupID)
     def run(self):
                 
         DATpath = self.QDsource

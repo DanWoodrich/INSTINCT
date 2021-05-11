@@ -2,7 +2,7 @@ library(PRROC)
 library(flux)
 
 
-args<-"C:/Apps/INSTINCT/Cache/4b78a778998c/a2df6f C:/Apps/INSTINCT/Cache/4b78a778998c/a2df6f/7b04eb C:/Apps/INSTINCT/Cache/8a08b7/6f7ebc FG"
+args<-"C:/Apps/INSTINCT/Cache//0d0dc380b1ee/5499ab C:/Apps/INSTINCT/Cache//0d0dc380b1ee/5499ab/998c0e C:/Apps/INSTINCT/Cache/4ed47b/6f7ebc FG"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -55,6 +55,14 @@ curve$curve[,1]<-curve$curve[,1]-EDrecDiff
 
 curve$curve<-curve$curve[which(curve$curve[,1]>=0),]
 
+
+plot(curve, auc.main=FALSE, main ="",legend=FALSE,col="black",cex.axis=1.8)
+#pointsOfInterest<-c(0.2,0.3,0.4,0.5,0.60,0.75,0.83,0.92,0.95,0.97,0.99)
+
+
+
+if(!is.na(curve$auc.integral)){
+  
 PRauc<-auc(curve$curve[,1],curve$curve[,2])
 
 if(PRauc<0.80){
@@ -69,8 +77,6 @@ curveFortext_y<-curve$curve[,2]+max(curve$curve[,2]*0.03)
 }
 
 
-plot(curve, auc.main=FALSE, main ="",legend=FALSE,col="black",cex.axis=1.8)
-#pointsOfInterest<-c(0.2,0.3,0.4,0.5,0.60,0.75,0.83,0.92,0.95,0.97,0.99)
 
 pointsOfInterest<-c(0.2,0.3,0.4,0.5,0.6,0.75,0.85,0.95,0.99)
 
@@ -85,6 +91,12 @@ for(n in 1:length(pointsOfInterest)){
   
   graphics::text(xtxt,ytxt,labels=pointsOfInterest[n],cex=1.75)
   points(x,y,cex=1.75,lwd=2,pch=16)
+}
+
+}else{
+  PRauc<-NA
+  text(0.65,0.6,paste("No True Positives"),cex=2)
+  
 }
 
 legend(x=-0.025,y=0.19, 

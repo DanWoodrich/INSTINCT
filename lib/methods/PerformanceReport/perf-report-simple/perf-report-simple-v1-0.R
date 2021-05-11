@@ -1,20 +1,10 @@
 MethodID<-"perf-report-simple-v1-0"
 
+args<-"C:/Apps/INSTINCT/Cache/4ed47b/6f7ebc C:/Apps/INSTINCT/Outputs/ModelPerfEval/66a753 C:/Apps/INSTINCT/Cache/1af01a/5499ab/998c0e C:/Apps/INSTINCT/Outputs/ModelPerfEval/66a753 C:/Apps/INSTINCT/Cache//0d0dc380b1ee/5499ab/998c0e,C:/Apps/INSTINCT/Cache//fdb2261ed7fd/5499ab/998c0e,C:/Apps/INSTINCT/Cache//eedec80a4499/5499ab/998c0e,C:/Apps/INSTINCT/Cache//daf9e0046b12/5499ab/998c0e,C:/Apps/INSTINCT/Cache//ff536027d17e/5499ab/998c0e,C:/Apps/INSTINCT/Cache//830000c84c1e/5499ab/998c0e,C:/Apps/INSTINCT/Cache//4b78a778998c/5499ab/998c0e,C:/Apps/INSTINCT/Cache//181ce5ead182/5499ab/998c0e,C:/Apps/INSTINCT/Cache//7c7adf8c8761/5499ab/998c0e,C:/Apps/INSTINCT/Cache//2f6b36609bc0/5499ab/998c0e AL16_AU_BS01_files_All.csv,AW12_AU_BS03_files_All.csv,AW14_AU_BS02_files_All.csv,AW14_AU_BS03_files_1-160.csv,BS13_AU_PM02-a_files_All.csv,BS13_AU_PM04_files_All.csv,BS14_AU_PM04_files_All.csv,BS15_AU_PM02-a_files_1-104.csv,BS15_AU_PM02-b_files_All.csv,BS15_AU_PM04_files_301-417.csv"
+
+args<-strsplit(args,split=" ")[[1]]
+
 args<-commandArgs(trailingOnly = TRUE)
-
-#EDstatsPath<-"C:/instinct_dt/Cache/07592b6298d81eb10f5044f0bb9a8d8a58fc9d31"
-#ModelstatsPath<-"C:/instinct_dt/Cache/de2974684d7d4bdc86c66533bcdf4c3e6635321f"
-#ModelvisPath<- "C:/instinct_dt/Cache/9b83e604c10167e92547431790a3008f3db64157/a321a8f4c3abd3c2781be01ca92aff16fcd6f07f"
-#FGVisPaths<-"C:/instinct_dt/Cache/2bf717aef81044ab2e655e4351d4342cc08de10a/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/a321a8f4c3abd3c2781be01ca92aff16fcd6f07f,C:/instinct_dt/Cache/4447ee5580b7e09998ced8194e868db6be2e21dc/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/a321a8f4c3abd3c2781be01ca92aff16fcd6f07f,C:/instinct_dt/Cache/290c766b4f8e1dbb3e5a962dee042855be3df37a/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/a321a8f4c3abd3c2781be01ca92aff16fcd6f07f,C:/instinct_dt/Cache/0858b6a64633adcb3b6170fdb419a5a30e116804/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/a321a8f4c3abd3c2781be01ca92aff16fcd6f07f,C:/instinct_dt/Cache/ca28e08bde8474d6a004b5acbd2644b187061f03/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/a321a8f4c3abd3c2781be01ca92aff16fcd6f07f,C:/instinct_dt/Cache/c3dfe4b64950e42d7f6f6c546446b5e8e4f73e42/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/a321a8f4c3abd3c2781be01ca92aff16fcd6f07f,C:/instinct_dt/Cache/491ed9da5575918b03e04d73402145b99dd3fec0/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/a321a8f4c3abd3c2781be01ca92aff16fcd6f07f,C:/instinct_dt/Cache/51ee31b15b31aa23204ffb3b200d4c2d7f2f44c7/8a757bbec32b5b6a56bc98ac2748d2df64deaa0f/2cc09ef5daa22a410caf96a2b15d10537bd1a4b5/9b83e604c10167e92547431790a3008f3db64157/a321a8f4c3abd3c2781be01ca92aff16fcd6f07f"
-#FGIDs<- "AL16_AU_BS3_files_152-354.csv,AL16_AU_BS3_files_59-114.csv,BS13_AU_02a_files_343-408.csv,BS13_AU_02a_files_38-122.csv,BS13_AU_02a_files_510-628.csv,BS14_AU_04_files_189-285.csv,BS14_AU_04_files_304-430.csv,BS14_AU_04_files_45-188.csv"
-#resultPath<-"C:/instinct_dt/Outputs//ModelPerfEval/"
-
-EDstatsPath<-"C:/Apps/INSTINCT/Cache/210f68/6f7ebc" 
-ModelstatsPath<-"C:/Apps/INSTINCT/Outputs/TrainTest/612212" 
-ModelvisPath<-"C:/Apps/INSTINCT/Cache/bbfbeb/22a63a" 
-resultPath<-"C:/Apps/INSTINCT/Outputs/TrainTest/612212" 
-FGVisPaths<-"C:/Apps/INSTINCT/Cache/d11fba1ef3de/a04a78/886848/a2a7b1/c1e882/c01c47"
-FGIDs<-"AL16_AU_BS3_files_152-354.csv,AL16_AU_BS3_files_59-114.csv,BS13_AU_02a_files_343-408.csv,BS13_AU_02a_files_510-628.csv,BS14_AU_04_files_189-285.csv,BS14_AU_04_files_304-430.csv,BS14_AU_04_files_45-188.csv"
 
 EDstatsPath<-args[1]
 ModelstatsPath<-args[2]
@@ -49,7 +39,7 @@ Modelstats<-read.csv(paste(ModelstatsPath,"/Stats.csv.gz",sep=""))
 EDstats$Stage<-"ED"
 EDstats$AveragePrecision<-NA
 Modelstats$Stage<-"AM"
-Modelstats$AveragePrecision<-c(FGdataQuick$AveragePrecision[!is.na(FGdataQuick$AveragePrecision)],read.table(paste(ModelvisPath,'PRcurve_auc.txt',sep="/"))[1,])
+Modelstats$AveragePrecision<-c(FGdataQuick$AveragePrecision,read.table(paste(ModelvisPath,'PRcurve_auc.txt',sep="/"))[1,])
 
 Stats<-rbind(EDstats,Modelstats)
 

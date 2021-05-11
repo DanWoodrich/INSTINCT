@@ -10,7 +10,7 @@ MethodID<-"labels-w-iou-simple-v1-1"
 #fix bug in determining if intersection is present.
 #
 
-args<-"C:/Apps/INSTINCT/Cache/1fecac0f763c/ C:/Apps/INSTINCT/Cache/1fecac0f763c/6c666b/ C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c/ C:/Apps/INSTINCT/Cache/1fecac0f763c/d3729c/e08d0c  0.25 labels-w-iou-simple-v1-1"
+args<-"C:/Apps/INSTINCT/Cache//0d0dc380b1ee/ C:/Apps/INSTINCT/Cache//0d0dc380b1ee/39286b/ C:/Apps/INSTINCT/Cache//0d0dc380b1ee/5499ab/636865/ C:/Apps/INSTINCT/Cache//0d0dc380b1ee/5499ab/636865/f86b8a 0.15 labels-w-iou-simple-v1-1"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -71,6 +71,7 @@ FGdata$cumsum<- c(0,cumsum(FGdata$Duration)[1:(nrow(FGdata)-1)])
 
 GTlong<-GTdata
 
+if(nrow(GTlong)>0){
 #these steps are long... could make much faster with a merge. To do
 for(i in 1:nrow(GTlong)){
   GTlong$StartTime[i]<-GTlong$StartTime[i]+FGdata$cumsum[which(FGdata$FileName==GTlong$StartFile[i])]
@@ -80,6 +81,12 @@ for(i in 1:nrow(GTlong)){
 GTdata$StartFile<-as.factor(GTdata$StartFile)
 GTdata$EndFile<-as.factor(GTdata$EndFile)
 
+GTlong$iou<-0
+
+}else{
+  GTlong<-cbind(GTlong, data.frame(iou=double()))
+}
+
 outLong<-outData
 
 for(i in 1:nrow(outLong)){
@@ -87,7 +94,6 @@ for(i in 1:nrow(outLong)){
   outLong$EndTime[i]<-outLong$EndTime[i]+FGdata$cumsum[which(FGdata$FileName==outLong$EndFile[i])]
 }
 
-GTlong$iou<-0
 outLong$iou<-0
 
 GTlong$Dur<-GTlong$EndTime-GTlong$StartTime
@@ -98,6 +104,7 @@ outLong<-outLong[order(outLong$StartTime),]
 
 
 #calculate iou GT
+if(nrow(GTlong)>0){
 
 for(i in 1:nrow(GTlong)){
   
@@ -165,6 +172,7 @@ for(i in 1:nrow(GTlong)){
   
   
 }
+}
 
 GTlong$StartTime<-GTdata$StartTime
 GTlong$EndTime<-GTdata$EndTime
@@ -189,7 +197,11 @@ if(mergeProbsBack){
   outDataAll<-outDataAll[order(outDataAll$StartFile,outDataAll$StartTime),]
   outLong$probs<-outDataAll$probs
   
-  GTlong$probs<-NA
+  if(nrow(GTlong)>0){
+    GTlong$probs<-NA
+  }else{
+    GTlong<-cbind(GTlong, data.frame(probs=double()))
+  }
 }
 
 #make sure columns match (throw out other metdata not relevant here)
