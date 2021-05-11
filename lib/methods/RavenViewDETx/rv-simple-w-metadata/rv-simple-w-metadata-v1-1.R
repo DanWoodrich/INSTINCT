@@ -97,11 +97,15 @@ if(nrow(outNeg)>0){
   outNeg$HighFreq<-as.numeric(outNeg$HighFreq)
   
   #add dummy cols to outNeg to match Dets
-  addCols<-colnames(Dets)[!(colnames(Dets) %in% colnames(outNeg))]
-  dummy<-data.frame(addCols)
-  colnames(dummy)<-addCols
-  dummy[,]<-NA
-  outNeg<-cbind(outNeg,dummy)
+  if(length(colnames(Dets))>length(colnames(outNeg))){
+    
+    addCols<-colnames(Dets)[!(colnames(Dets) %in% colnames(outNeg))]
+    dummy<-data.frame(addCols)
+    colnames(dummy)<-addCols
+    dummy[,]<-NA
+    outNeg<-cbind(outNeg,dummy)
+    
+  }
   
   Dets<-rbind(Dets,outNeg)
   

@@ -1168,3 +1168,37 @@ class RavenToDETx(INSTINCT_Rmethod_Task):
         
     def invoke(self,upstream1,upstream2):
         return(RavenToDETx(upstream_task1=upstream1,upstream_task2=upstream2,RDmethodID=self.RDmethodID,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
+
+
+class QueryData(INSTINCT_Rmethod_Task):
+    #no, I do want it to be hashed and saved to an outpath. In a larger job, I can collect the output and place in the output folder 
+
+    QDmethodID = luigi.Parameter()
+    QDsource = luigi.Parameter()
+    QDstatement = luigi.Parameter()
+    SoundFileRootDir_Host_Raw=luigi.Paramater()
+    #FileGroupID = luigi.Parameter()
+    
+    def hashProcess(self):
+        hashLength = 6
+        return Helper.getParamHash2(self.QDmethodID + ' ' + self.QDsource +  ' ' + self.QDstatement,hashLength)
+    def outpath(self):
+        return self.upstream_task1.outpath() + '/' + self.hashProcess() 
+    def requires(self):
+        return None
+    def output(self):
+        #conditional on what this task is doing. 
+        return luigi.LocalTarget(self.outpath() + "/FGfile.csv")
+    def run(self):
+                
+        DATpath = self.QDsource
+        resultPath=self.outpath()
+
+        FGpath = self.upstream_task2.outpath() 
+
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
+
+        Paths = [DATpath,resultPath]
+        
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="QueryData",MethodID=self.RDmethodID,Paths=Paths,Args=self.SoundFileRootDir_Host_Raw,Params=self.QDstatement)
