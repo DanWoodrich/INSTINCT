@@ -222,6 +222,18 @@ class Comb4Standard(luigi.Task):
             os.mkdir(resultPath)
 
         Dat.to_csv(resultPath + '/' + self.fileName,index=False,compression="gzip")
+
+class Dummy(INSTINCT_Task):
+    def hashProcess(self):
+        return None
+    def outpath(self):
+        return self.ProjectRoot + 'Cache/'
+    def requires(self):
+        return None
+    def complete(self):
+        return True #this just tells luigi not to run the task
+    def invoke(obj):
+        return(Dummy(ProjectRoot=obj.ProjectRoot))
     
 ########################
 #format metadata
@@ -278,12 +290,14 @@ class FormatFG(INSTINCT_Task):
             FG.to_csv(self.outpath() + '/FileGroupFormat.csv.gz',index=False,compression='gzip')
         
 
-    def invoke(obj,upstream1=Dummy.invoke(),n='default',src="GT"): #shortcut to call this without specifying parameters which typically stay fixed.
+    def invoke(obj,upstream1=None,n='default',src="GT"): #shortcut to call this without specifying parameters which typically stay fixed.
         if src == "GT":
             FGfile=obj.FGfile
         elif src == "n_":
             FGfile=obj.n_FGfile
         FGfile = Helper.tplExtract(FGfile,n=n)
+        if upstream1==None:
+            upstream1=Dummy.invoke(obj)
         return(FormatFG(upstream_task1 = upstream1, FGfile = FGfile,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,FGparamString=obj.FGparamString,FGmethodID=obj.FGmethodID,decimatedata=obj.decimatedata))
 
 class FormatGT(INSTINCT_Task):
@@ -297,9 +311,16 @@ class FormatGT(INSTINCT_Task):
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
+
+        #change this to make a new GT if one doesn't exist. 
         if not os.path.exists(self.outpath()):
             os.mkdir(self.outpath())
-        GT = pd.read_csv(self.GTfile)
+
+        if os.path.isfile(self.GTfile):
+            GT = pd.read_csv(self.GTfile)
+        else:
+            GT = pd.DataFrame()
+            GT['Name'] = ["StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile","label","Type","SignalCode"]
         GT.to_csv(self.outpath() + '/DETx.csv.gz',index=False,compression='gzip')
     def invoke(obj,upstream1,n='default',src="GT"):
         if src == "GT":
@@ -1108,12 +1129,11 @@ class RavenToDETx(INSTINCT_Rmethod_Task):
 
 
 class QueryData(INSTINCT_Rmethod_Task):
-    #no, I do want it to be hashed and saved to an outpath. In a larger job, I can collect the output and place in the output folder 
 
     QDmethodID = luigi.Parameter()
     QDsource = luigi.Parameter()
     QDstatement = luigi.Parameter()
-    SoundFileRootDir_Host_Raw=luigi.Paramater()
+    SoundFileRootDir_Host_Raw=luigi.Parameter()
     #FileGroupID = luigi.Parameter()
     
     def hashProcess(self):
@@ -1135,18 +1155,11 @@ class QueryData(INSTINCT_Rmethod_Task):
         Paths = [DATpath,resultPath]
         
         argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="QueryData",MethodID=self.RDmethodID,Paths=Paths,Args=self.SoundFileRootDir_Host_Raw,Params=self.QDstatement)
-    def invoke()
+        
+    def invoke(self,upstream1=None):
+        if upstream1==None:
+            upstream1=Dummy.invoke(obj)
+        return(QueryData(upstream_task1=self.upstream1,QDmethodID=self.QDmethodID,QDsource=self.QDsource,QDstatement=self.QDstatement,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
+                         system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
 
-class Dummy(INSTINCT_Task):
-    def hashProcess(self):
-        return None
-    def outpath(self):
-        return self.ProjectRoot + 'Cache/'
-    def requires(self):
-        return None
-    def output(self):
-        return None
-    def run(self):
-        return None
-    def invoke(obj):
-        return(Dummy(ProjectRoot=obj.ProjectRoot))
+
