@@ -42,7 +42,7 @@ chunkSize<- 20
 
 MethodID<-"bled-and-combine-test-r-source-v1-0"
 
-paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/4b78a778998c/ C:/Apps/INSTINCT/Cache/4b78a778998c/8a0167 FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-0 Upsweep 260 85 0 60 90 2 2 1024 128 contour-w-slope-r-source-v1-0 desired_slope high_freq img_thresh isoblur_sigma low_freq overlap pix_thresh pix_thresh_div t_samp_rate window_length"
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/b1a54ddb80b2/ C:/Apps/INSTINCT/Cache/b1a54ddb80b2/f02f46 FileGroupFormat.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-0 Upsweep 260 85 0 60 90 2 2 1024 128 contour-w-slope-r-source-v1-2 desired_slope high_freq img_thresh isoblur_sigma low_freq overlap pix_thresh pix_thresh_div t_samp_rate window_length"
 
 args<-strsplit(paramArgsPre,split=" ")[[1]]
 

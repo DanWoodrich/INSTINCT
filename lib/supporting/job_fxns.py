@@ -2,6 +2,7 @@
 import time
 import luigi
 import configparser
+import random
 from supporting.instinct import Helper
 
 def secToDHMS(time):
@@ -19,28 +20,16 @@ def deployJob(self,args):
     start = time.time()
     Params =self.getParams(args)
     inv = self.invoke(Params)
-    luigi.build([inv], local_scheduler=True)
+    result=luigi.build([inv], local_scheduler=True)
+    randNum=random.randint(1,10)
     end = time.time()
-    
 
-    
-    print("                          Output file location path:\n" + "                   " +inv.outpath())
-    print("                     elapsed time (d:h:m:s): " + str(secToDHMS(round(end-start,0))))
-    print(r"""
-                                 ','. '. ; : ,','
-                                   '..'.,',..'
-                                    ';.'  ,'
-                                       ;;
-                                       ;'
-                      :._   _.------------.__
-              __      |  :-'              ## '\
-       __   ,' .'    .'                      ##\ 
-     /__ '.-   \___.'              o  .----.  # |
-       '._                  ~~     ._/   ## \__/
-         '----'.____           \      ##     .'
-                    '------.    \._____.----' 
-             INSTINCT       \.__/  
-    """)
+    if result:
+        print("                          Output file location path:\n" + "                   " +inv.outpath())
+        print("                     elapsed time (d:h:m:s): " + str(secToDHMS(round(end-start,0))))
+    else:
+        print("                               === Job failed ===")
+    print(getArt(str(Params.GT_signal_code),result,num=randNum))
 
 class Load_Job:
     def __init__(self,Name,args):
@@ -68,3 +57,52 @@ class Load_Job:
         self.MasterINI = MasterINI
         self.system=self.MasterINI['Global']['system']
         self.r_version=self.MasterINI['Global']['r_version']
+
+def getArt(signal,result,num=1):
+    if signal in ["GS","RW"]:
+        if result==True and num < 10: 
+            art =r"""                                ','. '. ; : ,','
+                                   '..'.,',..'
+                                    ';.'  ,'
+                                       ;;
+                                       ;'
+                      :._   _.------------.__
+              __      |  :-'              ## '\
+       __   ,' .'    .'             ^        ##\ 
+     /__ '.-   \___.'                O  .--.  # |
+       '._                  ~~      \__/    \__/
+         '----'.____           \      ##     .'
+                    '------.    \._____.----' 
+             INSTINCT       \.__/  
+            """
+        elif result==True and num==10:
+            art =r"""                                ','. '. ; : ,','
+                                   '..'.,',..'
+                                    ';.'  ,'
+                                       ;;
+                                       ;'
+                      :._   _.------------.__
+              __      |  :-'              ## '\       )
+       __   ,' .'    .'             __       ##\     (
+     /__ '.-   \___.'                (D .--.  # |     )
+       '._                  ~~      \__/    \__[======#
+         '----'.____           \      ##     .'
+                    '------.    \._____.----' 
+             INSTINCT       \.__/  
+            """
+        else:    
+            art =r"""                                ','. '. ; : ,','
+                                   '..'.,',..'
+                                    ';.'  ,'
+                                       ;;
+                                       ;'
+                      :._   _.------------.__
+              __      |  :-'              ## '\
+       __   ,' .'    .'            /         ##\ 
+     /__ '.-   \___.'              o  .----.  # |
+       '._                  ~~       /   ## \__/
+         '----'.____           \    / ##     .'
+                    '------.    \._____.----' 
+             INSTINCT       \.__/  
+            """
+    return art

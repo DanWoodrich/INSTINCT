@@ -1,6 +1,6 @@
 from supporting.instinct import *
 from supporting.getParams import *
-from supporting.ViewGT import *
+from ViewGT import *
 from supporting.job_fxns import * 
 import shutil
 
@@ -11,6 +11,8 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
 
     GT_signal_code=luigi.Parameter()
     FileGroupID=luigi.Parameter()
+
+    RavenFill=None
     
     #nullify some inherited parameters:
     upstream_task1=None
@@ -65,8 +67,9 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
         
         params = FG(params,'FormatFG')
         if len(args)==4:
-            ind=params.FileGroupID.index(args[3])
-            params = FG(params,'FormatFG',ind=ind)
+            params = FG(params,'FormatFG',FGovr=args[3])
+        else:
+            params = FG(params,'FormatFG')
         params = GT(params,'FormatGT')
         params = RV(params,'RavenViewDETx')
         params = RD(params,'RavenToDETx')

@@ -69,7 +69,7 @@ def FE(self,ID):
     self.FEparamNames=' '.join(paramNames)
     return self
 
-def FG(self,ID,ind=None):
+def FG(self,ID,FGovr=None):
     self.FGprocess = 'FormatFG'
     FileGroupID = self.MasterINI[ID]['FileGroupID']
     self.SoundFileRootDir_Host_Raw = self.MasterINI[ID]['SoundFileRootDir_Host']  #this is a little ugly, but make it convention for now
@@ -82,12 +82,12 @@ def FG(self,ID,ind=None):
     for l in range(self.IDlength):
         self.FGfile[l] = self.ProjectRoot +'Data/' + 'FileGroups/' + self.FileGroupID[l]
 
-    if ind!=None:
-        self.FileGroupID=[self.FileGroupID[ind]]
-        self.FGfile=[self.FGfile[ind]]
+    if FGovr!=None:
+        self.FileGroupID=[FGovr]
+        self.FGfile=[self.ProjectRoot +'Data/' + 'FileGroups/' + FGovr]
         #note that overriding IDlength can cause other effects in proccess that are using this var for training: recommend using params.topLoop instead
         #for more complex jobs (see ViewFGfromCV Job) 
-        self.IDlength = len([ind])
+        self.IDlength = len([FGovr])
         
     p_ini = readP_Params(self.ParamsRoot,self.FGmethodID)
 
@@ -175,11 +175,16 @@ def RD(self,ID):
     self.RDmethodID = self.MasterINI[ID]['MethodID']
     return self
 
+def QD(self,ID):
+    self.QDprocess = 'QueryData'
+    self.QDmethodID = self.MasterINI[ID]['MethodID']
+    self.QDsource = self.MasterINI[ID]['DataSource']
 
+    p_ini = readP_Params(self.ParamsRoot,self.QDmethodID)
+    paramList = getParamDeets(p_ini,self.QDprocess,1)
+    self.QDstatement = getParamString(paramList,self.QDmethodID)
 
-
-
-
+    return self
 
 
 

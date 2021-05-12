@@ -1,12 +1,18 @@
 MethodID<-"query-data-csv-v1-0"
 
-#this is only ever to read from master .mat file 
-#library(R.matlab)
 library(sqldf)
 
-args="C:/Apps/INSTINCT/Data/SoundChecker"
+#cant do it this way unfortunately, with the internal quotes. maybe can find a better way eventually..
+args="//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWupcallYeses4Dan.csv C:/Apps/INSTINCT/Data/FileGroups //161.55.120.117/NMML_AcousticsData/Audio_Data testFG.csv \"StartDateTime > '2016-10-04 21:13:45' AND StartDateTime < '2017-10-10 21:13:45' AND MoorSite = 'BS01' LIMIT 150\" query-data-csv-v1-0"
 
 args<-strsplit(args,split=" ")[[1]]
+
+datapath <- "//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWupcallYeses4Dan.csv"
+resultPath<- "C:/Apps/INSTINCT/Data/FileGroups"
+
+SfRoot<- "//161.55.120.117/NMML_AcousticsData/Audio_Data"
+fileName <- "testFG.csv" 
+statement <- "StartDateTime > '2016-10-04 21:13:45' AND StartDateTime < '2017-10-10 21:13:45' AND MoorSite = 'BS01' LIMIT 150"
 
 args<-commandArgs(trailingOnly = TRUE)
 
@@ -14,7 +20,9 @@ datapath <- args[1]
 resultPath<- args[2]
 
 SfRoot<- args[3]
-statement <- args[4]
+fileName <- args[4]
+statement <- args[5]
+
 
 source(paste("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R",sep="")) 
 
@@ -32,8 +40,8 @@ data$year<-as.character(format(data$StartFieldTimeUTC,"%Y"))
 data$month<-as.character(format(data$StartFieldTimeUTC,"%m"))
 
 
-statement<-"StartDateTime > '2016-10-04 21:13:45' AND StartDateTime < '2017-10-10 21:13:45' AND MoorSite = 'BS01' LIMIT 150"
-statement<-"month = 10"
+#statement<-"StartDateTime > '2016-10-04 21:13:45' AND StartDateTime < '2017-10-10 21:13:45' AND MoorSite = 'BS01' LIMIT 150"
+#statement<-"month = 10"
 
 #enforce keeping all of the columns, and starting with Where 
 statement<-paste("SELECT * FROM data Where ",statement)
@@ -59,17 +67,17 @@ year<-paste("20",substr(sfdt,1,2),sep="")
 month<-substr(sfdt,3,4)
 
 #
-SfRoot<-"//161.55.120.117/NMML_AcousticsData/Audio_Data"
+#SfRoot<-"//161.55.120.117/NMML_AcousticsData/Audio_Data"
   
 #assemble fg: 
-out<-data.frame(sf,paste("/",datasub$MoorDeploy,"/",month,"_",year,"/",sep=""),sfdt,0,datasub$MoorDeploy,datasub$StartSecInWav,datasub$EndSecInWav,datasub$MoorSite)
+out<-data.frame(paste(sf,".wav",sep=""),paste("/",datasub$MoorDeploy,"/",month,"_",year,"/",sep=""),sfdt,0,datasub$MoorDeploy,datasub$StartSecInWav,datasub$EndSecInWav-datasub$StartSecInWav,datasub$MoorSite)
 
 colnames(out)<-c("FileName","FullPath","StartTime","Duration","Deployment","SegStart","SegDur","SiteID")
 
 pathsave<-""
 #find the file durations
 for(i in 1:nrow(out)){
-  path = paste(SfRoot,"/Waves",out[i,"FullPath"],out[i,"FileName"],".wav",sep="")
+  path = paste(SfRoot,"/Waves",out[i,"FullPath"],out[i,"FileName"],sep="")
   if(path!=pathsave){
     info<-readWave2(path,header = TRUE)
     out[i,"Duration"]<-round(info$samples/info$sample.rate)
@@ -78,5 +86,11 @@ for(i in 1:nrow(out)){
   }
 }
 
+#Do not allow overrides! Test to see if file is present, and only print if not. If it is, spit an error. 
+filePath<-paste(resultPath,"/",fileName,sep="")
+if(file.exists(filePath)){
+  stop("Cannot overwrite existing FG of same name! Stopping...")
+}else{
+  write.csv(out,filePath,row.names = FALSE)
+}
 #print out the csv in outputs. 
-write.csv(out,paste(resultPath,"/FGfile.csv",sep=""),row.names = FALSE)

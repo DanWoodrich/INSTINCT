@@ -18,7 +18,8 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
         task1 = FormatFG.invoke(self,upstream1=task0,n=0) 
         task2 = FormatGT.invoke(self,task1,n=0)
         task3 = RavenViewDETx.invoke(self,task2,task1,"T")
-        return [task0,task1,task2,task3]
+        return [task1,task2,task3] #intentionally leave out task0- it will hash anyway depending on what is given to FormatFG.
+    #And should allow to refer to same file for EditGT
     def hashProcess(self):
         taskStr = []
         tasks = self.pipelineMap()
@@ -30,7 +31,9 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
         return Helper.getParamHash2(' '.join(hashStrings),6)
     def requires(self):
         tasks = self.pipelineMap()
-        return tasks[3]
+        yield tasks[0]
+        yield tasks[1]
+        yield tasks[2]
     def outpath(self):
         return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
     def output(self):
@@ -40,7 +43,7 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
 
         #move file
         tasks = self.pipelineMap()
-        filepath = tasks[3].outpath() + '/RAVENx.txt'
+        filepath = tasks[2].outpath() + '/RAVENx.txt'
         filedest = self.outpath() + '/RAVENx.txt'
 
         if not os.path.exists(self.ProjectRoot +'Outputs/' + self.JobName):
@@ -54,16 +57,17 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
     def invoke(self):
         return(ViewGT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,\
                       GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,QDmethodID=self.QDmethodID,QDsource=self.QDsource,\
-                      QDstatement,GT_signal_code=self.GT_signal_code
+                      QDstatement=self.QDstatement,FileGroupID=self.FileGroupID,\
                       FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                       FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
     def getParams(args):
 
-        params = Load_Job('QueryGT',args)
-        params = FG(params,'FormatFG')
+        params = Load_Job('EditGTwRaven',args)
+        params = QD(params,'QueryData')
         if len(args)==4:
-            params.FileGroupID=[args[4]]
-            params.FGfile = [self.ProjectRoot +'Data/' + 'FileGroups/' + args[4]]
+            params = FG(params,'FormatFG',FGovr=args[3])
+        else:
+            params = FG(params,'FormatFG')
         params = GT(params,'FormatGT')
         params = RV(params,'RavenViewDETx')
 

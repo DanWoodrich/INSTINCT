@@ -250,8 +250,13 @@ class FormatFG(INSTINCT_Task):
 
     def hashProcess(self):
         hashLength = 12
-        filehash = Helper.hashfile(self.FGfile,hashLength)
-        return Helper.getParamHash2(filehash + self.FGparamString + ' ' + self.FGmethodID,hashLength)
+        if os.path.isfile(self.FGfile):
+            return Helper.hashfile(self.FGfile,hashLength)
+        else: 
+            return "not yet created" #I think this should just tell the scheduler the task is incomplete, without causing errors...?
+    #do not use upstream outpath(), breaking convention. Use Cache. 
+    def outpath(self):
+        return self.ProjectRoot + 'Cache/' + self.hashProcess()
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/FileGroupFormat.csv.gz')
     def run(self):
@@ -260,7 +265,9 @@ class FormatFG(INSTINCT_Task):
         FG = pd.read_csv(self.FGfile, dtype=FG_dict)
         FG['StartTime'] = pd.to_datetime(FG['StartTime'], format='%y%m%d-%H%M%S')
         FG=Helper.getDifftime(FG)
-        os.mkdir(self.outpath())
+
+        if not os.path.exists(self.outpath()):
+            os.mkdir(self.outpath())
 
         if self.decimatedata == 'y':
             #if decimating, run decimate. Check will matter in cases where MATLAB supporting library is not installed.
@@ -1079,7 +1086,7 @@ class RavenViewDETx(INSTINCT_Rmethod_Task):
 
     def hashProcess(self):
         hashLength = 6
-        return Helper.getParamHash2(self.RVmethodID + ' ' + self.upstream_task1.hashProcess(),hashLength)
+        return Helper.getParamHash2(self.RVmethodID + ' ' + self.RavenFill + ' ' + self.upstream_task1.hashProcess(),hashLength)
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/RAVENx.txt')
     def run(self):
@@ -1136,38 +1143,38 @@ class RavenToDETx(INSTINCT_Rmethod_Task):
 
 class QueryData(INSTINCT_Rmethod_Task):
 
+    upstream_task1= luigi.Parameter()
     QDmethodID = luigi.Parameter()
     QDsource = luigi.Parameter()
     QDstatement = luigi.Parameter()
     SoundFileRootDir_Host_Raw=luigi.Parameter()
-    GT_signal_code=luigi.Parameter()
     FileGroupID = luigi.Parameter()
     
     def hashProcess(self):
         hashLength = 6
         return Helper.getParamHash2(self.QDmethodID + ' ' + self.QDsource +  ' ' + self.QDstatement,hashLength)
     def outpath(self):
-        return self.ProjectRoot + 'Data/GroundTruth/' + self.GT_signal_code
+        return self.ProjectRoot + 'Data/FileGroups'
     def output(self):
-        return luigi.LocalTarget(self.outpath() + "/" + self.FileGroupID)
+        return luigi.LocalTarget(self.outpath() + "/" + self.FileGroupID[0])
     def run(self):
                 
         DATpath = self.QDsource
         resultPath=self.outpath()
 
-        FGpath = self.upstream_task2.outpath() 
-
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
         Paths = [DATpath,resultPath]
+        Args = [self.SoundFileRootDir_Host_Raw,self.FileGroupID[0]]
+        Params = self.QDstatement
         
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="QueryData",MethodID=self.RDmethodID,Paths=Paths,Args=self.SoundFileRootDir_Host_Raw,Params=self.QDstatement)
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="QueryData",MethodID=self.QDmethodID,Paths=Paths,Args=Args,Params=Params)
         
     def invoke(self,upstream1=None):
         if upstream1==None:
-            upstream1=Dummy.invoke(obj)
-        return(QueryData(upstream_task1=self.upstream1,QDmethodID=self.QDmethodID,QDsource=self.QDsource,QDstatement=self.QDstatement,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                         system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version,FileGroupID=self.FileGroupID,GT_signal_code=self.GT_signal_code))
+            upstream1=Dummy.invoke(self)
+        return(QueryData(upstream_task1=upstream1,QDmethodID=self.QDmethodID,QDsource=self.QDsource,QDstatement=self.QDstatement,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
+                         system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version,FileGroupID=self.FileGroupID))
 
 
