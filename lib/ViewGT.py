@@ -12,10 +12,12 @@ class ViewGT(FormatFG,FormatGT,RavenViewDETx):
     upstream_task1=None
     upstream_task2=None
 
+    RavenFill=None
+
     def pipelineMap(self): #here is where you define pipeline structure 
         task0 = FormatFG.invoke(self,n=0) 
         task1 = FormatGT.invoke(self,task0,n=0)
-        task2 = RavenViewDETx.invoke(self,task1,task0)
+        task2 = RavenViewDETx.invoke(self,task1,task0,"T")
         return [task0,task1,task2]
     def hashProcess(self):
         taskStr = []

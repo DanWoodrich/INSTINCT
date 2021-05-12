@@ -6,15 +6,13 @@ from supporting.job_fxns import *
 class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
     
     JobName=luigi.Parameter()
-    IDlength = luigi.IntParameter()
 
     #nullify some inherited parameters:
     upstream_task1=None
     upstream_task2=None
     upstream_task3=None
-    uTask1path=None
-    uTask2path=None
-    uTask3path=None
+
+    RavenFill=None
 
     def pipelineMap(self): #here is where you define pipeline structure 
         task0 = FormatFG.invoke(self,n=0) 
@@ -55,7 +53,7 @@ class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
         shutil.copy(filepath, filedest)
         
     def invoke(self):
-        return(ViewDet(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,IDlength=self.IDlength,\
+        return(ViewDet(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,\
                    GTfile=self.GTfile,FGfile=self.FGfile,EDprocess=self.EDprocess,EDsplits=self.EDsplits,EDcpu=self.EDcpu,\
                    EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
                    ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,RVmethodID=self.RVmethodID,\

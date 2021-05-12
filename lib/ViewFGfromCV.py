@@ -8,7 +8,9 @@ class ViewFGfromCV(Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,RavenView
     
     JobName=luigi.Parameter()
     topLoop=luigi.Parameter()
-    
+
+    RavenFill=None
+
     def pipelineMap(self,l): #here is where you define pipeline structure
         task0 = Comb4FeatureTrain.invoke(self)
         task1 = TrainModel.invoke(self,task0)
@@ -18,7 +20,7 @@ class ViewFGfromCV(Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,RavenView
         task4 = ApplyCutoff.invoke(self,task3)
         task5 = FormatGT.invoke(self,task2,n=l)
         task6 = AssignLabels.invoke(self,task4,task5,task2)
-        task7 = RavenViewDETx.invoke(self,task6,task2)
+        task7 = RavenViewDETx.invoke(self,task6,task2,"T")
 
         return [task0,task1,task2,task3,task4,task5,task6,task7]
     def outpath(self):

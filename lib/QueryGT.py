@@ -7,6 +7,8 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
     
     JobName=luigi.Parameter()
 
+    RavenFill=None
+
     #nullify some inherited parameters:
     upstream_task1=None
     upstream_task2=None
@@ -15,7 +17,7 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
         task0 = QueryData.invoke(self)
         task1 = FormatFG.invoke(self,upstream1=task0,n=0) 
         task2 = FormatGT.invoke(self,task1,n=0)
-        task3 = RavenViewDETx.invoke(self,task2,task1)
+        task3 = RavenViewDETx.invoke(self,task2,task1,"T")
         return [task0,task1,task2,task3]
     def hashProcess(self):
         taskStr = []

@@ -24,9 +24,9 @@ RavGT<-RavGT[,which(!colnames(RavGT) %in% c("Selection","View","Channel"))]
 
 RavGT<-RavGT[order(RavGT$Begin.Time..s.),]
 
-#get rid of not considered
+#get rid of not considered, and placeholder
 
-RavGT<-RavGT[which(RavGT$SignalCode!="Not Considered"),]
+RavGT<-RavGT[which(RavGT$SignalCode!="Not Considered"|RavGT$SignalCode!="Placeholder"),]
 
 #changed this from backslash to forward slash, but not sure why it is coming out different...
 for(i in 1:nrow(RavGT)){
