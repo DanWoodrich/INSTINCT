@@ -1074,7 +1074,9 @@ class RavenViewDETx(INSTINCT_Rmethod_Task):
     SoundFileRootDir_Host_Dec = luigi.Parameter()
 
     RVmethodID = luigi.Parameter()
-    
+
+    RavenFill = luigi.Parameter()
+
     def hashProcess(self):
         hashLength = 6
         return Helper.getParamHash2(self.RVmethodID + ' ' + self.upstream_task1.hashProcess(),hashLength)
@@ -1091,13 +1093,13 @@ class RavenViewDETx(INSTINCT_Rmethod_Task):
             os.mkdir(resultPath)
 
         Paths = [DETpath,FGpath,resultPath]
-        Params = self.SoundFileRootDir_Host_Dec
+        Args= [self.SoundFileRootDir_Host_Dec,self.RavenFill]
         
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenViewDETx",MethodID=self.RVmethodID,Paths=Paths,Args='',Params=Params)
+        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenViewDETx",MethodID=self.RVmethodID,Paths=Paths,Args=Args,Params='')
         
-    def invoke(self,upstream1,upstream2):
+    def invoke(self,upstream1,upstream2,RavenFillDef="F"):
         return(RavenViewDETx(upstream_task1=upstream1,upstream_task2=upstream2,RVmethodID=self.RVmethodID,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version,
-                             SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec))
+                             RavenFill=RavenFillDef,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec))
 
 class RavenToDETx(INSTINCT_Rmethod_Task):
     upstream_task1 = luigi.Parameter() #RAVx
@@ -1166,6 +1168,6 @@ class QueryData(INSTINCT_Rmethod_Task):
         if upstream1==None:
             upstream1=Dummy.invoke(obj)
         return(QueryData(upstream_task1=self.upstream1,QDmethodID=self.QDmethodID,QDsource=self.QDsource,QDstatement=self.QDstatement,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                         system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
+                         system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version,FileGroupID=self.FileGroupID,GT_signal_code=self.GT_signal_code))
 
 

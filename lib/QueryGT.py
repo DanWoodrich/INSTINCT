@@ -6,9 +6,6 @@ import shutil
 class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
     
     JobName=luigi.Parameter()
-    IDlength = luigi.IntParameter()
-
-    FGfileName = luigi.Parameter() #get from arg
 
     #nullify some inherited parameters:
     upstream_task1=None
@@ -53,26 +50,20 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
         shutil.copy(filepath, filedest)
         
     def invoke(self):
-        return(ViewGT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,IDlength=self.IDlength,\
-                   GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,\
-                   FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                   FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
+        return(ViewGT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,\
+                      GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,QDmethodID=self.QDmethodID,QDsource=self.QDsource,\
+                      QDstatement,GT_signal_code=self.GT_signal_code
+                      FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
+                      FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
     def getParams(args):
 
-        params = Load_Job('EditGTwRaven',args)
+        params = Load_Job('QueryGT',args)
         params = FG(params,'FormatFG')
         if len(args)==4:
-            ind=params.FileGroupID.index(args[3])
-            params = FG(params,'FormatFG',ind=ind)
+            params.FileGroupID=[args[4]]
+            params.FGfile = [self.ProjectRoot +'Data/' + 'FileGroups/' + args[4]]
         params = GT(params,'FormatGT')
         params = RV(params,'RavenViewDETx')
-
-        if len(args)==4:
-            print(params.FileGroupID)
-            ind=params.FileGroupID.index(args[3])
-            assert isinstance(ind, int)
-            params.topLoop=ind
-        #have an arg that dictates filename
 
         return params
 
