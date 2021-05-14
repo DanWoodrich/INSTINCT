@@ -16,6 +16,8 @@ def secToDHMS(time):
     return("%d:%d:%d:%d" % (day, hour, minutes, seconds))
 
 def deployJob(self,args):
+
+    #I should have this also output params to outpath, to refer to later! 
     
     start = time.time()
     Params =self.getParams(args)
@@ -59,7 +61,7 @@ class Load_Job:
         self.r_version=self.MasterINI['Global']['r_version']
 
 def getArt(signal,result,num=1):
-    if signal in ["GS","RW"]:
+    if signal in ["GS","RW","LM"]:
         if result==True and num < 10: 
             art =r"""                                ','. '. ; : ,','
                                    '..'.,',..'
@@ -68,8 +70,8 @@ def getArt(signal,result,num=1):
                                        ;'
                       :._   _.------------.__
               __      |  :-'              ## '\
-       __   ,' .'    .'             ^        ##\ 
-     /__ '.-   \___.'                O  .--.  # |
+       __   ,' .'    .'             /        ##\ 
+     /__ '.-   \___.'                ^  .--.  # |
        '._                  ~~      \__/    \__/
          '----'.____           \      ##     .'
                     '------.    \._____.----' 
@@ -79,12 +81,12 @@ def getArt(signal,result,num=1):
             art =r"""                                ','. '. ; : ,','
                                    '..'.,',..'
                                     ';.'  ,'
-                                       ;;
-                                       ;'
-                      :._   _.------------.__
+                                       _____
+                                      /     \___
+                      :._   _.-------+=======+--`
               __      |  :-'              ## '\       )
-       __   ,' .'    .'             __       ##\     (
-     /__ '.-   \___.'                (D .--.  # |     )
+       __   ,' .'    .'            __~       ##\     (
+     /__ '.-   \___.'                D  .--.  # |     )
        '._                  ~~      \__/    \__[======#
          '----'.____           \      ##     .'
                     '------.    \._____.----' 

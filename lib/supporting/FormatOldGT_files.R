@@ -4,9 +4,9 @@
 
 library(doParallel)
 
-Species<-"RW"
-Decimate<-"No_whiten_decimate_by_16"
-DecimateShort<-"decimate_by_16"
+Species<-"LM"
+Decimate<-"No_whiten_decimate_by_128"
+DecimateShort<-"decimate_by_128"
 
 
 folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_files",Species,Decimate,sep="/")

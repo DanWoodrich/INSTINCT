@@ -1,15 +1,9 @@
-library(doParallel)
-library(tuneR)
-library(signal)
-library(foreach)
-library(imager)
-library(pracma)
-library(zoo)
+
 
 #V1-0: this mainly uses the contour algorithm from pracma for detection. Right now, it takes parameters that attempt to 
 #weed out FP using slope and island size. Slope is crude, if I like it probably should use hough lines instead. 
 #v1-2: this uses a simple sound window for noise reduction, instead of an image wide averaging.
-#v1-3: fix bug from 1-2
+#v1-3: fix bug from 1-2 (1-2 broken...)
 
 EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   
@@ -113,7 +107,7 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   
   image1<-threshold(image1,ImgThresh) 
   
-  plot(image1)
+  #plot(image1)
   
   #}
   
@@ -152,8 +146,8 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
     cont2<-cont[which(size>pixThresh|(slope==slopeTest & (size>pixThresh/pixThreshDiv)))]
   }
 
-  plot(image1)
-  purrr::walk(cont2,function(v) lines(v$x,v$y,col="red",lwd=4))
+  #plot(image1)
+  #purrr::walk(cont2,function(v) lines(v$x,v$y,col="red",lwd=4))
   
   tAdjust=length(soundFile@left)/soundFile@samp.rate/length(spectrogram$t)
   fAdjust=(highFreq-lowFreq)/length(spectrogram$f)

@@ -1,5 +1,13 @@
 #set these variables in all containers:
 
+#TODO: put these in each ED method, and have them load in string of objects they need passed into cluser 
+library(doParallel)
+library(tuneR)
+library(signal)
+library(foreach)
+library(imager)
+library(pracma)
+library(zoo)
 
 
 #windows test values
@@ -42,8 +50,7 @@ chunkSize<- 20
 
 MethodID<-"bled-and-combine-test-r-source-v1-0"
 
-paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/b1a54ddb80b2/ C:/Apps/INSTINCT/Cache/b1a54ddb80b2/f02f46 FileGroupFormat.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-0 Upsweep 260 85 0 60 90 2 2 1024 128 contour-w-slope-r-source-v1-2 desired_slope high_freq img_thresh isoblur_sigma low_freq overlap pix_thresh pix_thresh_div t_samp_rate window_length"
-
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/0b460543fa8c/ C:/Apps/INSTINCT/Cache/0b460543fa8c/73d162 FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-2 Upsweep 260 90 0 60 90 60 3 1024 128 contour-w-slope-r-source-v1-2 desired_slope high_freq img_thresh isoblur_sigma low_freq overlap pix_thresh pix_thresh_div t_samp_rate window_length"
 args<-strsplit(paramArgsPre,split=" ")[[1]]
 
 #To make this general to ED, need to pass method params instead of hard defining here. 
@@ -135,7 +142,7 @@ detOut<-foreach(i=1:BigChunks) %do% {
   
   #probably should make packages loaded in dynamically
   
-  startLocalPar(crs,"FilezAssign","data","EventDetectoR","specgram","splitID","StartFile","EndFile","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2")
+  startLocalPar(crs,"FilezAssign","data","EventDetectoR","specgram","splitID","StartFile","EndFile","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2","rollmedian")
   
   Detections<-foreach(n=1:crs,.packages=c("tuneR","doParallel","signal","imager","pracma")) %dopar% {
 
@@ -226,7 +233,7 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
     crs<-length(unique(data$DiffTime))
   }
   
-  startLocalPar(crs,"data","EventDetectoR","specgram","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2")
+  startLocalPar(crs,"data","EventDetectoR","specgram","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2","rollmedian")
   
   detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel","signal","imager","pracma")) %dopar% {
     dataMini<-data[which(data$DiffTime==n),]

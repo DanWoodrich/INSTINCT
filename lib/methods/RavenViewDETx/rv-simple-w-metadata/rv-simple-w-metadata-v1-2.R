@@ -47,6 +47,7 @@ Resultpath <- args[3]
 dataPath <- args[4]
 fillDat <- args[5]
 
+
 #transform into Raven formatted data, retain data in other columns besides mandated 6. 
 
 Dets<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
