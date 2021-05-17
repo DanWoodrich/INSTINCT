@@ -1,5 +1,5 @@
 #set these variables in all containers:
-MethodName<-"feat-ext-hough-light-source-v1-1"
+MethodName<-"feat-ext-hough-light-source-v1-2"
 #v1-1
 #change catch in spectrogram rendering for something more general to other window lengths
 #change catch for using autoc feature
@@ -285,6 +285,8 @@ FeatureExtracteR<-function(wav=NULL,spectrogram=NULL,featList,args){
     image1[1:TileAxisSize,1,1,1]<-FALSE
     image1[TileAxisSize,1:TileAxisSize,1,1]<-FALSE #get rid of side border artifact 
     image1[1:TileAxisSize,TileAxisSize,1,1]<-FALSE 
+    
+    #plot(image1)
     
     if(length(unique(image1))!=1){
       

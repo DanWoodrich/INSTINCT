@@ -5,9 +5,6 @@ library(doParallel)
 library(tuneR)
 library(signal)
 library(foreach)
-library(imager)
-library(pracma)
-library(zoo)
 
 
 #windows test values
@@ -48,9 +45,7 @@ EDstage<-"1"
 crs<-99
 chunkSize<- 20
 
-MethodID<-"bled-and-combine-test-r-source-v1-0"
-
-paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/0b460543fa8c/ C:/Apps/INSTINCT/Cache/0b460543fa8c/73d162 FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-2 Upsweep 260 90 0 60 90 60 3 1024 128 contour-w-slope-r-source-v1-2 desired_slope high_freq img_thresh isoblur_sigma low_freq overlap pix_thresh pix_thresh_div t_samp_rate window_length"
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/12010adb358c/ C:/Apps/INSTINCT/Cache/12010adb358c/bfcbdf FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-6 Upsweep 260 85 2 60 90 40 1.5 1024 132 contour-w-slope-r-source-v1-6 desired_slope high_freq img_thresh isoblur_sigma low_freq overlap pix_thresh pix_thresh_div t_samp_rate window_length"
 args<-strsplit(paramArgsPre,split=" ")[[1]]
 
 #To make this general to ED, need to pass method params instead of hard defining here. 
@@ -95,6 +90,11 @@ MethodIDcut<-substr(MethodID,0,mIDind-1)
 #populate with needed fxns for ED
 SourcePath<-paste(ProjectRoot,"/lib/methods/EventDetector/",MethodIDcut,"/",MethodID,".R",sep="")
 source(SourcePath) 
+
+#load ED libraries: 
+for(l in 1:length(libraries)){
+  library(libraries[l])
+}
 
 #and general fxns
 source(paste(ProjectRoot,"/lib/supporting/instinct_fxns.R",sep="")) 
@@ -142,11 +142,12 @@ detOut<-foreach(i=1:BigChunks) %do% {
   
   #probably should make packages loaded in dynamically
   
-  startLocalPar(crs,"FilezAssign","data","EventDetectoR","specgram","splitID","StartFile","EndFile","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2","rollmedian")
+  startLocalPar(crs,"FilezAssign","data","EventDetectoR","specgram","splitID","StartFile","EndFile","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2",nameSpaceFxns)
   
-  Detections<-foreach(n=1:crs,.packages=c("tuneR","doParallel","signal","imager","pracma")) %dopar% {
+  Detections<-foreach(n=1:crs,.packages=c("tuneR","doParallel","signal",librariesToLoad)) %dopar% {
 
     dataIn<-data[StartFile:EndFile,][which(FilezAssign==n),]
+    
     #process per diffTime chunk
     outList <- vector(mode = "list")
     for(h in unique(dataIn$DiffTime)){
@@ -205,6 +206,7 @@ detOut<-foreach(i=1:BigChunks) %do% {
       #convert outputs to have startfile, starttime, endfile, endtime. 
       outputs<-data.frame(StartMod,EndMod,outputs[,3],outputs[,4],Cums[,3],Cums[,4],processTag)
       colnames(outputs)<-c('StartTime','EndTime','LowFreq','HighFreq','StartFile',"EndFile","ProcessTag")
+      
       }else{
         outputs<-NULL
       }
@@ -233,9 +235,9 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
     crs<-length(unique(data$DiffTime))
   }
   
-  startLocalPar(crs,"data","EventDetectoR","specgram","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2","rollmedian")
+  startLocalPar(crs,"data","EventDetectoR","specgram","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2",nameSpaceFxns)
   
-  detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel","signal","imager","pracma")) %dopar% {
+  detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel","signal",librariesToLoad)) %dopar% {
     dataMini<-data[which(data$DiffTime==n),]
     if(nrow(dataMini)==1){
       dataMini$cumsum<-0
@@ -281,6 +283,7 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
     #convert outputs to have startfile, starttime, endfile, endtime. 
     outputs<-data.frame(StartMod,EndMod,outputs[,3],outputs[,4],Cums[,3],Cums[,4],n)
     colnames(outputs)<-c('StartTime','EndTime','LowFreq','HighFreq','StartFile',"EndFile","DiffTime")
+    
     }else{
       outputs<-NULL
     }

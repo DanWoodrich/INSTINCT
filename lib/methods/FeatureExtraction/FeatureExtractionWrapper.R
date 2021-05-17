@@ -1,5 +1,5 @@
 
-args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/fdb2261ed7fd/ C:/Apps/INSTINCT/Cache/fdb2261ed7fd/45aad2 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/fdb2261ed7fd/45aad2/12a503 1 99 method1 feat-ext-hough-light-source-v1-1 n 90 1 30 specgram 1024 48 0 32 0 feat-ext-hough-light-source-v1-1 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
+args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/98397c947317/ C:/Apps/INSTINCT/Cache/98397c947317/bfcbdf //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/98397c947317/bfcbdf/89a37c 1 99 method1 feat-ext-hough-light-source-v1-2 n 90 1 30 specgram 1024 48 0 32 0 feat-ext-hough-light-source-v1-2 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
 
 args<-strsplit(args,split=" ")[[1]]
 
