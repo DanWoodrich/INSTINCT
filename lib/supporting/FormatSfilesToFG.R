@@ -6,7 +6,7 @@
 #modify so it fits the NAS naming requirements (month subfolders)
 source(paste("C:/Apps/INSTINCT/bin/instinct_fxns.R",sep="")) 
 
-SpeciesDo<-"y"
+SpeciesDo<-"n"
 Species<-"LM"
 Decimate<-"No_whiten_decimate_by_128"
 DecimateShort<-"decimate_by_128"
