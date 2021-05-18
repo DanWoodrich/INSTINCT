@@ -8,7 +8,6 @@ MethodName<-"feat-ext-hough-light-source-v1-2"
 #fix bug where P high and P low were same value 
 
 #attempt at recreating the feature extraction protocol of INSTINCT.
-
 libraries<-c("imager","pracma","oce","seewave","plotrix")
 librariesToLoad<-c("imager","pracma")
 nameSpaceFxns<-c("lastFeature","getMinBBox","freqstat.normalize","std.error")

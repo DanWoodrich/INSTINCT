@@ -1,3 +1,7 @@
+library(foreach) 
+library(doParallel) #need
+library(tuneR) #need
+library(signal) #need
 
 args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/98397c947317/ C:/Apps/INSTINCT/Cache/98397c947317/bfcbdf //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/98397c947317/bfcbdf/89a37c 1 99 method1 feat-ext-hough-light-source-v1-2 n 90 1 30 specgram 1024 48 0 32 0 feat-ext-hough-light-source-v1-2 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
 
@@ -52,6 +56,13 @@ MethodIDcut<-substr(MethodID,0,mIDind-1)
 #populate with needed fxns for ED
 SourcePath<-paste(ProjectRoot,"/lib/methods/FeatureExtraction/",MethodIDcut,"/",MethodID,".R",sep="")
 source(SourcePath) 
+
+#load FE libraries: 
+if(length(libraries)>0){
+  for(l in 1:length(libraries)){
+    library(libraries[l],character.only=TRUE)
+  }
+}
 
 #and general fxns
 source(paste(ProjectRoot,"/lib/supporting/instinct_fxns.R",sep="")) 
@@ -146,9 +157,9 @@ for(n in 1:crs){
 }
 #divide up effort into consecutive chunks 
 
-startLocalPar(crs,"crs","tmpPath","lastFeature","freqstat.normalize","FG","targetSampRate","readWave2","decimateData","resampINST","decDo","prime.factor","ParamArgs","FeatureExtracteR","lastFeature","getMinBBox","freqstat.normalize")
+startLocalPar(crs,"crs","tmpPath","FG","targetSampRate","readWave2","decimateData","resampINST","decDo","prime.factor","ParamArgs","FeatureExtracteR",nameSpaceFxns)
 
-out2<-foreach(f=1:crs,.packages=c("tuneR","imager","doParallel","seewave","pracma","plotrix","signal")) %dopar% {
+out2<-foreach(f=1:crs,.packages=c("tuneR","doParallel","seewave","signal",librariesToLoad)) %dopar% {
   
   #
   #  print(f)

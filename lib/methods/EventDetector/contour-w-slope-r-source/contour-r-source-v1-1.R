@@ -1,9 +1,6 @@
-library(doParallel)
-library(tuneR)
-library(signal)
-library(foreach)
-library(imager)
-library(pracma)
+libraries<-c("imager","pracma")
+librariesToLoad<-c("imager","pracma")
+nameSpaceFxns<-c()
 
 #V1-0: this mainly uses the contour algorithm from pracma for detection. Right now, it takes parameters that attempt to 
 #weed out detections without 

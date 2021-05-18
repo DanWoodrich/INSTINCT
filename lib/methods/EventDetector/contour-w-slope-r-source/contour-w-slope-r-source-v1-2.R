@@ -1,10 +1,7 @@
-library(doParallel)
-library(tuneR)
-library(signal)
-library(foreach)
-library(imager)
-library(pracma)
-library(zoo)
+libraries<-c("imager","pracma","zoo")
+librariesToLoad<-c("imager","pracma")
+nameSpaceFxns<-c("rollmedian")
+
 
 #V1-0: this mainly uses the contour algorithm from pracma for detection. Right now, it takes parameters that attempt to 
 #weed out FP using slope and island size. Slope is crude, if I like it probably should use hough lines instead. 

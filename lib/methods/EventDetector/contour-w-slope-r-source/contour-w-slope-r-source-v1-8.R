@@ -1,6 +1,6 @@
 libraries<-c("imager","pracma","caTools")
 librariesToLoad<-c("imager","pracma")
-nameSpaceFxns("runquantile")
+nameSpaceFxns<-c("runquantile")
 
 #V1-0: this mainly uses the contour algorithm from pracma for detection. Right now, it takes parameters that attempt to 
 #weed out FP using slope and island size. Slope is crude, if I like it probably should use hough lines instead. 
@@ -17,7 +17,7 @@ nameSpaceFxns("runquantile")
 
 #v1-7: add blurring step to hough line measurement. Lower thresh to 0.65 for max score, and use median instead of mean. 
 
-#v1-8: Make relevant parameters into luigi parameters. make hough step create an image w/ contour instead of subset? 
+#v1-8: Have libraries load from this script. 
 
 EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   

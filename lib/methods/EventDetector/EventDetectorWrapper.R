@@ -1,6 +1,5 @@
 #set these variables in all containers:
 
-#TODO: put these in each ED method, and have them load in string of objects they need passed into cluser 
 library(doParallel)
 library(tuneR)
 library(signal)
@@ -92,8 +91,10 @@ SourcePath<-paste(ProjectRoot,"/lib/methods/EventDetector/",MethodIDcut,"/",Meth
 source(SourcePath) 
 
 #load ED libraries: 
-for(l in 1:length(libraries)){
-  library(libraries[l])
+if(length(libraries)>0){
+  for(l in 1:length(libraries)){
+    library(libraries[l],character.only=TRUE)
+  }
 }
 
 #and general fxns

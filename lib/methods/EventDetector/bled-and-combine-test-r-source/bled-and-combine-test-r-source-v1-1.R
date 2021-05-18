@@ -1,7 +1,6 @@
-library(doParallel)
-library(tuneR)
-library(signal)
-library(foreach)
+libraries<-c()
+librariesToLoad<-c()
+nameSpaceFxns<-c()
 
 #V1-1: changing the input arg to match wrapper, for more convenient debugging. 
 #-add in rounding function to make it work when noise hop length is not a clean factor of noise window length
