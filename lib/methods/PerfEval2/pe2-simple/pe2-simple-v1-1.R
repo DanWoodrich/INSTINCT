@@ -2,7 +2,7 @@ library(PRROC)
 library(flux)
 
 
-args<-"C:/Apps/INSTINCT/Cache//0d0dc380b1ee/5499ab C:/Apps/INSTINCT/Cache//0d0dc380b1ee/5499ab/998c0e C:/Apps/INSTINCT/Cache/4ed47b/6f7ebc FG"
+args<-"C:/Apps/INSTINCT/Cache/98397c947317/d70ca2/478b27/9d5fa7/412824 C:/Apps/INSTINCT/Cache/98397c947317/d70ca2/478b27/9d5fa7/412824/43f193 C:/Apps/INSTINCT/Cache/c7c139/6f7ebc FG"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -45,6 +45,7 @@ labelVec<-data$label=="TP"
 labelVec[labelVec]<-1
 
 data$label<-labelVec
+
 
 png(paste(resultPath,"/PRcurve.png",sep=""),width=500,height = 500)
 par(mgp=c(2.4,1,0),mar=c(4,4,0,0.5))

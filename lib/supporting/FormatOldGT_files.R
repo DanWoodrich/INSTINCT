@@ -4,9 +4,9 @@
 
 library(doParallel)
 
-Species<-"LM"
-Decimate<-"No_whiten_decimate_by_128"
-DecimateShort<-"decimate_by_128"
+Species<-"RW"
+Decimate<-"No_whiten_decimate_by_16"
+DecimateShort<-"decimate_by_16"
 
 
 folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_files",Species,Decimate,sep="/")
@@ -14,6 +14,8 @@ folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_fil
 #find .csv files in folder
 files<-dir(folderName,pattern=".csv")
 transferSF<-"n"
+
+source<-"DCLDE2013"
 
 for(n in files){
   
@@ -31,8 +33,12 @@ for(n in files){
   dot1<-gregexpr("\\.",data$SFsh[1])[[1]][1]
   dateTimeFormat<-substr(data$SFsh,dash2+1,dot1-1)
   
+  if(source!="DCLDE2013"){
   if(!any(!nchar(dateTimeFormat)==15)){
     dateTimeFormat<-paste(substr(dateTimeFormat,3,12),"000",sep="")
+  }
+  }else{
+    dateTimeFormat<-substr(dateTimeFormat,3,15)
   }
   
   data$SFsh<-paste(substr(data$SFsh,1,dash2),dateTimeFormat,".wav",sep="")
@@ -48,8 +54,11 @@ for(n in files){
   
   outData$FileName<-as.character(outData$FileName)
   
+  if(source!="DCLDE2013"){
   outData$pngFileDiff<-vals
-  
+  }else{
+    outData$pngFileDiff<-0
+  }
   und5<-gregexpr("_",SfilesName)[[1]][5]
   saveName<-substr(SfilesName,1,und5-1)
   

@@ -4,12 +4,12 @@
 
 #3/3/20:
 #modify so it fits the NAS naming requirements (month subfolders)
-source(paste("C:/Apps/INSTINCT/bin/instinct_fxns.R",sep="")) 
+source(paste("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R",sep="")) 
 
-SpeciesDo<-"n"
-Species<-"LM"
-Decimate<-"No_whiten_decimate_by_128"
-DecimateShort<-"decimate_by_128"
+SpeciesDo<-"y"
+Species<-"RW"
+Decimate<-"No_whiten_decimate_by_16"
+DecimateShort<-"decimate_by_16"
 
 if(SpeciesDo=='y'){
   folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_files",Species,Decimate,sep="/")
@@ -29,11 +29,17 @@ files<-dir(folderName)[grep(".csv",dir(folderName))]
 #just for RW, and temporary
 #files<-files[1:12]
 
+source<-"DCLDE2013"
+
 for(n in files){
 
 SfilesName<-n
 
 data<-read.csv(paste(folderName,SfilesName,sep="/"))
+
+if(source=="DCLDE2013"&Species=="RW"){
+data$MooringName<-"XT09_MR_MA01"
+}
 
 data$SFsh<-gsub("_", "-", data$SFsh)
 
@@ -51,16 +57,23 @@ if(!any(!nchar(dateTimeFormat)==15)){ #split this conditional into 2 parts, one 
 
 #find the time difference from file name to 000. Save this as a vector in SegStart. 
 
+if(source!="DCLDE2013"){
 mss<-paste("0",substr(dateTimeFormat,11,15),sep="")
 vals<-as.POSIXlt(mss,format="%M%S")
 vals<- vals$sec+vals$min*60
 
 data$SegStart<-vals
+
+dateTimeFormat<-paste(substr(dateTimeFormat,1,10),"000",sep="")
+
+}else{
+  data$SegStart<-0
+}
 data$SegDur<-data$Duration
 
 #Then, convert all dateTimeFormat to 000
 
-dateTimeFormat<-paste(substr(dateTimeFormat,1,10),"000",sep="")
+
 
 data$SFsh<-paste(substr(data$SFsh,1,dash2),dateTimeFormat,".wav",sep="")
 
@@ -115,10 +128,17 @@ outData<-data.frame(cbind(as.character(data$SFsh),NASpath,dateTimeFormat,data$Du
 colnames(outData)<-c("FileName","FullPath","StartTime","Duration","Deployment","SegStart","SegDur","SiteID")
 
 #modify saved name as well 
+if(source!="DCLDE2013"){
+  
 und5<-gregexpr("_",SfilesName)[[1]][5]
 saveName<-substr(SfilesName,gregexpr("_",SfilesName)[[1]][3],und5-1)
 
 saveName<-paste(data$MooringName[1],saveName,sep="")
+
+}else{
+  saveName<-data$MooringID[1]
+}
+
 
 #before saving, need to loop through each file, call readwave2 to get duration. Then, remove redunant rows. 
 
