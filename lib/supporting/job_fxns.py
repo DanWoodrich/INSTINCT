@@ -15,7 +15,7 @@ def secToDHMS(time):
     seconds = time
     return("%d:%d:%d:%d" % (day, hour, minutes, seconds))
 
-def deployJob(self,args):
+def deployJob(self,args,dType="Job"):
 
     #I should have this also output params to outpath, to refer to later! 
     
@@ -27,8 +27,12 @@ def deployJob(self,args):
     end = time.time()
 
     if result:
-        print("                          Output file location path:\n" + "                   " +inv.outpath())
-        print("                     elapsed time (d:h:m:s): " + str(secToDHMS(round(end-start,0))))
+        if(dType=="Job"):
+            print("                          Output file location path:\n" + "                   " +inv.outpath())
+            
+        elif(dType=="Wrapper"):
+            print("                             Wrapper Job Successful!                   ")
+        print("                        elapsed time (d:h:m:s): " + str(secToDHMS(round(end-start,0))))
     else:
         print("                               === Job failed ===")
     print(getArt(str(Params.GT_signal_code),result,num=randNum))
