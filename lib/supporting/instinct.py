@@ -102,7 +102,7 @@ class argParse:
             if(Program=='R'):
                 #default install vers
                 if(Wrapper==False):
-                    command1 = '"'+ rVers + '/bin/Rscript.exe" -e "source(\'' + ProjectRoot + 'lib/methods/' + ProcessID + '/' + MethodIDcut +'/'+MethodID+'.R\')"'
+                    command1 = '"Rscript" -e "source(\'' + ProjectRoot + 'lib/methods/' + ProcessID + '/' + MethodIDcut +'/'+MethodID+'.R\')"'
                     command2 = ' '.join(Paths) + ' ' + ' '.join(Args) + ' ' + Params
 
                 elif(Wrapper):

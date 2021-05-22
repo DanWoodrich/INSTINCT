@@ -14,6 +14,8 @@ MooringNames<-strsplit(MooringNames,",")[[1]]
 
 #MooringNames<-MooringNames[c(-6,-25)]
 
+MooringNames<-MooringNames[10:length(MooringNames)]
+
 for(n in 1:length(MooringNames)){
 
 MooringName<-MooringNames[n]
@@ -31,10 +33,24 @@ rows<-foreach(l=1:length(monthFolders)) %do% {
   FilesP<-paste(monthFoldersP[l],dir(monthFoldersP[l]),sep="/")
   Files<-dir(monthFoldersP[l])
   
+  ind<-which(Files=="AM-XBCS01-200709-090001.wav")
+  
+  if(length(ind)>0){
+    Files<-Files[-ind]
+    FilesP<-FilesP[-ind]
+  }
+
   out1<-foreach(p=1:length(FilesP)) %do% {
     #make the row
     filedeets<-readWave2(FilesP[p],header = TRUE)
     dur<-round(filedeets$samples/filedeets$sample.rate)
+    
+    #have a catch in here: if file is <20s, reject it (and spit out warning)
+    if(dur<20){
+      print("SF rejected: too short (<20s)")
+      return(NULL)
+    }
+    
     row<-c(Files[p],paste("/",MooringName,"/",monthFolders[l],"/",sep=""),substr(Files[p],nchar(Files[p])-16,nchar(Files[p])-4),dur,MooringName,0,dur,site)
     return(row)
   }

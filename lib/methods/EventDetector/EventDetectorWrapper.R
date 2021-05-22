@@ -44,7 +44,7 @@ EDstage<-"1"
 crs<-99
 chunkSize<- 20
 
-paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/12010adb358c/ C:/Apps/INSTINCT/Cache/12010adb358c/bfcbdf FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-6 Upsweep 260 85 2 60 90 40 1.5 1024 132 contour-w-slope-r-source-v1-6 desired_slope high_freq img_thresh isoblur_sigma low_freq overlap pix_thresh pix_thresh_div t_samp_rate window_length"
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/4810452eb581/ C:/Apps/INSTINCT/Cache/4810452eb581/d70ca2 FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-9 Upsweep 260 3 0.25 85 50 1.2 2 60 0.9 2.5 90 40 1024 132 contour-w-slope-r-source-v1-9 desired_slope high_freq hough_slope_max hough_slope_min img_thresh1 img_thresh2 isoblur_sigma1 isoblur_sigma2 low_freq noise_thresh noise_win_length overlap pix_thresh t_samp_rate window_length"
 args<-strsplit(paramArgsPre,split=" ")[[1]]
 
 #To make this general to ED, need to pass method params instead of hard defining here. 
