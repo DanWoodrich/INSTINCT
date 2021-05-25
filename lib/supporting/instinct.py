@@ -106,7 +106,7 @@ class argParse:
                     command2 = ' '.join(Paths) + ' ' + ' '.join(Args) + ' ' + Params
 
                 elif(Wrapper):
-                    command1 = '"'+ rVers + '/bin/Rscript.exe" -e "source(\'' + ProjectRoot + 'lib/methods/' + ProcessID + '/' + ProcessID + 'Wrapper.R\')"'
+                    command1 = '"Rscript.exe" -e "source(\'' + ProjectRoot + 'lib/methods/' + ProcessID + '/' + ProcessID + 'Wrapper.R\')"'
                     command2 = ProjectRoot + ' ' + ' '.join(Paths) + ' ' + ' '.join(Args) #don't think lists need to be flattened, since these should refer to process not the individual methods
 
                     if not(isinstance(MethodID, list)): #this will be a list if there are multiple methods being passed 
