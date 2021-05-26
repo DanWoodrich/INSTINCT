@@ -7,9 +7,9 @@
 source(paste("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R",sep="")) 
 
 SpeciesDo<-"y"
-Species<-"RW"
-Decimate<-"No_whiten_decimate_by_16"
-DecimateShort<-"decimate_by_16"
+Species<-"GS"
+Decimate<-"No_whiten_decimate_by_8"
+DecimateShort<-"decimate_by_8"
 
 if(SpeciesDo=='y'){
   folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_files",Species,Decimate,sep="/")
@@ -29,7 +29,8 @@ files<-dir(folderName)[grep(".csv",dir(folderName))]
 #just for RW, and temporary
 #files<-files[1:12]
 
-source<-"DCLDE2013"
+source<-"old"
+#source<-"DCLDE2013"
 
 for(n in files){
 

@@ -204,12 +204,16 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   #}
   fAdjust=(highFreq-lowFreq)/length(spectrogram$f)
   
+  if(length(cont2)>0){
   Detections<-foreach(i=1:length(cont2)) %do% { #could expand size of detection, and then combine overlapping for better boxes 
     x1=min(cont2[[i]]$x)*tAdjust
     x2=max(cont2[[i]]$x)*tAdjust
     y1=highFreq-(max(cont2[[i]]$y)*fAdjust) #((length(spectrogram$f)-max(cont2[[i]]$y))*fAdjust)+lowFreq
     y2=highFreq-(min(cont2[[i]]$y)*fAdjust)
     return(c(x1,x2,y1,y2))
+  }
+  }else{
+    Detections<-list()
   }
   
   Detections<-do.call("rbind",Detections)

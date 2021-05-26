@@ -422,7 +422,7 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
     def invoke(obj,n):
         return(RunED(upstream_task1=obj.upstream_task1,EDsplits=obj.EDsplits,splitNum=n,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\
                      EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDparamNames=obj.EDparamNames,EDparamString=obj.EDparamString,EDcpu=obj.EDcpu,EDchunk=obj.EDchunk,\
-                     ProjectRoot=obj.ProjectRoot,system=obj.system,r_version=obj.r_version))
+                     ProjectRoot=obj.ProjectRoot,system=obj.system))
         
 class UnifyED(RunED):
 
@@ -584,7 +584,7 @@ class UnifyED(RunED):
     def invoke(obj,upstream1):
         return(UnifyED(upstream_task1 = upstream1,EDsplits = obj.EDsplits,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,EDparamNames=obj.EDparamNames,\
                        EDparamString=obj.EDparamString,EDmethodID=obj.EDmethodID,EDprocess=obj.EDprocess,EDcpu=obj.EDcpu,\
-                       EDchunk=obj.EDchunk,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
+                       EDchunk=obj.EDchunk,system=obj.system,ProjectRoot=obj.ProjectRoot))
                 
         #merge outputs with ED:
         #pseudo code: for each difftime in patches, eliminate detections in starting in the first half of 1st file and ending in the last half of last file
@@ -673,7 +673,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
         return(RunFE(upstream_task1=obj.upstream_task1,upstream_task2=obj.upstream_task2,FEsplits=obj.FEsplits,splitNum=n,\
                      SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,FEparamString=obj.FEparamString,\
                      FEparamNames=obj.FEparamNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEcpu=obj.FEcpu,\
-                     ProjectRoot=obj.ProjectRoot,system=obj.system,r_version=obj.r_version))
+                     ProjectRoot=obj.ProjectRoot,system=obj.system))
 
 class UnifyFE(RunFE):
 
@@ -700,7 +700,7 @@ class UnifyFE(RunFE):
     def invoke(obj,upstream1,upstream2):
         return(UnifyFE(upstream_task1 = upstream1,upstream_task2 = upstream2,\
                        FEparamNames=obj.FEparamNames,FEmethodID=obj.FEmethodID,FEprocess=obj.FEprocess,FEparamString=obj.FEparamString,FEsplits=obj.FEsplits,FEcpu=obj.FEcpu,\
-                       SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version)) 
+                       SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,system=obj.system,ProjectRoot=obj.ProjectRoot)) 
 
 ############################################################
 #Label detector outputs with GT using containerized method 
@@ -743,7 +743,7 @@ class AssignLabels(INSTINCT_Rmethod_Task):
     def invoke(obj,upstream1,upstream2,upstream3):
         return(AssignLabels(upstream_task1 = upstream1,upstream_task2 = upstream2,upstream_task3 = upstream3,\
                             ALmethodID=obj.ALmethodID,ALprocess=obj.ALprocess,ALparamString=obj.ALparamString,\
-                            system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
+                            system=obj.system,ProjectRoot=obj.ProjectRoot))
 
 ########################
 #Det with labels and FE 
@@ -781,8 +781,7 @@ class MergeFE_AL(INSTINCT_Rmethod_Task):
         
     def invoke(obj,upstream1,upstream2):
         return(MergeFE_AL(upstream_task1 = upstream1,upstream_task2 = upstream2,\
-                          MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,system=obj.system,ProjectRoot=obj.ProjectRoot,\
-                          r_version=obj.r_version))
+                          MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,system=obj.system,ProjectRoot=obj.ProjectRoot))
 
 
 ############################################################
@@ -833,8 +832,7 @@ class PerfEval1_s1(INSTINCT_Rmethod_Task):
             FileGroupID=obj.n_FileGroupID
         FileGroupID = Helper.tplExtract(FileGroupID,n=n)
         return(PerfEval1_s1(upstream_task1=upstream1,upstream_task2=upstream2,upstream_task3=upstream3,\
-                         FileGroupID=FileGroupID,PE1methodID=obj.PE1methodID,PE1process=obj.PE1process,system=obj.system,ProjectRoot=obj.ProjectRoot,\
-                         r_version=obj.r_version))
+                         FileGroupID=FileGroupID,PE1methodID=obj.PE1methodID,PE1process=obj.PE1process,system=obj.system,ProjectRoot=obj.ProjectRoot))
 
 class PerfEval1_s2(INSTINCT_Rmethod_Task):
 
@@ -868,7 +866,7 @@ class PerfEval1_s2(INSTINCT_Rmethod_Task):
 
     def invoke(obj,upstream1):
         return(PerfEval1_s2(upstream_task1=upstream1,PE1methodID=obj.PE1methodID,PE1process=obj.PE1process,\
-                            system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
+                            system=obj.system,ProjectRoot=obj.ProjectRoot))
 
 ############################################################
 #Performance stats based on specification independent labels
@@ -913,7 +911,7 @@ class PerfEval2(INSTINCT_Rmethod_Task):
 
     def invoke(obj,upstream1,upstream2,PE2datTypeDef=None):
         return(PerfEval2(upstream_task1=upstream1,upstream_task2=upstream2,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
-                         PE2datType=PE2datTypeDef,system=obj.system,ProjectRoot=obj.ProjectRoot,r_version=obj.r_version))
+                         PE2datType=PE2datTypeDef,system=obj.system,ProjectRoot=obj.ProjectRoot))
 
 #############################################################
 #apply cutoff on DETwProbs object, stage represents if it is in FG paths in cache (2) or in job in cache (1)
@@ -983,7 +981,7 @@ class ApplyModel(INSTINCT_Rmethod_Task):
         
     def invoke(self,upstream1,upstream2,upstream3):
         return(ApplyModel(upstream_task1=upstream1,upstream_task2=upstream2,upstream_task3=upstream3,TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,\
-                          system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
+                          system=self.system,ProjectRoot=self.ProjectRoot))
 
 ####################################################################################
 #Split data with probs and labels back into FG components (used for perf eval 2) 
@@ -1065,7 +1063,7 @@ class TrainModel(INSTINCT_Rmethod_Task):
         argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.TMprocess,MethodID=self.TMmethodID,Paths=Paths,Args=Args,Params=self.TMparamString)
     def invoke(self,upstream1):
         return(TrainModel(upstream_task1=upstream1,TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparamString=self.TMparamString,\
-                          TMstage=self.TMstage,TM_outName=self.TM_outName,TMcpu=self.TMcpu,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
+                          TMstage=self.TMstage,TM_outName=self.TM_outName,TMcpu=self.TMcpu,system=self.system,ProjectRoot=self.ProjectRoot))
 
 #####################################################################################
 #convert detx type to a format understandable by Raven Pro
@@ -1104,7 +1102,7 @@ class RavenViewDETx(INSTINCT_Rmethod_Task):
         argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenViewDETx",MethodID=self.RVmethodID,Paths=Paths,Args=Args,Params='')
         
     def invoke(self,upstream1,upstream2,RavenFillDef="F"):
-        return(RavenViewDETx(upstream_task1=upstream1,upstream_task2=upstream2,RVmethodID=self.RVmethodID,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version,
+        return(RavenViewDETx(upstream_task1=upstream1,upstream_task2=upstream2,RVmethodID=self.RVmethodID,system=self.system,ProjectRoot=self.ProjectRoot,\
                              RavenFill=RavenFillDef,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec))
 
 class RavenToDETx(INSTINCT_Rmethod_Task):
@@ -1137,7 +1135,7 @@ class RavenToDETx(INSTINCT_Rmethod_Task):
         argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenToDETx",MethodID=self.RDmethodID,Paths=Paths,Args='',Params='')
         
     def invoke(self,upstream1,upstream2):
-        return(RavenToDETx(upstream_task1=upstream1,upstream_task2=upstream2,RDmethodID=self.RDmethodID,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
+        return(RavenToDETx(upstream_task1=upstream1,upstream_task2=upstream2,RDmethodID=self.RDmethodID,system=self.system,ProjectRoot=self.ProjectRoot))
 
 
 class QueryData(INSTINCT_Rmethod_Task):
@@ -1174,6 +1172,6 @@ class QueryData(INSTINCT_Rmethod_Task):
         if upstream1==None:
             upstream1=Dummy.invoke(self)
         return(QueryData(upstream_task1=upstream1,QDmethodID=self.QDmethodID,QDsource=self.QDsource,QDstatement=self.QDstatement,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                         system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version,FileGroupID=self.FileGroupID))
+                         system=self.system,ProjectRoot=self.ProjectRoot,FileGroupID=self.FileGroupID))
 
 

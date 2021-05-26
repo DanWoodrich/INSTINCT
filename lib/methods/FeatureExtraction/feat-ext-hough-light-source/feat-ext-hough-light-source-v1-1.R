@@ -16,6 +16,10 @@ library(plotrix) #need
 library(autoimage) #unsure if need
 library(pracma) #need
 
+libraries<-c("imager","pracma","oce","seewave","plotrix")
+librariesToLoad<-c("imager","pracma")
+nameSpaceFxns<-c("lastFeature","getMinBBox","freqstat.normalize","std.error")
+
 #'rotating calipers algorithm' from http://dwoll.de/rexrepos/posts/diagBounding.html
 getMinBBox <- function(xy,H) {
   stopifnot(is.matrix(xy), is.numeric(xy), nrow(xy) >= 2, ncol(xy) == 2)

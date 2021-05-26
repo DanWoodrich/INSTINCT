@@ -3,6 +3,7 @@ library(flux)
 
 #v1-2: Add a FP/hour axis on the curve. Try to fix glitches
 #v1-2: make graphs bigger, now that they contain more info 
+#v1-4: add behavior to subset points of interest if not represented in curve
 
 args<-"C:/Apps/INSTINCT/Cache/c578364f766e/4a806f C:/Apps/INSTINCT/Cache/c578364f766e/4a806f/785635 C:/Apps/INSTINCT/Cache/99d8e5/6f7ebc FG"
 
@@ -89,13 +90,15 @@ if(sum(data$label==1)>0){
     xvals<-c(xvals,x)
   }
   
-  cutoffPos<-xvals[length(xvals)]-0.1
-  cutoffVec<-c(xvals,cutoffPos)
-  labVec<-c(pointsOfInterestChar,"Cutoffs:")
+  xvalssUse<-!is.na(xvals)
+  
+  cutoffPos<-xvals[xvalssUse][length(xvals[xvalssUse])]-0.1
+  cutoffVec<-c(xvals[xvalssUse],cutoffPos)
+  labVec<-c(pointsOfInterestChar[xvalssUse],"Cutoffs:")
   if(cutoffPos<0){
-    cutoffPos<-xvals[1]+0.1
-    cutoffVec<-c(cutoffPos,xvals)
-    labVec<-c("<-Cutoffs",pointsOfInterestChar)
+    cutoffPos<-xvals[xvalssUse][1]+0.1
+    cutoffVec<-c(cutoffPos,xvals[xvalssUse])
+    labVec<-c("<-Cutoffs",pointsOfInterestChar[xvalssUse])
   }
   
   

@@ -4,9 +4,9 @@
 
 library(doParallel)
 
-Species<-"RW"
-Decimate<-"No_whiten_decimate_by_16"
-DecimateShort<-"decimate_by_16"
+Species<-"GS"
+Decimate<-"No_whiten_decimate_by_8"
+DecimateShort<-"decimate_by_8"
 
 
 folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_files",Species,Decimate,sep="/")
@@ -15,7 +15,8 @@ folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_fil
 files<-dir(folderName,pattern=".csv")
 transferSF<-"n"
 
-source<-"DCLDE2013"
+source<-"old"
+#source<-"DCLDE2013"
 
 for(n in files){
   
