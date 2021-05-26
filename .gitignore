@@ -11,12 +11,12 @@
 
 Data/SoundFiles/
 Out/
-Outputs/
 tmp/
-Cache/
 old/
 etc/Projects/*
 !etc/Projects/README.txt
 cloud_archive
 lib/Archive/*
 lib/junk/*
+Outputs/*
+Cache/*
