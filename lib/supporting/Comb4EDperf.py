@@ -5,7 +5,7 @@ class Comb4EDperf(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1
     
     JobName=luigi.Parameter()
     IDlength = luigi.IntParameter()
-
+    
     #nullify some inherited parameters:
     upstream_task1=None
     upstream_task2=None
@@ -27,6 +27,6 @@ class Comb4EDperf(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,PerfEval1
                    ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,loopVar=self.IDlength,\
                    FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                    FGparamString=self.FGparamString,PE1process=self.PE1process,PE1methodID=self.PE1methodID,\
-                   ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
+                   ProjectRoot=self.ProjectRoot,system=self.system,CacheRoot=self.CacheRoot))
 
 

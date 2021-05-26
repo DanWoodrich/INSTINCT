@@ -89,7 +89,7 @@ class ViewRFN(ApplyModel,Comb4FeatureTrain,TrainModel,ApplyCutoff,RavenViewDETx)
                             FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,RVmethodID=obj.RVmethodID,\
                             TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
                             TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_FileGroupID=obj.n_FileGroupID,\
-                            n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,system=obj.system,r_version=obj.r_version))
+                            n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,system=obj.system,CacheRoot=obj.CacheRoot))
     def getParams(args):
         
         params = Load_Job('runFullNovel',args)

@@ -45,8 +45,6 @@ class RunFullNovel(luigi.WrapperTask,ApplyModel,Comb4FeatureTrain,TrainModel,App
         for l in range(self.loopVar):
             tasks = self.pipelineMap(l)
             yield tasks[6]
-    #def complete(self): #this is the luigi wrapper logic, just says the job is complete if requirements are satisfied.
-    #    return all(r.complete() for r in flatten(self.requires()))
     def invoke(obj):
         return(RunFullNovel(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                             IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\
@@ -59,7 +57,7 @@ class RunFullNovel(luigi.WrapperTask,ApplyModel,Comb4FeatureTrain,TrainModel,App
                             FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,loopVar=obj.n_IDlength,\
                             TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
                             TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_FileGroupID=obj.n_FileGroupID,\
-                            n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,system=obj.system,r_version=obj.r_version))
+                            n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,system=obj.system,CacheRoot=obj.CacheRoot))
     def getParams(args):
         
         params = Load_Job('runFullNovel',args)

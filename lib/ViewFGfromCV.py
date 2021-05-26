@@ -66,7 +66,7 @@ class ViewFGfromCV(Comb4FeatureTrain,TrainModel,SplitForPE,ApplyCutoff,RavenView
                              TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,TM_outName=obj.TM_outName,FGparamString=obj.FGparamString,\
                              FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                              TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,ProjectRoot=obj.ProjectRoot,system=obj.system,RVmethodID=obj.RVmethodID,\
-                             r_version=obj.r_version,loopVar = obj.IDlength,topLoop=obj.topLoop))
+                             CacheRoot=obj.CacheRoot,loopVar = obj.IDlength,topLoop=obj.topLoop))
     def getParams(args):    
         params = Load_Job('ViewFGfromCV',args)
 

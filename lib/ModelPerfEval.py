@@ -46,7 +46,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         if self.MPE_WriteToOutputs=='y':
             return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
         elif self.MPE_WriteToOutputs=='n':
-            return self.ProjectRoot + 'Cache/' + self.hashProcess()
+            return self.CacheRoot + 'Cache/' + self.hashProcess()
     def hashProcess(self):
         hashStrings = [None] * self.loopVar
         for l in range(self.loopVar):
@@ -82,7 +82,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         Modeleval = pd.concat(dataframes,ignore_index=True)
 
         #trying to get resultPath formated like normal, messed up paths a little bit need to fix!!! Pick up here. 
-        resultCache= self.ProjectRoot + 'Cache/' + self.hashProcess()
+        resultCache= self.CacheRoot + 'Cache/' + self.hashProcess()
         if not os.path.exists(resultCache):
             os.mkdir(resultCache)
 
@@ -106,7 +106,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         Args = [FGID,'All']
         Params = ''
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params=Params)
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params=Params)
 
         #now send the paths for all of the artifacts into the performance report R script.
 
@@ -141,7 +141,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
         Paths = [EDstatPath,MDstatPath,MDvisPath,resultPath]
         Args = [FGvis_paths,FGIDs]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PRprocess,MethodID=self.PRmethodID,Paths=Paths,Args=Args,Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PRprocess,MethodID=self.PRmethodID,Paths=Paths,Args=Args,Params='')
     def invoke(obj):
         return(ModelPerfEval(JobName=obj.JobName,MPE_WriteToOutputs=obj.MPE_WriteToOutputs,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\
                              IDlength=obj.IDlength,FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,GTfile=obj.GTfile,EDprocess=obj.EDprocess,\
@@ -153,7 +153,7 @@ class ModelPerfEval(Comb4EDperf,PerfEval1_s2,Comb4FeatureTrain,TrainModel,SplitF
                              FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                              TMcpu=obj.TMcpu,PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
                              ACcutoffString=obj.ACcutoffString,PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,ProjectRoot=obj.ProjectRoot,system=obj.system,\
-                             r_version=obj.r_version,loopVar = obj.IDlength))
+                             CacheRoot=obj.CacheRoot,loopVar = obj.IDlength))
     def getParams(args):    
         params = Load_Job('ModelPerfEval',args)
 

@@ -60,7 +60,7 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
         return(EditGT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,IDlength=self.IDlength,GT_signal_code=self.GT_signal_code,\
                    GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,RDmethodID=self.RDmethodID,FileGroupID=self.FileGroupID,\
                    FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                   FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
+                   FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,CacheRoot=self.CacheRoot))
     def getParams(args):
         
         params = Load_Job('EditGTwRaven',args)

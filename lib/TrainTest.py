@@ -62,7 +62,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         if self.TT_WriteToOutputs=='y':
             return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
         elif self.TT_WriteToOutputs=='n':
-            return self.ProjectRoot + 'Cache/' + self.hashProcess()
+            return self.CacheRoot + 'Cache/' + self.hashProcess()
     def requires(self):
         for l in range(self.loopVar):
             tasks = self.pipelineMap(l)
@@ -81,7 +81,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
             dataframes[k] = pd.read_csv(tasks[14].outpath() + '/Stats.csv.gz',compression='gzip')
         Modeleval = pd.concat(dataframes,ignore_index=True)
 
-        resultCache= self.ProjectRoot + 'Cache/' + self.hashProcess()
+        resultCache= self.CacheRoot + 'Cache/' + self.hashProcess()
         if not os.path.exists(resultCache):
             os.mkdir(resultCache)
 
@@ -107,7 +107,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         Args = [FGID,'All']
         Params = ''
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params=Params)
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params=Params)
 
         EDstatPath= tasks[1].outpath() #reads off the last loop from earlier, doesn't matter as these don't change per loop 
         MDstatPath= self.outpath()
@@ -144,7 +144,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
                             PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
                             PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,loopVar=obj.n_IDlength,\
                             FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
-                            n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,n_GTfile=obj.n_GTfile,system=obj.system,r_version=obj.r_version))
+                            n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,n_GTfile=obj.n_GTfile,system=obj.system,CacheRoot=obj.CacheRoot))
     def getParams(args):
         params = Load_Job('TrainTest',args)
 

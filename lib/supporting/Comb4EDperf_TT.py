@@ -40,5 +40,5 @@ class Comb4EDperf_TT(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,PerfEv
                    ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,loopVar = self.n_IDlength,\
                    FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                    PE1process=self.PE1process,PE1methodID=self.PE1methodID,FGparamString=self.FGparamString,\
-                   ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
+                   ProjectRoot=self.ProjectRoot,system=self.system,CacheRoot=self.self.CacheRoot))
 

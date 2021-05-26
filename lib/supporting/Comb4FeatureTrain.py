@@ -56,5 +56,5 @@ class Comb4FeatureTrain(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,Uni
                                  FEprocess=self.FEprocess,FEmethodID=self.FEmethodID,FEparamString=self.FEparamString,FEparamNames=self.FEparamNames,\
                                  FEsplits=self.FEsplits,FEcpu=self.FEcpu,MFAprocess=self.MFAprocess,MFAmethodID=self.MFAmethodID,\
                                  FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                                 system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
+                                 system=self.system,ProjectRoot=self.ProjectRoot,CacheRoot=self.CacheRoot))
 

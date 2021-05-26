@@ -62,7 +62,7 @@ class Load_Job:
         MasterINI.read(self.ParamsRoot + 'Master.ini')
         self.MasterINI = MasterINI
         self.system=self.MasterINI['Global']['system']
-        self.r_version=self.MasterINI['Global']['r_version']
+        self.CacheRoot=self.MasterINI['Global']['CacheRoot']
 
 def getArt(signal,result,num=1):
     if signal in ["GS","RW","LM"]:

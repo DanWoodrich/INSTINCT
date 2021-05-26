@@ -59,7 +59,7 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
                       GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,QDmethodID=self.QDmethodID,QDsource=self.QDsource,\
                       QDstatement=self.QDstatement,FileGroupID=self.FileGroupID,\
                       FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                      FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
+                      FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,CacheRoot=self.CacheRoot))
     def getParams(args):
 
         params = Load_Job('EditGTwRaven',args)

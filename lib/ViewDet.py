@@ -58,7 +58,7 @@ class ViewDet(FormatFG,FormatGT,UnifyED,AssignLabels,RavenViewDETx):
                    EDchunk=self.EDchunk,EDmethodID=self.EDmethodID,EDparamString=self.EDparamString,EDparamNames=self.EDparamNames,ALprocess=self.ALprocess,\
                    ALmethodID=self.ALmethodID,ALparamString=self.ALparamString,RVmethodID=self.RVmethodID,\
                    FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                   FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,r_version=self.r_version))
+                   FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,CacheRoot=self.CacheRoot))
     
     def getParams(args):
 

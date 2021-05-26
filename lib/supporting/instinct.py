@@ -93,7 +93,7 @@ class Helper:
 
 class argParse:
     #I need to do some work on this. Command1 should be split, since the parts of it which depend on OS are serpeate from the relationship of the arguments. 
-    def run(cmdType,MethodID,Paths,Args,Params,paramsNames=None,ProcessID=None,Program=None,ProjectRoot=None,rVers=None,dockerVolMounts=None,Wrapper=False):
+    def run(cmdType,MethodID,Paths,Args,Params,paramsNames=None,ProcessID=None,Program=None,ProjectRoot=None,dockerVolMounts=None,Wrapper=False):
 
         SlashPos= [pos for pos, char in enumerate(MethodID) if char == "-"]
         MethodIDcut = MethodID[:SlashPos[-2]]
@@ -181,10 +181,10 @@ class INSTINCT_detTask(INSTINCT_Task): #for task types that modifying detection 
 class INSTINCT_Rmethod_Task(INSTINCT_Task):
 
     system= luigi.Parameter()
-    r_version=luigi.Parameter()
 
 class Comb4Standard(luigi.Task):
     loopVar = luigi.Parameter()
+    CacheRoot = luigi.Parameter()
 
     def hashProcess(self):
         #this is just composed of the component hashes (PE1, method being run here, is accounted for in pipeline).
@@ -205,7 +205,7 @@ class Comb4Standard(luigi.Task):
             yield tasks[len(tasks)-1]
             #concatenate outputs and summarize
     def outpath(self):
-        return self.ProjectRoot + 'Cache/' + self.hashProcess()
+        return self.CacheRoot + 'Cache/' + self.hashProcess()
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/' + self.fileName)   
     def run(self):
@@ -227,7 +227,7 @@ class Dummy(INSTINCT_Task):
     def hashProcess(self):
         return None
     def outpath(self):
-        return self.ProjectRoot + 'Cache/'
+        return self.CacheRoot + 'Cache/'
     def requires(self):
         return None
     def complete(self):
@@ -247,6 +247,7 @@ class FormatFG(INSTINCT_Task):
     decimatedata = luigi.Parameter()
     FGparamString = luigi.Parameter()
     FGmethodID = luigi.Parameter()
+    CacheRoot = luigi.Parameter()
 
     def hashProcess(self):
         hashLength = 12
@@ -256,7 +257,7 @@ class FormatFG(INSTINCT_Task):
             return "not yet created" #I think this should just tell the scheduler the task is incomplete, without causing errors...?
     #do not use upstream outpath(), breaking convention. Use Cache. 
     def outpath(self):
-        return self.ProjectRoot + 'Cache/' + self.hashProcess()
+        return self.CacheRoot + 'Cache/' + self.hashProcess()
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/FileGroupFormat.csv.gz')
     def run(self):
@@ -305,7 +306,8 @@ class FormatFG(INSTINCT_Task):
         FGfile = Helper.tplExtract(FGfile,n=n)
         if upstream1==None:
             upstream1=Dummy.invoke(obj)
-        return(FormatFG(upstream_task1 = upstream1, FGfile = FGfile,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,FGparamString=obj.FGparamString,FGmethodID=obj.FGmethodID,decimatedata=obj.decimatedata))
+        return(FormatFG(upstream_task1 = upstream1, FGfile = FGfile,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
+                        FGparamString=obj.FGparamString,FGmethodID=obj.FGmethodID,decimatedata=obj.decimatedata,CacheRoot=obj.CacheRoot))
 
 class FormatGT(INSTINCT_Task):
     
@@ -414,10 +416,7 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
         Paths = [DataPath,FGpath,resultPath]
         Args = [ReadFile,'1',self.EDcpu,self.EDchunk]
 
-        #just consolidate all command args into one line, args. Send MethodID as a list of length n, if > 1 interpreted as a wrapper
-        #argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,
-
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.EDprocess,MethodID=self.EDmethodID,Paths=Paths,Args=Args,Params=self.EDparamString,\
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.EDprocess,MethodID=self.EDmethodID,Paths=Paths,Args=Args,Params=self.EDparamString,\
                      paramsNames=self.EDparamNames,Wrapper=True)
         
     def invoke(obj,n):
@@ -510,7 +509,7 @@ class UnifyED(RunED):
             Paths = [DataPath,FGpath,resultPath]
             Args = [ReadFile,'2',self.EDcpu,self.EDchunk]
 
-            argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.EDprocess,MethodID=self.EDmethodID,Paths=Paths,Args=Args,Params=self.EDparamString,\
+            argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.EDprocess,MethodID=self.EDmethodID,Paths=Paths,Args=Args,Params=self.EDparamString,\
                      paramsNames=self.EDparamNames,Wrapper=True)
 
             #drop process data from ED
@@ -667,7 +666,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
         Paths = [FGpath,DETpath,DataPath,resultPath]
         Args = [str(self.splitNum+1),str(self.FEcpu)]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.FEprocess,MethodID=self.FEmethodID,Paths=Paths,Args=Args,Params=self.FEparamString,\
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.FEprocess,MethodID=self.FEmethodID,Paths=Paths,Args=Args,Params=self.FEparamString,\
                      paramsNames=self.FEparamNames,Wrapper=True)
         
     def invoke(obj,n):
@@ -739,7 +738,7 @@ class AssignLabels(INSTINCT_Rmethod_Task):
         Paths = [FGpath,GTpath,DETpath,resultPath]
         Args = ''
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ALprocess,MethodID=self.ALmethodID,Paths=Paths,Args=Args,Params=self.ALparamString)
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ALprocess,MethodID=self.ALmethodID,Paths=Paths,Args=Args,Params=self.ALparamString)
         
     def invoke(obj,upstream1,upstream2,upstream3):
         return(AssignLabels(upstream_task1 = upstream1,upstream_task2 = upstream2,upstream_task3 = upstream3,\
@@ -778,7 +777,7 @@ class MergeFE_AL(INSTINCT_Rmethod_Task):
 
         Paths = [DETwFEpath,DETwALpath,resultPath]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.MFAprocess,MethodID=self.MFAmethodID,Paths=Paths,Args='',Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.MFAprocess,MethodID=self.MFAmethodID,Paths=Paths,Args='',Params='')
         
     def invoke(obj,upstream1,upstream2):
         return(MergeFE_AL(upstream_task1 = upstream1,upstream_task2 = upstream2,\
@@ -825,7 +824,7 @@ class PerfEval1_s1(INSTINCT_Rmethod_Task):
         Paths = [FGpath,LABpath,INTpath,resultPath]
         Args = [self.FileGroupID,"FG"]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
 
     def invoke(obj,upstream1,upstream2,upstream3,n='default',src=None):
         if src == "GT":
@@ -865,7 +864,7 @@ class PerfEval1_s2(INSTINCT_Rmethod_Task):
         Paths = [FGpath,LABpath,INTpath,resultPath2]
         Args = [FGID,'All'] #run second stage of R script 
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE1process,MethodID=self.PE1methodID,Paths=Paths,Args=Args,Params='')
 
     def invoke(obj,upstream1):
         return(PerfEval1_s2(upstream_task1=upstream1,PE1methodID=obj.PE1methodID,PE1process=obj.PE1process,\
@@ -910,7 +909,7 @@ class PerfEval2(INSTINCT_Rmethod_Task):
 
         Paths = [DETpath,resultPath,StatsPath,self.PE2datType]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE2process,MethodID=self.PE2methodID,Paths=Paths,Args='',Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE2process,MethodID=self.PE2methodID,Paths=Paths,Args='',Params='')
 
     def invoke(obj,upstream1,upstream2,PE2datTypeDef=None):
         return(PerfEval2(upstream_task1=upstream1,upstream_task2=upstream2,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
@@ -980,7 +979,7 @@ class ApplyModel(INSTINCT_Rmethod_Task):
         Paths = [DETpath,FGpath,resultPath,Mpath]
         Args = ['apply']
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.TMprocess,MethodID=self.TMmethodID,Paths=Paths,Args=Args,Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.TMprocess,MethodID=self.TMmethodID,Paths=Paths,Args=Args,Params='')
         
     def invoke(self,upstream1,upstream2,upstream3):
         return(ApplyModel(upstream_task1=upstream1,upstream_task2=upstream2,upstream_task3=upstream3,TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,\
@@ -1063,7 +1062,7 @@ class TrainModel(INSTINCT_Rmethod_Task):
         Paths = [TMpath,FGpath,resultPath,Mpath]
         Args = [self.TMstage,self.TMcpu]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.TMprocess,MethodID=self.TMmethodID,Paths=Paths,Args=Args,Params=self.TMparamString)
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.TMprocess,MethodID=self.TMmethodID,Paths=Paths,Args=Args,Params=self.TMparamString)
     def invoke(self,upstream1):
         return(TrainModel(upstream_task1=upstream1,TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,TMparamString=self.TMparamString,\
                           TMstage=self.TMstage,TM_outName=self.TM_outName,TMcpu=self.TMcpu,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
@@ -1102,7 +1101,7 @@ class RavenViewDETx(INSTINCT_Rmethod_Task):
         Paths = [DETpath,FGpath,resultPath]
         Args= [self.SoundFileRootDir_Host_Dec,self.RavenFill]
         
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenViewDETx",MethodID=self.RVmethodID,Paths=Paths,Args=Args,Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenViewDETx",MethodID=self.RVmethodID,Paths=Paths,Args=Args,Params='')
         
     def invoke(self,upstream1,upstream2,RavenFillDef="F"):
         return(RavenViewDETx(upstream_task1=upstream1,upstream_task2=upstream2,RVmethodID=self.RVmethodID,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version,
@@ -1135,7 +1134,7 @@ class RavenToDETx(INSTINCT_Rmethod_Task):
 
         Paths = [RAVpath,FGpath,resultPath]
         
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenToDETx",MethodID=self.RDmethodID,Paths=Paths,Args='',Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenToDETx",MethodID=self.RDmethodID,Paths=Paths,Args='',Params='')
         
     def invoke(self,upstream1,upstream2):
         return(RavenToDETx(upstream_task1=upstream1,upstream_task2=upstream2,RDmethodID=self.RDmethodID,system=self.system,ProjectRoot=self.ProjectRoot,r_version=self.r_version))
@@ -1169,7 +1168,7 @@ class QueryData(INSTINCT_Rmethod_Task):
         Args = [self.SoundFileRootDir_Host_Raw,self.FileGroupID[0]]
         Params = self.QDstatement
         
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="QueryData",MethodID=self.QDmethodID,Paths=Paths,Args=Args,Params=Params)
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="QueryData",MethodID=self.QDmethodID,Paths=Paths,Args=Args,Params=Params)
         
     def invoke(self,upstream1=None):
         if upstream1==None:
