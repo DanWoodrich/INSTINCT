@@ -10,7 +10,7 @@ MethodID<-"labels-w-iou-simple-v1-1"
 #fix bug in determining if intersection is present.
 #
 
-args<-"C:/Apps/INSTINCT/Cache/3a627ee7fe04/ C:/Apps/INSTINCT/Cache/3a627ee7fe04/b701bc/ C:/Apps/INSTINCT/Cache/3a627ee7fe04/d70ca2/ C:/Apps/INSTINCT/Cache/3a627ee7fe04/d70ca2/039e5e  0.15 labels-w-iou-simple-v1-1"
+args<-"//161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/7a05a241aec2/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/7a05a241aec2/a21b11/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/7a05a241aec2/4a1918/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/7a05a241aec2/4a1918/e3b278  0.25 labels-w-iou-simple-v1-1"
 
 args<-strsplit(args,split=" ")[[1]]
 

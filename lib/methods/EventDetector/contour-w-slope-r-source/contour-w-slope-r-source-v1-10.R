@@ -20,7 +20,7 @@ nameSpaceFxns<-c("runquantile")
 #v1-8: Have libraries load from this script. 
 
 #v1-9: Make params loadable from INSTINCT. Make general to downsweeps also. 
-#v1-10:
+#v1-10: introduce option for a sliding noise window (w.r.t frequency)
 
 EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   
@@ -34,11 +34,13 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   IsoblurSigma2=as.numeric(ParamArgs[8])#  2
   lowFreq<-as.numeric(ParamArgs[9])
   noiseThresh<-as.numeric(ParamArgs[10]) #0.9
-  noiseWinLength<-as.numeric(ParamArgs[11]) #2.5
-  Overlap<-as.numeric(ParamArgs[12]) 
-  pixThresh<-as.numeric(ParamArgs[13])#  100
+  noiseThreshEnd = as.numeric(ParamArgs[11]) #end 0,7, start 0.99?
+  noiseWinLength<-as.numeric(ParamArgs[12]) #2.5
+  noiseWinLengthEnd = as.numeric(ParamArgs[13])#end value for noisewinLegnth. start 10?
+  Overlap<-as.numeric(ParamArgs[14]) 
+  pixThresh<-as.numeric(ParamArgs[15])#  100
   #t_samp_rate
-  windowLength<-as.numeric(ParamArgs[15]) #
+  windowLength<-as.numeric(ParamArgs[17]) #
   
   #for this 
   
@@ -87,12 +89,21 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
 
   tAdjust=length(soundFile@left)/soundFile@samp.rate/length(spectrogram$t)
   
-  noiseWinLength = round(noiseWinLength/tAdjust) #figure out a way to round this to nearest odd number 
+  pts<-c(round(noiseWinLength/tAdjust),round(noiseWinLengthEnd/tAdjust))
+
+  NoiseWinvals<-seq(pts[1],pts[2],length.out = nrow(P))
+  
+  NoiseThreshvals<-seq(noiseThresh,noiseThreshEnd,length.out = nrow(P))
+  
+  NoiseWinvals<-rev(NoiseWinvals)
+  NoiseThreshvals<-rev(NoiseThreshvals)
+  
+  #plot((base^vals))
   
   #could replace this with a moving window for more precise calculation
   #or, with a 'smart' window that doesn't average between big swings, and instead averages within these (such as in the case of mooring noise)
   for(k in 1:nrow(P)){
-    med<-runquantile(P[k,], noiseWinLength, noiseThresh,endrule = "quantile")
+    med<-runquantile(P[k,], NoiseWinvals[k],NoiseThreshvals[k] ,endrule = "quantile")
     #
     #test=P[k,]-med
     #test[which(test<0)]<-0
@@ -122,7 +133,7 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   image1<-isoblur(image1,sigma=IsoblurSigma1)
   image1<-threshold(image1,ImgThresh1) 
   #plot(image1)
-  #plot(as.cimg(image1[2500:4500,,,]))
+  #plot(as.cimg(image1[0:2500,,,]))
   
   #image1<-clean(image1,ImgNoiseRedPower) %>% imager::fill(ImgFillPower) 
   
@@ -189,11 +200,10 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   }else if(DesiredSlope=="Upsweep"){
     cont2<-cont[which(size>pixThresh & slope<=houghSlopeMax & slope>=houghSlopeMin)]
   }else if(DesiredSlope=="Downsweep"){
-    cont2<-cont[which(size>pixThresh & slope>=houghSlopeMax & slope<=houghSlopeMin)]
+    cont2<-cont[which(size>pixThresh & slope>=houghSlopeMax & slope<=houghSlopeMin|(size>pixThresh & is.na(slope)))] #also keep if slope = na
   }
   
  
-  
   #cont2<-cont[which(slope==slopeTest)]
 
   #plot(image1)
