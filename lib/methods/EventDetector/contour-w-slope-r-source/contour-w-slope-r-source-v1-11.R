@@ -146,7 +146,7 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   image1<-isoblur(image1,sigma=IsoblurSigma1)
   image1<-threshold(image1,ImgThresh1) 
   #plot(image1)
-  #plot(as.cimg(image1[0:3000,,,]))
+  #plot(as.cimg(image1[3000:6000,,,]))
   
   #image1<-clean(image1,ImgNoiseRedPower) %>% imager::fill(ImgFillPower) 
   
@@ -179,7 +179,7 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
       imgSub<-as.cimg(image1[xs,ys,1,1]) #it would be nice to just start from scratch here (create new binary image instead of cropping) 
       #since this would prevent inclusion of competing signals. But, I might need other packages to do this. 
       imgSub<-isoblur(imgSub,sigma=IsoblurSigma2)
-      imgSub<-threshold(imgSub,ImgThresh1) #50%
+      imgSub<-threshold(imgSub,ImgThresh2) #50% #fix this in v11
       lines=hough_line(imgSub,data.frame = TRUE)
     
       #Bestline<-lines[which.max(lines$score),]

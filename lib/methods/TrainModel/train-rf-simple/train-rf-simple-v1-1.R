@@ -50,6 +50,10 @@ set.seed(5)
 
 #load in params #don't care about CV and datasplit params for making single model. 
 
+args<-"//161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/01c472/DETx.csv.gz //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/01c472/FileGroupFormat.csv.gz //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/01c472/8fc310 NULL CV 99 y 60 0.75 1 11 500 train-rf-simple-v1-1"
+
+args<-strsplit(args,split=" ")[[1]]
+
 args<-commandArgs(trailingOnly = TRUE)
 
 dataPath<-args[1]
