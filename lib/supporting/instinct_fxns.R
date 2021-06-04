@@ -16,8 +16,8 @@ getFileName<-function(x){
     allVals[[n]]<-xmod
   }
 
-  allVals<-do.call("cbind",allVals)
-  return(xmod)
+  allVals<-do.call("c",allVals)
+  return(allVals)
 }
 
 
