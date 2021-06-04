@@ -3,7 +3,7 @@ library(doParallel) #need
 library(tuneR) #need
 library(signal) #need
 
-args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/98397c947317/ C:/Apps/INSTINCT/Cache/98397c947317/bfcbdf //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/98397c947317/bfcbdf/89a37c 1 99 method1 feat-ext-hough-light-source-v1-2 n 90 1 30 specgram 1024 48 0 32 0 feat-ext-hough-light-source-v1-2 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
+args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/c01fc54d27fd/ C:/Apps/INSTINCT/Cache/c01fc54d27fd/e5d724 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/c01fc54d27fd/e5d724/fe909d 1 99 method1 feat-ext-hough-light-source-v1-3 n 75 1.5 30 specgram 1024 24 1 50 0 feat-ext-hough-light-source-v1-3 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -70,6 +70,12 @@ source(paste(ProjectRoot,"/lib/supporting/instinct_fxns.R",sep=""))
 #Merge FG and data so data has full paths 
 data<- merge(data, FG, by.x = "StartFile", by.y = "FileName")
 
+#this doesn't work with segstart segdur etc. But shouldn't matter for the TMB calculation, and not used later. 
+data$mapID<-1:nrow(data)
+
+dataDETx<-data[,c(1:6)]
+dataDETx$mapID<-data$mapID
+
 data$calDur<-data$EndTime-data$StartTime
 data$calDur[which(data$calDur<0)]<-data$calDur[which(data$calDur<0)]+data$Duration[which(data$calDur<0)]
 data$StartTime[which(TMB-data$calDur>0)]<-data$StartTime[which(TMB-data$calDur>0)]-((TMB-data$calDur[which(TMB-data$calDur>0)])/2)
@@ -78,12 +84,13 @@ data$EndTime[which(TMB-data$calDur>0)]<-data$EndTime[which(TMB-data$calDur>0)]+(
 if(any(data$StartTime<0)){
   for(i in which(data$StartTime<0)){
     difftime<-data[i,'DiffTime']
-    earliestDifftime<-min(which(FG$DiffTime %in% difftime))
+    filesInDiff <- FG$FileName[which(FG$DiffTime %in% difftime)]
     fileName<-as.character(data[i,'StartFile'])
-    fileNamePos<-which(FG$FileName==fileName)
-    if(earliestDifftime<fileNamePos){
-      data[i,'StartFile']<-FG$FileName[fileNamePos-1]
-      data[i,'Duration']<-FG$Duration[fileNamePos-1]
+    filePos<-which(filesInDiff==fileName)
+    if(filePos!=1){
+      data[i,'StartFile']<-filesInDiff[filePos-1]
+      rowFind<-FG[which(FG$FileName==filesInDiff[filePos-1]),]
+      data[i,'Duration']<-rowFind$Duration[1]
       data[i,'StartTime']<-data[i,'Duration']+data[i,'StartTime']
     }else{
       #assume since its at the start of a file the end time can handle it if added on the other end. This behavior keeps 
@@ -98,19 +105,19 @@ if(any(data$StartTime<0)){
 if(any(data$EndTime>data$Duration)){
   for(i in which(data$EndTime>data$Duration)){
     difftime<-data[i,'DiffTime']
-    latestDifftime<-max(which(FG$DiffTime %in% difftime))
+    
+    filesInDiff <- FG$FileName[which(FG$DiffTime %in% difftime)]
     fileName<-as.character(data[i,'StartFile'])
-    fileNamePos<-which(FG$FileName==fileName)
-    if(latestDifftime>fileNamePos){
-      data[i,'EndFile']<-FG$FileName[fileNamePos+1]
-      data[i,'Duration']<-FG$Duration[fileNamePos+1]
+    filePos<-which(filesInDiff==fileName)
+    if(filePos!=length(filesInDiff)){
+      data[i,'EndFile']<-filesInDiff[filePos+1]
       data[i,'EndTime']<-data[i,'EndTime']-data[i,'Duration']
     }else{
       #assume since its at the start of a file the end time can handle it if added on the other end. This behavior keeps 
       #TMB consistent and moves window to accomodate- does not attempt to find a valid file not specified in FG to 
       #keep effort assumptions consistent
-      data[i,'EndTime']<-FG$Duration[i]
-      data[i,'StartTime']<-FG$Duration[i]-TMB
+      data[i,'EndTime']<-data[i,'Duration']
+      data[i,'StartTime']<-data[i,'Duration']-TMB
     }
   }
 }
@@ -122,7 +129,7 @@ data$calDur<-data$EndTime-data$StartTime
 data$calDur[which(data$calDur<0)]<-data$calDur[which(data$calDur<0)]+data$Duration[which(data$calDur<0)]
 
 #drop unneeded columns
-data<-data[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile","FullPath","Duration")]
+data<-data[,c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile","FullPath","Duration","mapID")]
 
 #sort by start time and file 
 data<-data[order(data$StartFile,data$StartTime),]
@@ -144,9 +151,10 @@ chunkzAssign<-rep(1:crs,each=chunkz_size)
 
 realcrs<-unique(chunkzAssign)
 #in case of rounding issues: 
-crs<-length(unique(chunkzAssign))
 
 chunkzAssign<-chunkzAssign[1:itemz]
+
+crs<-length(unique(chunkzAssign)) #moved this in a stealth change: don't think it should break anything. 
 
 #make a column to identify FG ID 
 FG$ID<-1:nrow(FG)
@@ -161,8 +169,7 @@ startLocalPar(crs,"crs","tmpPath","FG","targetSampRate","readWave2","decimateDat
 
 out2<-foreach(f=1:crs,.packages=c("tuneR","doParallel","seewave","signal",librariesToLoad)) %dopar% {
   
-  #
-  #  print(f)
+  #for(f in 1:32){
   dataIn<-read.csv(paste(tmpPath,"/chunk",f,".csv.gz",sep=""))
   
   #attempt to use IO/readwav more effeciently by reusing wav objects between iterations
@@ -178,6 +185,7 @@ out2<-foreach(f=1:crs,.packages=c("tuneR","doParallel","seewave","signal",librar
   
   
   out1<-foreach(r=1:nrow(dataIn)) %do% {
+    #print(paste(f,r))
     #for(r in 1:16){
     #check if start file is correct file, try to use loaded end file if it is the new start file
     if(StartNameL!=dataIn$StartFile[r]){
@@ -228,7 +236,7 @@ out2<-foreach(f=1:crs,.packages=c("tuneR","doParallel","seewave","signal",librar
     featList<-FeatureExtracteR(wav,spectrogram=NULL,featList,args=ParamArgs)
     #endTimes<-c(endTimes,Sys.time())
     
-    featList<-c(featList[1:4],FG[which(FG$FileName==StartNameL),"ID"],FG[which(FG$FileName==EndNameL),"ID"],featList[5:length(featList)]) #this is a test line to see if it fixes bug
+    featList<-c(dataIn[r,"mapID"],featList[5:length(featList)]) #this is a test line to see if it fixes bug
     
     
     featList
@@ -246,7 +254,7 @@ out2<-do.call("rbind",out2)
 
 out2<-data.frame(out2)
 
-colnames(out2)<-c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile", #test: startfile and endfile in here 
+colnames(out2)<-c("mapID",
                   "Rugosity","Crest","Temporal Entropy","Shannon Entropy","Roughness", "autoc mean", "autoc median","autoc se",
                   "dfreq mean","dfreq se","specprop mean","specprop sd","specprop se","specprop median","specprop mode","specprop q25",
                   "specprop q75","specprop IQR","specprop centroid","specprop skewness","specprop kurtosis","specprop sfm","specprop sh","specprop precision",
@@ -263,11 +271,9 @@ colnames(out2)<-c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFil
 
 #make FG back into character then factor type: 
 
-StartID<-FG$FileName[out2$StartFile] #only assumption is that you didn't reorder FG after assigning ID 
-EndID<-FG$FileName[out2$EndFile]
+out2<-out2[order(out2$mapID),]
 
-out2$StartFile<-StartID
-out2$EndFile<-EndID
+out2<-data.frame(dataDETx[,c(2:5,1,6)],out2[,2:ncol(out2)])
 
 for(n in 1:crs){
   file.remove(paste(tmpPath,"/chunk",n,".csv.gz",sep=""))
