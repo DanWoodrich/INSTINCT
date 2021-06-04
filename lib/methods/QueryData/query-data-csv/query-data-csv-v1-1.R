@@ -54,13 +54,13 @@ if(nrow(datasub)==0){
 }
 
 #now convert it to FG format
-sf<-getFileName(datasub$WaveFile)
+sf<-getFileName(datasub$Wavefile)
 sfdt<-vector(length=length(sf))
 #insert a slash
 for(n in 1:length(sf)){
   lenN<-nchar(sf[n])
   sfdt[n]<-substr(sf[n],lenN-16,lenN-4)
-  sf[n]<-paste(substr(sf[n],1,lenN-17),"-",sfdt[n],sep="")
+  #sf[n]<-paste(substr(sf[n],1,lenN-17),"-",sfdt[n],sep="")
 }
 
 year<-paste("20",substr(sfdt,1,2),sep="")
@@ -70,7 +70,7 @@ month<-substr(sfdt,3,4)
 #SfRoot<-"//161.55.120.117/NMML_AcousticsData/Audio_Data"
   
 #assemble fg: 
-out<-data.frame(paste(sf,".wav",sep=""),paste("/",datasub$MoorDeploy,"/",month,"_",year,"/",sep=""),sfdt,0,datasub$MoorDeploy,datasub$StartSecInWav,datasub$EndSecInWav-datasub$StartSecInWav,datasub$MoorSite)
+out<-data.frame(sf,paste("/",datasub$MooringDeployID,"/",month,"_",year,"/",sep=""),sfdt,0,datasub$MooringDeployID,datasub$StartSecInWav,datasub$EndSecInWav-datasub$StartSecInWav,datasub$MooringSite)
 
 colnames(out)<-c("FileName","FullPath","StartTime","Duration","Deployment","SegStart","SegDur","SiteID")
 

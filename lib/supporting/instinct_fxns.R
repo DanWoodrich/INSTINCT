@@ -9,9 +9,14 @@
 #start parallel processing
 
 getFileName<-function(x){
-  lastSlash<-gregexpr("\\\\",x)[[1]][length(gregexpr("\\\\",x)[[1]])]
-  xmod<-substr(x,lastSlash+1,nchar(x))
-  
+  allVals<-vector("list",length=length(x))
+  for(n in 1:length(x)){
+    lastSlash<-gregexpr("\\\\",x[n])[[1]][length(gregexpr("\\\\",x[n])[[1]])]
+    xmod<-substr(x[n],lastSlash+1,nchar(x[n]))
+    allVals[[n]]<-xmod
+  }
+
+  allVals<-do.call("cbind",allVals)
   return(xmod)
 }
 
