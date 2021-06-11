@@ -36,7 +36,7 @@ formatToDets<-function(data,data2){
   return(data)
 }
 
-args="C:/Apps/INSTINCT/Cache//c08e20f6e97a/a21b11 C:/Apps/INSTINCT/Cache//c08e20f6e97a C:/Apps/INSTINCT/Cache//c08e20f6e97a/a21b11/cd04d4 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 T"
+args="//161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/ca43e58cab13/90da56 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/ca43e58cab13 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/ca43e58cab13/90da56/925e47 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/512 T"
 args<-strsplit(args,split=" ")[[1]]
 
 args<-commandArgs(trailingOnly = TRUE)
@@ -47,6 +47,7 @@ Resultpath <- args[3]
 dataPath <- args[4]
 fillDat <- args[5]
 
+#stop()
 
 #transform into Raven formatted data, retain data in other columns besides mandated 6. 
 
