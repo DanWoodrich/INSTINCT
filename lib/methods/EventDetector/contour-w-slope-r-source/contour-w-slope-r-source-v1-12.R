@@ -22,23 +22,26 @@ nameSpaceFxns<-c("runquantile")
 #v1-9: Make params loadable from INSTINCT. Make general to downsweeps also. 
 #v1-10:
 
+#v12- branch from v9. thresholds again after smoothing. 
 EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   
-  DesiredSlope<-ParamArgs[1]#"Upsweep"
-  highFreq<-as.numeric(ParamArgs[2])
-  houghSlopeMax<-as.numeric(ParamArgs[3])
-  houghSlopeMin<-as.numeric(ParamArgs[4])
-  ImgThresh1=paste(as.integer(ParamArgs[5]),"%",sep="")#"85"
-  ImgThresh2=paste(as.integer(ParamArgs[6]),"%",sep="")#"50"
-  IsoblurSigma1=as.numeric(ParamArgs[7])#  1.2
-  IsoblurSigma2=as.numeric(ParamArgs[8])#  2
-  lowFreq<-as.numeric(ParamArgs[9])
-  noiseThresh<-as.numeric(ParamArgs[10]) #0.9
-  noiseWinLength<-as.numeric(ParamArgs[11]) #2.5
-  Overlap<-as.numeric(ParamArgs[12]) 
-  pixThresh<-as.numeric(ParamArgs[13])#  100
+  CombineDets<-ParamArgs[1]
+  CombInt<-as.numeric(ParamArgs[2])
+  DesiredSlope<-ParamArgs[3]#"Upsweep"
+  highFreq<-as.numeric(ParamArgs[4])
+  houghSlopeMax<-as.numeric(ParamArgs[5])
+  houghSlopeMin<-as.numeric(ParamArgs[6])
+  ImgThresh1=paste(as.integer(ParamArgs[7]),"%",sep="")#"85"
+  ImgThresh2=paste(as.integer(ParamArgs[8]),"%",sep="")#"50"
+  IsoblurSigma1=as.numeric(ParamArgs[9])#  1.2
+  IsoblurSigma2=as.numeric(ParamArgs[10])#  2
+  lowFreq<-as.numeric(ParamArgs[11])
+  noiseThresh<-as.numeric(ParamArgs[12]) #0.9
+  noiseWinLength<-as.numeric(ParamArgs[13]) #2.5
+  Overlap<-as.numeric(ParamArgs[14]) 
+  pixThresh<-as.numeric(ParamArgs[15])#  100
   #t_samp_rate
-  windowLength<-as.numeric(ParamArgs[15]) #
+  windowLength<-as.numeric(ParamArgs[17]) #
   
   #for this 
   
@@ -123,7 +126,7 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   #plot(image1)
   image1<-threshold(image1,ImgThresh1) #changed order of this and next line 
   image1<-isoblur(image1,sigma=IsoblurSigma1)
-  #image1<-threshold(image1,"90%")
+  image1<-threshold(image1,"90%")
   #plot(image1)
   #plot(as.cimg(image1[4500:5500,,,]))
   
@@ -226,6 +229,40 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   }
   
   Detections<-do.call("rbind",Detections)
+  
+  #combine detections. Since we are doing this for GS, first just do it based on time similarity. 
+  #pseudo: 
+  #sort by startime . Give integer ID to each detection
+  #for each detection, if any following detections start within endtime +x, reassign them to the current ID. 
+  #last, melt the df by ID, taking the lowest low, highest high, earliest start, latest end. 
+  
+  if(CombineDets=="y"){
+    Detections<-as.data.frame(Detections)
+    Detections<-Detections[order(Detections$V1),]
+    Detections$ID<-1:nrow(Detections)
+    
+    detslen<-nrow(Detections)
+    
+    for(n in 1:detslen){
+      endtime<-Detections[n,2]
+      p=n+1
+      if(p<=detslen){
+        while(Detections[p,1]<(endtime+CombInt) & Detections[n,5]!=Detections[p,5]){
+          Detections[p,5]<-Detections[n,5]
+          p=n+1
+        }
+      }
+    }
+    
+    detsUnq<- unique(Detections[,5])
+    Detections<-foreach(n=detsUnq) %do% {
+      dat<-Detections[which(Detections[,5]==n),]
+      return(c(min(dat[,1]),max(dat[,2]),min(dat[,3]),max(dat[,4])))
+    }
+    
+    Detections<-do.call("rbind",Detections)
+
+  }
   
   return(Detections)
 
