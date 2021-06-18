@@ -158,7 +158,7 @@ saveSample<-function(x,xname,path){
 
 
 #cant do it this way unfortunately, with the internal quotes. maybe can find a better way eventually..
-args="C:/Apps/INSTINCT/Data/FileGroups //161.55.120.117/NMML_AcousticsData/Audio_Data testFG.csv //nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWupyeses_1.csv 15 7200 allRand 1"
+args="C:/Apps/INSTINCT/Data/FileGroups //161.55.120.117/NMML_AcousticsData/Audio_Data testFG.csv //nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWupyeses_1.csv AL16_AU_BS01_files_All.csv,AL16_AU_BS03_files_59-114.csv 15 7200 allRand 1"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -176,10 +176,11 @@ resultPath<- args[1]
 SfRoot<- args[2]
 fileName <- args[3]
 datapath <- args[4]
-PercTarget<- as.numeric(args[5])
-PullDur<- as.numeric(args[6])
-PullType<- args[7]
-RandSeed<- as.numeric(args[8])
+Exclude <-args[5] #vector of FG to exclude from sample 
+PercTarget<- as.numeric(args[6])
+PullDur<- as.numeric(args[7])
+PullType<- args[8]
+RandSeed<- as.numeric(args[9])
 
 #make random pulls consistent depending on seed set
 set.seed(RandSeed)
@@ -199,6 +200,22 @@ data<-dataFormat(data)
 #remove any NA rows
 data<-data[-which(is.na(data$dur)),]
 
+#load in other FG, and remove them from data. 
+if(Exclude!="None"){
+  Exclude<-strsplit(Exclude,split=",")[[1]]
+  for(n in 1:length(Exclude)){
+    
+    #load in FG
+    FG<-read.csv(paste(resultPath,"/",Exclude[n],sep=""))
+    
+    matches <-paste(getFileName(data$Wavefile),data$StartSecInWav,data$EndSecInWav) %in% paste(FG$FileName,FG$SegStart,FG$SegStart+FG$SegDur)
+    if(any(matches)){
+      data<-data[-which(matches),]
+    }
+    
+  }
+}
+
 data<-pullFxn(dataIn=data,pullDur=PullDur,pullType=PullType,percTarget = PercTarget)
 
 datasub<-data[[1]]
@@ -212,6 +229,8 @@ for(n in 1:length(sf)){
   sfdt[n]<-substr(sf[n],lenN-16,lenN-4)
   #sf[n]<-paste(substr(sf[n],1,lenN-17),"-",sfdt[n],sep="")
 }
+
+
 
 year<-paste("20",substr(sfdt,1,2),sep="")
 month<-substr(sfdt,3,4)
