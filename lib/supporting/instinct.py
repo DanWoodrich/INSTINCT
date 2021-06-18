@@ -1142,36 +1142,34 @@ class QueryData(INSTINCT_Rmethod_Task):
 
     upstream_task1= luigi.Parameter()
     QDmethodID = luigi.Parameter()
-    QDsource = luigi.Parameter()
-    QDstatement = luigi.Parameter()
+    QDparamString = luigi.Parameter()
     SoundFileRootDir_Host_Raw=luigi.Parameter()
     FileGroupID = luigi.Parameter()
     
     def hashProcess(self):
         hashLength = 6
-        return Helper.getParamHash2(self.QDmethodID + ' ' + self.QDsource +  ' ' + self.QDstatement,hashLength)
+        return Helper.getParamHash2(self.QDmethodID + ' ' + self.QDparamString,hashLength)
     def outpath(self):
         return self.ProjectRoot + 'Data/FileGroups'
     def output(self):
         return luigi.LocalTarget(self.outpath() + "/" + self.FileGroupID[0])
     def run(self):
                 
-        DATpath = self.QDsource
         resultPath=self.outpath()
 
         if not os.path.exists(resultPath):
             os.mkdir(resultPath)
 
-        Paths = [DATpath,resultPath]
+        Paths = [resultPath]
         Args = [self.SoundFileRootDir_Host_Raw,self.FileGroupID[0]]
-        Params = self.QDstatement
+        Params = self.QDparamString
         
         argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="QueryData",MethodID=self.QDmethodID,Paths=Paths,Args=Args,Params=Params)
         
     def invoke(self,upstream1=None):
         if upstream1==None:
             upstream1=Dummy.invoke(self)
-        return(QueryData(upstream_task1=upstream1,QDmethodID=self.QDmethodID,QDsource=self.QDsource,QDstatement=self.QDstatement,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
+        return(QueryData(upstream_task1=upstream1,QDmethodID=self.QDmethodID,QDparamString=self.QDparamString,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                          system=self.system,ProjectRoot=self.ProjectRoot,FileGroupID=self.FileGroupID))
 
 

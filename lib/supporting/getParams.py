@@ -182,7 +182,7 @@ def QD(self,ID):
 
     p_ini = readP_Params(self.ParamsRoot,self.QDmethodID)
     paramList = getParamDeets(p_ini,self.QDprocess,1)
-    self.QDstatement = getParamString(paramList,self.QDmethodID)
+    self.QDparamString = getParamString(paramList,self.QDmethodID)
 
     return self
 
