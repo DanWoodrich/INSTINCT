@@ -1,4 +1,4 @@
-MethodID<-"query-random-by-month"
+MethodID<-"query-random-v1-0"
 
 library(foreach)
 
@@ -29,16 +29,9 @@ dataFormat<- function(x){
 }
 
 #cant do it this way unfortunately, with the internal quotes. maybe can find a better way eventually..
-args="C:/Apps/INSTINCT/Data/FileGroups //161.55.120.117/NMML_AcousticsData/Audio_Data testFG.csv //nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWupyeses_1.csv AL16_AU_BS01_files_All.csv,AL16_AU_BS03_files_59-114.csv 2 1"
+args="C:/Apps/INSTINCT/Data/FileGroups //161.55.120.117/NMML_AcousticsData/Audio_Data NewFGtest.csv //nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWupyeses_1.csv AL16_AU_BS01_files_All.csv,AL16_AU_BS03_files_59-114.csv 6 1 query-random-v1-0"
 
 args<-strsplit(args,split=" ")[[1]]
-
-datapath <- "//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/LMyeses_2.csv"
-resultPath<- "C:/Apps/INSTINCT/Data/FileGroups"
-
-SfRoot<- "//161.55.120.117/NMML_AcousticsData/Audio_Data"
-fileName <- "LMyes.csv" 
-statement <- "StartDateTime > '2016-10-04 21:13:45' AND StartDateTime < '2017-10-10 21:13:45' AND MooringSite = 'BS01' LIMIT 150"
 
 args<-commandArgs(trailingOnly = TRUE)
 
@@ -59,7 +52,7 @@ source(paste("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R",sep=""))
 #datapath<-"//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWupcallYeses4Dan.csv" #change to local folder
 #datapath<-"//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWgunshots4Dan.csv"   #change to local folder 
 
-data<-read.csv(datapath)
+data<-read.csv(datapath,stringsAsFactors = FALSE)
 
 #mandate column names to fit standard (column names changed on Cath end)
 colnames(data)[1:7]<-c("Wavefile","StartSecInWav","EndSecInWav","MooringSite","MooringDeployID","StartFieldTimeUTC","EndFieldTimeUTC")
@@ -67,7 +60,9 @@ colnames(data)[1:7]<-c("Wavefile","StartSecInWav","EndSecInWav","MooringSite","M
 data<-dataFormat(data)
 
 #remove any NA rows
-data<-data[-which(is.na(data$dur)),]
+if(any(is.na(data$dur))){
+  data<-data[-which(is.na(data$dur)),]
+}
 
 #load in other FG, and remove them from data. 
 if(Exclude!="None"){
@@ -116,7 +111,12 @@ index<-which(data$Cycle %in% cyclesPull)
 
 datasub<-data[sample(index,length(index)),] #randomize index, so when you sort by cycle you don't pure random order
 
-datasub<-datasub[order(sort(datasub$Cycle)),]
+orders<-cbind(unique(datasub$Cycle),1:length(unique(datasub$Cycle)))
+
+datasub$Cycle<-match(datasub$Cycle, orders[,1])
+
+datasub<-datasub[order(datasub$Cycle,datasub$StartDateTime),]
+
 
 #now convert it to FG format
 sf<-getFileName(datasub$Wavefile)

@@ -129,6 +129,7 @@ class argParse:
                 print("******************************\nRunning R method " + MethodID + " for process " + ProcessID + "\n******************************")
 
                 print("******************************\nCommand params (can copy and paste): " + command2 +"\n******************************")
+
                 subprocess.run(shlex.split(command))
                 return None
             elif(Program!='R'):
@@ -1152,7 +1153,7 @@ class QueryData(INSTINCT_Rmethod_Task):
     def outpath(self):
         return self.ProjectRoot + 'Data/FileGroups'
     def output(self):
-        return luigi.LocalTarget(self.outpath() + "/" + self.FileGroupID[0])
+        return luigi.LocalTarget(self.outpath() + "/" + self.FileGroupID)
     def run(self):
                 
         resultPath=self.outpath()
@@ -1161,7 +1162,7 @@ class QueryData(INSTINCT_Rmethod_Task):
             os.mkdir(resultPath)
 
         Paths = [resultPath]
-        Args = [self.SoundFileRootDir_Host_Raw,self.FileGroupID[0]]
+        Args = [self.SoundFileRootDir_Host_Raw,self.FileGroupID]
         Params = self.QDparamString
         
         argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="QueryData",MethodID=self.QDmethodID,Paths=Paths,Args=Args,Params=Params)
@@ -1169,7 +1170,8 @@ class QueryData(INSTINCT_Rmethod_Task):
     def invoke(self,upstream1=None):
         if upstream1==None:
             upstream1=Dummy.invoke(self)
+        FileGroupID = Helper.tplExtract(self.FileGroupID,n=0)
         return(QueryData(upstream_task1=upstream1,QDmethodID=self.QDmethodID,QDparamString=self.QDparamString,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                         system=self.system,ProjectRoot=self.ProjectRoot,FileGroupID=self.FileGroupID))
+                         system=self.system,ProjectRoot=self.ProjectRoot,FileGroupID=FileGroupID))
 
 

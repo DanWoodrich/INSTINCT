@@ -3,7 +3,7 @@ from supporting.getParams import *
 from supporting.job_fxns import * 
 import shutil
 
-class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
+class QueryGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
     
     JobName=luigi.Parameter()
 
@@ -55,9 +55,9 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
         shutil.copy(filepath, filedest)
         
     def invoke(self):
-        return(ViewGT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,\
-                      GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,QDmethodID=self.QDmethodID,QDsource=self.QDsource,\
-                      QDstatement=self.QDstatement,FileGroupID=self.FileGroupID,\
+        return(QueryGT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,\
+                      GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,QDmethodID=self.QDmethodID,\
+                      QDparamString=self.QDparamString,FileGroupID=self.FileGroupID,\
                       FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                       FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,CacheRoot=self.CacheRoot))
     def getParams(args):
@@ -74,4 +74,4 @@ class ViewGT(QueryData,FormatFG,FormatGT,RavenViewDETx):
         return params
 
 if __name__ == '__main__':
-    deployJob(ViewGT,sys.argv)
+    deployJob(QueryGT,sys.argv)

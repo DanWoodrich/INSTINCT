@@ -51,8 +51,8 @@ fillDat <- args[5]
 
 #transform into Raven formatted data, retain data in other columns besides mandated 6. 
 
-Dets<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"))
-FG<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"))
+Dets<-read.csv(paste(DETpath,"DETx.csv.gz",sep="/"),stringsAsFactors = FALSE) #add this in 1.3 for better backwards compatability with R
+FG<-read.csv(paste(FGpath,"FileGroupFormat.csv.gz",sep="/"),stringsAsFactors = FALSE)
 
 #mandatory column names
 reqCols<-c("StartTime","EndTime","LowFreq","HighFreq","StartFile","EndFile")

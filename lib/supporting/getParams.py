@@ -178,7 +178,6 @@ def RD(self,ID):
 def QD(self,ID):
     self.QDprocess = 'QueryData'
     self.QDmethodID = self.MasterINI[ID]['MethodID']
-    self.QDsource = self.MasterINI[ID]['DataSource']
 
     p_ini = readP_Params(self.ParamsRoot,self.QDmethodID)
     paramList = getParamDeets(p_ini,self.QDprocess,1)

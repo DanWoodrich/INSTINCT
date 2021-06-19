@@ -198,7 +198,10 @@ colnames(data)[1:7]<-c("Wavefile","StartSecInWav","EndSecInWav","MooringSite","M
 data<-dataFormat(data)
 
 #remove any NA rows
-data<-data[-which(is.na(data$dur)),]
+if(any(is.na(data$dur))){
+  data<-data[-which(is.na(data$dur)),]
+}
+
 
 #load in other FG, and remove them from data. 
 if(Exclude!="None"){
