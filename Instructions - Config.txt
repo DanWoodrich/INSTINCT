@@ -20,3 +20,7 @@
 8. In the CMD terminal, navigate to ~/INSTINCT/etc
 	a. Use command ‘pip install -r requirements.txt’
 
+The following will require admin privileges
+
+1. Install the matlab compiler library (2019a). https://www.mathworks.com/products/compiler/matlab-runtime.html
+2. Install 7zip 
