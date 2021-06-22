@@ -1,0 +1,4 @@
+StartTime,EndTime,LowFreq,HighFreq,StartFile,EndFile,label,SignalCode,Type,Comments
+49.102,64.61,88.5,541.3,AU-ALUN01-170108-091000.wav,AU-ALUN01-170108-091000.wav,,obs,HB,#patternA
+580.382,595.933,90.8,536.7,AU-ALUN01-170108-092000.wav,AU-ALUN01-170108-092000.wav,,obs,HB,#patternA
+53.873,62.983,95.4,713.8,AU-ALUN01-170108-093000.wav,AU-ALUN01-170108-093000.wav,,obs,HB,#patternB

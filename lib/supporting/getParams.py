@@ -186,7 +186,7 @@ def QD(self,ID):
     return self
 
 def RG(self,ID):
-    self.RGprocess = 'ReduceGT'
+    self.RGprocess = 'ReduceByGT'
     self.RGmethodID = self.MasterINI[ID]['MethodID']
 
     p_ini = readP_Params(self.ParamsRoot,self.RGmethodID)

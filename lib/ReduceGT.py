@@ -4,7 +4,7 @@ from ViewGT import *
 from supporting.job_fxns import * 
 import shutil
 
-class ReduceGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
+class ReduceGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx,ReduceByGT):
     
     JobName=luigi.Parameter()
     IDlength = luigi.IntParameter()
@@ -61,10 +61,10 @@ class ReduceGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
         FG.to_csv(self.outpath() + '/' + self.FileGroupID[0][0:(len(self.FileGroupID[0])-4)] + '_reduce.csv',index=False)
 
     def invoke(self):
-        return(EditGT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,IDlength=self.IDlength,GT_signal_code=self.GT_signal_code,\
+        return(ReduceGT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,IDlength=self.IDlength,GT_signal_code=self.GT_signal_code,\
                    GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,RDmethodID=self.RDmethodID,FileGroupID=self.FileGroupID,\
                    RGmethodID=self.RGmethodID,RGparamString=self.RGparamString,FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,\
-                   SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,\
+                   SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,\
                    system=self.system,CacheRoot=self.CacheRoot))
     def getParams(args):
         

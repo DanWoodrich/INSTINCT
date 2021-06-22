@@ -8,6 +8,35 @@
 
 #start parallel processing
 
+#calculate files in FG format (or Catherine output format) which are consecutive with each other
+#has arguments to specify different column names, but data type must be consistent. 
+addCycle<-function(data,depCol,timeStringCol,startCol,endCol){
+  
+  cycleVar=0
+  
+  data<-foreach(i=1:length(unique(data[,depCol]))) %do% {
+    datain<-data[which(data[,depCol]==unique(data[,depCol])[i]),]
+    datain<-datain[order(datain[,timeStringCol]),]
+    
+    datain$Cycle<-0
+    
+    cycleVar=cycleVar+1
+    
+    for(n in 1:nrow(datain)){
+      datain$Cycle[n]<-cycleVar
+      
+      if(datain[n,endCol]!=datain[n+1,startCol]&n!=nrow(datain)){
+        cycleVar<-cycleVar+1
+      }
+    }
+    
+    return(datain)
+  }
+  
+  data<-do.call("rbind",data)
+  return(data)
+}
+
 getFileName<-function(x){
   allVals<-vector("list",length=length(x))
   for(n in 1:length(x)){

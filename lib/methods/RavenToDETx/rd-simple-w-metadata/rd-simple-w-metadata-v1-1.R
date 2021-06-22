@@ -2,7 +2,7 @@ MethodID<-"rd-simple-w-metadata-v1-1"
 
 #1.1: make it so any extra metadata is retained
 
-args="C:/Apps/INSTINCT/Outputs/EditGTwRaven/cc8590 C:/Apps/INSTINCT/Cache/c4a8525f118b C:/Apps/INSTINCT/Outputs/EditGTwRaven/cc8590/5e5a4c"
+args="C:/Apps/INSTINCT/Outputs/EditGTwRaven/cc8590 C:/Apps/INSTINCT/Cache/c4a8525f118b C:/Apps/INSTINCT/Outputs/EditGTwRaven/cc8590/6d75fa"
 
 args<-strsplit(args,split=" ")[[1]]
 
