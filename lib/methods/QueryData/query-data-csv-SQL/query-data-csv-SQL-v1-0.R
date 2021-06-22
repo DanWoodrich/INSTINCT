@@ -3,8 +3,7 @@ MethodID<-"query-data-csv-SQL-v1-0"
 library(sqldf)
 
 #cant do it this way unfortunately, with the internal quotes. maybe can find a better way eventually..
-args="C:/Apps/INSTINCT/Data/FileGroups //161.55.120.117/NMML_AcousticsData/Audio_Data testFG.csv //nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWupcallYeses4Dan.csv StartDateTime_>_'2016-10-04_21:13:45'_AND_StartDateTime_<_'2017-10-10_21:13:45'_AND_MoorSite_=_'BS01'_LIMIT_150 query-data-csv-SQL-v1-0"
-
+args="C:/Apps/INSTINCT/Data/FileGroups //161.55.120.117/NMML_AcousticsData/Audio_Data TestQueryWSQL.csv //nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/HumpbackYeses_2.csv None StartDateTime_>_'2014-01-01_00:00:00'_AND_StartDateTime_<_'2018-01-01_00:00:00'_AND_MooringSite_=_'PM02'_LIMIT_100 query-data-csv-SQL-v1-0"
 args<-strsplit(args,split=" ")[[1]]
 
 datapath <- "//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/LMyeses_2.csv"
@@ -22,7 +21,7 @@ SfRoot<- args[2]
 fileName <- args[3]
 datapath <- args[4]
 Exclude <-args[5] #vector of FG to exclude from sample 
-statement <- args[6]
+statement <- as.character(args[6])
 
 statement<-gsub("_", " ", statement)
 
@@ -64,9 +63,10 @@ if(Exclude!="None"){
 #statement<-"month = 10"
 
 #enforce keeping all of the columns, and starting with Where 
-statement<-paste("SELECT * FROM data Where ",statement)
+statement<-paste("SELECT * FROM data WHERE",statement)
 
 datasub<-sqldf(statement) 
+
 
 #check to make sure there is data
 if(nrow(datasub)==0){

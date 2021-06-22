@@ -1,0 +1,22 @@
+1. Make sure Python (>3.0.0) is installed 
+2. Make sure R (>4.0.0) is installed 
+3. Add R and python binaries to your user or system path
+	a. A binary is an file that runs a program (.exe file)
+	b. What is a system path: https://en.wikipedia.org/wiki/PATH_(variable)
+	c. https://www.mathworks.com/matlabcentral/answers/94933-how-do-i-edit-my-system-
+	path-in-windows
+	d. Above is a similar tutorial to what you need to do here, but for MATLAB. Do this for the binaries (~/bin subfolder) in R and
+	for the python directory, and the python ~/Scripts folder 
+4. Install Git Bash 
+5. Create the directory C:/Apps
+6. ‘Clone’ the repository from https://github.com/DanWoodrich/INSTINCT into C:/Apps
+	a. https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository
+7. In ~/INSTINCT/lib/supporting, run the R script Installe.R
+	a. Use the CMD terminal to run the R script, or R studio if installed already (don’t
+	download it only for this)
+	b. To run on CMD terminal, need to search for CMD in windows search bar, run it, navigate to
+	~/INSTINCT/lib/supporting (use an online tutorial for changing directories with CMD)
+	c. Once in the right directory, use Rscript Installe.R
+8. In the CMD terminal, navigate to ~/INSTINCT/etc
+	a. Use command ‘pip install -r requirements.txt’
+
