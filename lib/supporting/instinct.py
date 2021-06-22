@@ -1150,8 +1150,6 @@ class QueryData(INSTINCT_Rmethod_Task):
     def hashProcess(self):
         hashLength = 6
         return Helper.getParamHash2(self.QDmethodID + ' ' + self.QDparamString,hashLength)
-    def outpath(self):
-        return self.ProjectRoot + 'Data/FileGroups'
     def output(self):
         return luigi.LocalTarget(self.outpath() + "/" + self.FileGroupID)
     def run(self):
@@ -1174,4 +1172,36 @@ class QueryData(INSTINCT_Rmethod_Task):
         return(QueryData(upstream_task1=upstream1,QDmethodID=self.QDmethodID,QDparamString=self.QDparamString,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
                          system=self.system,ProjectRoot=self.ProjectRoot,FileGroupID=FileGroupID))
 
+
+class ReduceGT(INSTINCT_Rmethod_Task):
+
+    upstream_task1= luigi.Parameter()
+    upstream_task2= luigi.Parameter()
+    RGmethodID = luigi.Parameter()
+    RGparamString = luigi.Parameter()
+    FileGroupID = luigi.Parameter()
+    
+    def hashProcess(self):
+        hashLength = 6
+        return Helper.getParamHash2(self.RGmethodID + ' ' + self.RGparamString + ' ' + self.upstream_task2.hashProcess,hashLength)
+    def output(self):
+        yield luigi.LocalTarget(self.outpath() + '/FileGroupFormat.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
+    def run(self):
+                
+        resultPath=self.outpath()
+
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
+
+        Paths = resultPath
+        Args = self.FileGroupID
+        Params = self.RGparamString
+        
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="ReduceGT",MethodID=self.RGmethodID,Paths=Paths,Args=Args,Params=Params)
+        
+    def invoke(self,upstream1,upstream2):
+        FileGroupID = Helper.tplExtract(self.FileGroupID,n=0)
+        return(QueryData(upstream_task1=upstream1,upstream_task2=upstream2,RGmethodID=self.RGmethodID,RGparamString=self.RGparamString,\
+                         system=self.system,ProjectRoot=self.ProjectRoot,FileGroupID=FileGroupID))
 

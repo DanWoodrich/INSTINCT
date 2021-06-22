@@ -4,7 +4,7 @@ from ViewGT import *
 from supporting.job_fxns import * 
 import shutil
 
-class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
+class ReduceGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
     
     JobName=luigi.Parameter()
     IDlength = luigi.IntParameter()
@@ -22,7 +22,8 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
         task0 = FormatFG.invoke(self,n=0)
         task1 = ViewGT.invoke(self)
         task2 = RavenToDETx.invoke(self,task1,task0)
-        return [task0,task1,task2]
+        task3 = ReduceByGT.invoke(self,task2,task0)
+        return [task0,task1,task2,task3]
     def hashProcess(self):
         taskStr = []
         tasks = self.pipelineMap()
@@ -34,32 +35,37 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
         return Helper.getParamHash2(' '.join(hashStrings),6)
     def requires(self):
         tasks = self.pipelineMap()
-        return tasks[2]
-    def getOutName(self):
-        return self.GT_signal_code + '_' + self.FileGroupID[0][0:(len(self.FileGroupID[0])-4)] + '_edit.csv'
+        return tasks[3]
     def outpath(self):
         return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/' + self.getOutName())
+        yield luigi.LocalTarget(self.outpath() + '/' + self.FileGroupID[0][0:(len(self.FileGroupID[0])-4)] + '_reduce.csv')
+        return luigi.LocalTarget(self.outpath() + '/' + self.GT_signal_code + '_' + self.FileGroupID[0][0:(len(self.FileGroupID[0])-4)] + '_reduce.csv')
     def run(self):
         #move file
         tasks = self.pipelineMap()
-        filepath = tasks[2].outpath() + '/DETx.csv.gz'
+        filepath1 = tasks[3].outpath() + '/DETx.csv.gz'
+        filepath2 = tasks[3].outpath() + '/FileGroupFormat.csv.gz'
 
-        GT = pd.read_csv(filepath)
+        GT = pd.read_csv(filepath1)
         if not os.path.exists(self.ProjectRoot +'Outputs/' + self.JobName):
             os.mkdir(self.ProjectRoot +'Outputs/' + self.JobName)
 
         if not os.path.exists(self.outpath()):
             os.mkdir(self.outpath())
 
-        GT.to_csv(self.outpath() + '/' + self.getOutName(),index=False)
+        GT.to_csv(self.outpath() + '/' + self.GT_signal_code + '_' + self.FileGroupID[0][0:(len(self.FileGroupID[0])-4)] + '_reduce.csv',index=False)
+
+        FG = pd.read_csv(filepath2)
+
+        FG.to_csv(self.outpath() + '/' + self.FileGroupID[0][0:(len(self.FileGroupID[0])-4)] + '_reduce.csv',index=False)
 
     def invoke(self):
         return(EditGT(JobName=self.JobName,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,IDlength=self.IDlength,GT_signal_code=self.GT_signal_code,\
                    GTfile=self.GTfile,FGfile=self.FGfile,RVmethodID=self.RVmethodID,RDmethodID=self.RDmethodID,FileGroupID=self.FileGroupID,\
-                   FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\
-                   FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,system=self.system,CacheRoot=self.CacheRoot))
+                   RGmethodID=self.RGmethodID,RGparamString=self.RGparamString,FGmethodID=self.FGmethodID,decimatedata = self.decimatedata,\
+                   SoundFileRootDir_Host_Raw=self.SoundFileRootDir_Host_Raw,\FGparamString=self.FGparamString,ProjectRoot=self.ProjectRoot,\
+                   system=self.system,CacheRoot=self.CacheRoot))
     def getParams(args):
         
         params = Load_Job('EditGTwRaven',args)
@@ -72,8 +78,9 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
         params = GT(params,'FormatGT')
         params = RV(params,'RavenViewDETx')
         params = RD(params,'RavenToDETx')
+        params = RG(params,'ReduceByGT')
 
         return params
 
 if __name__ == '__main__':
-    deployJob(EditGT,sys.argv)
+    deployJob(ReduceGT,sys.argv)
