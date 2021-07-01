@@ -6,10 +6,10 @@
 #modify so it fits the NAS naming requirements (month subfolders)
 source(paste("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R",sep="")) 
 
-SpeciesDo<-"y"
+SpeciesDo<-"n"
 Species<-"GS"
-Decimate<-"No_whiten_decimate_by_8"
-DecimateShort<-"decimate_by_8"
+Decimate<-"No_whiten_decimate_by_128"
+DecimateShort<-"decimate_by_128"
 
 if(SpeciesDo=='y'){
   folderName<-paste("//akc0ss-n086/NMML_CAEP_Acoustics/Detector/Combined_sound_files",Species,Decimate,sep="/")
