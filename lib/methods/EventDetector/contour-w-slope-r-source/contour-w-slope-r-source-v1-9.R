@@ -22,7 +22,7 @@ nameSpaceFxns<-c("runquantile")
 #v1-9: Make params loadable from INSTINCT. Make general to downsweeps also. 
 
 #v1-9 is being used as a production method. Here is a log of stealth changes, made to fix individual bugs that have come up during deployment
-#1: ys in image subsetting exceeded the total size of the image (went to 51): fix: put in a change to make sure that the vector values (xs and ys)
+#1: ys in image subsetting exceeded the total size of the image (went to 51) due to rounding errors: fix: put in a change to make sure that the vector values (xs and ys)
 #don't exceed the size of the image. 
 
 EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
@@ -157,13 +157,17 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
       if(any(xs<0)){
         xs<-xs+1
         
+      }else if(max(xs)>dim(image1)[1]){
+        xs<-xs-1
       }
       ys=round((min(cont[[i]]$y)-1):(max(cont[[i]]$y)+1))
       if(any(ys>(length(soundFile@left)/soundFile@samp.rate))){
         ys<-ys-1
-      }else if(max(ys)>dim(image1)[2]){
+      }else if(max(ys)>dim(image1)[2]){ #stealth change
         ys<-ys-1
-      } #stealth change starts here
+      }else if(any(ys)<0){ #stealth change
+        ys<-ys+1
+      }
       imgSub<-as.cimg(image1[xs,ys,1,1]) #it would be nice to just start from scratch here (create new binary image instead of cropping) 
       #since this would prevent inclusion of competing signals. But, I might need other packages to do this. 
       imgSub<-isoblur(imgSub,sigma=IsoblurSigma2)
