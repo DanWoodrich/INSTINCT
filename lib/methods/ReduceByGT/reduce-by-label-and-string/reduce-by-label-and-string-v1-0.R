@@ -13,7 +13,7 @@ GTpath <- args[1]
 FGpath <-args[2]
 resultPath <- args[3]
 
-ByPngOrCycle<-args[4]
+ByFileOrCycle<-args[4]
 Label<-args[5]
 LabelString_IorU<-args[6]
 Strings<-args[7]
@@ -77,15 +77,15 @@ GT<-GT[which(keepbool),]
 GTfiles<-unique(c(GT$StartFile,GT$EndFile))
 
 #subset FG, by GT. 
-if(ByPngOrCycle=="Png"){
+if(ByFileOrCycle=="File"){
   FG<-FG[which(FG$FileName %in% GTfiles),]
-}else if(ByPngOrCycle=="Cycle"){
+}else if(ByFileOrCycle=="Cycle"){
   FGtemp<-FG[which(FG$FileName %in% GTfiles),]
   #calculate cycles in FGtemp
   cycle<-unique(FGtemp$Cycle)
   FG<-FG[which(FG$Cycle %in% cycle),]
 }else{
-  stop("ByPngOrCycle must be 'Png' or 'Cycle'")
+  stop("ByFileOrCycle must be 'File' or 'Cycle'")
 }
 
 FG<-FG[,1:8]

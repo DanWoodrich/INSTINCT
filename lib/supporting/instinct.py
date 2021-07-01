@@ -1108,17 +1108,19 @@ class RavenViewDETx(INSTINCT_Rmethod_Task):
     def invoke(self,upstream1,upstream2,RavenFillDef="F"):
         return(RavenViewDETx(upstream_task1=upstream1,upstream_task2=upstream2,RVmethodID=self.RVmethodID,system=self.system,ProjectRoot=self.ProjectRoot,\
                              RavenFill=RavenFillDef,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec))
-
+    
 class RavenToDETx(INSTINCT_Rmethod_Task):
     upstream_task1 = luigi.Parameter() #RAVx
     upstream_task2 = luigi.Parameter() #FG
+
+    fileName = luigi.Parameter()
 
     RDmethodID = luigi.Parameter()
 
     def hashProcess(self):
         hashLength = 6
         #hash the previous file to see if it was edited
-        fileHash = Helper.hashfile(self.upstream_task1.outpath() + '/RAVENx.txt',hashLength)
+        fileHash = Helper.hashfile(self.upstream_task1.outpath() + self.fileName,hashLength)
 
         return Helper.getParamHash2(self.RDmethodID + ' ' + fileHash+ ' ' + self.upstream_task1.hashProcess(),hashLength)
     def output(self):
@@ -1135,12 +1137,14 @@ class RavenToDETx(INSTINCT_Rmethod_Task):
             os.mkdir(resultPath)
 
         Paths = [RAVpath,FGpath,resultPath]
+        Args= [self.fileName]
         
-        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenToDETx",MethodID=self.RDmethodID,Paths=Paths,Args='',Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenToDETx",MethodID=self.RDmethodID,Paths=Paths,Args=Args,Params='')
         
-    def invoke(self,upstream1,upstream2):
-        return(RavenToDETx(upstream_task1=upstream1,upstream_task2=upstream2,RDmethodID=self.RDmethodID,system=self.system,ProjectRoot=self.ProjectRoot))
-
+    def invoke(self,upstream1,upstream2,fileName='RAVENx.txt'):
+        self.fileName=fileName
+        return(RavenToDETx(upstream_task1=upstream1,upstream_task2=upstream2,RDmethodID=self.RDmethodID,fileName=self.fileName,\
+                           system=self.system,ProjectRoot=self.ProjectRoot))
 
 class QueryData(INSTINCT_Rmethod_Task):
 
