@@ -1108,7 +1108,7 @@ class RavenViewDETx(INSTINCT_Rmethod_Task):
     def invoke(self,upstream1,upstream2,RavenFillDef="F"):
         return(RavenViewDETx(upstream_task1=upstream1,upstream_task2=upstream2,RVmethodID=self.RVmethodID,system=self.system,ProjectRoot=self.ProjectRoot,\
                              RavenFill=RavenFillDef,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec))
-    
+
 class RavenToDETx(INSTINCT_Rmethod_Task):
     upstream_task1 = luigi.Parameter() #RAVx
     upstream_task2 = luigi.Parameter() #FG
