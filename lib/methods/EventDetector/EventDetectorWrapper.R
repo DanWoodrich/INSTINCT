@@ -44,7 +44,7 @@ EDstage<-"1"
 crs<-99
 chunkSize<- 20
 
-paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/24a0a4828a24/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/24a0a4828a24/0ca0cd FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-12 y 0.5 Downsweep 1020 -1000 -0.25 60 50 1.2 2 40 0.9 2.5 90 50 2048 132 contour-w-slope-r-source-v1-12 combine_dets combine_interval desired_slope high_freq hough_slope_max hough_slope_min img_thresh1 img_thresh2 isoblur_sigma1 isoblur_sigma2 low_freq noise_thresh noise_win_length overlap pix_thresh t_samp_rate window_length"
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/f1f81de75ed5/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/f1f81de75ed5/d70ca2 FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-9 Upsweep 260 3 0.25 85 50 1.2 2 60 0.9 2.5 90 40 1024 132 contour-w-slope-r-source-v1-9 desired_slope high_freq hough_slope_max hough_slope_min img_thresh1 img_thresh2 isoblur_sigma1 isoblur_sigma2 low_freq noise_thresh noise_win_length overlap pix_thresh t_samp_rate window_length"
 args<-strsplit(paramArgsPre,split=" ")[[1]]
 
 #To make this general to ED, need to pass method params instead of hard defining here. 
