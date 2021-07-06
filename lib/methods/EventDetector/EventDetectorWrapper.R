@@ -44,7 +44,7 @@ EDstage<-"1"
 crs<-99
 chunkSize<- 20
 
-paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/f1f81de75ed5/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/f1f81de75ed5/d70ca2 FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-9 Upsweep 260 3 0.25 85 50 1.2 2 60 0.9 2.5 90 40 1024 132 contour-w-slope-r-source-v1-9 desired_slope high_freq hough_slope_max hough_slope_min img_thresh1 img_thresh2 isoblur_sigma1 isoblur_sigma2 low_freq noise_thresh noise_win_length overlap pix_thresh t_samp_rate window_length"
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/f1f81de75ed5/d70ca2 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/f1f81de75ed5/d70ca2 EDoutCorrect.csv.gz 2 99 20 method1 contour-w-slope-r-source-v1-9 Upsweep 260 3 0.25 85 50 1.2 2 60 0.9 2.5 90 40 1024 132 contour-w-slope-r-source-v1-9 desired_slope high_freq hough_slope_max hough_slope_min img_thresh1 img_thresh2 isoblur_sigma1 isoblur_sigma2 low_freq noise_thresh noise_win_length overlap pix_thresh t_samp_rate window_length"
 args<-strsplit(paramArgsPre,split=" ")[[1]]
 
 #To make this general to ED, need to pass method params instead of hard defining here. 
@@ -232,13 +232,40 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
   #keep difftimes together, but can still break into 
   #crs/chunk size batches to process 
   
+  
+  #note: added this stuff in as a potential bug fix, but it is untested!!! test before pushing. 
+  BigChunks<-ceiling(filez/(crs*chunkSize))
+  
   if(length(unique(data$DiffTime))<crs){
     crs<-length(unique(data$DiffTime))
   }
   
+  if(crs>detectCores()){
+    crs<-detectCores()
+  }
+  
+  StartFile<-(1+i*(crs*chunkSize)-(crs*chunkSize))
+  if(i!=BigChunks){
+    EndFile<-i*(crs*chunkSize)
+  }else{
+    EndFile<-filez
+  }
+  
+  FilezPerCr<-ceiling(length(StartFile:EndFile)/crs)
+  
+  FilezAssign<-rep(1:crs,each=FilezPerCr)
+  FilezAssign<-FilezAssign[1:length(StartFile:EndFile)]
+  
+  #reassign crs based on crs which actually made it into file split (will be crs on each except possibly not on last BigChunk)
+  crs<-length(unique(FilezAssign))
+  
   startLocalPar(crs,"data","EventDetectoR","specgram","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2",nameSpaceFxns)
   
+  print("MADE IT")
+  
   detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel","signal",librariesToLoad)) %dopar% {
+    #for(n in unique(data$DiffTime)){
+      #print(n)
     dataMini<-data[which(data$DiffTime==n),]
     if(nrow(dataMini)==1){
       dataMini$cumsum<-0
@@ -292,6 +319,8 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
     return(outputs)
   #break data into 
   }
+  stopCluster(cluz)
+  
 
   outName<-paste("DETx.csv.gz",sep="")  
   
