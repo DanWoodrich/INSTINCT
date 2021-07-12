@@ -40,12 +40,14 @@ class Helper:
                 sha1.update(data)
         return sha1.hexdigest()[0:hlen]
     def getDifftime(self):
-        self=self.sort_values(['Deployment','StartTime','SegStart'], ascending=[True,True,True])
+        #self=self.sort_values(['Deployment','StartTime','SegStart'], ascending=[True,True,True]) #change this behavior 7/12/21, don't re-sort. 
         self['TrueStart'] = self['StartTime']+pd.to_timedelta(self['SegStart'], unit='s')
         self['TrueEnd'] = self['TrueStart']+pd.to_timedelta(self['SegDur'], unit='s')
         #self['EndTime'] = self['StartTime']+pd.to_timedelta(self['Duration'], unit='s')
-        self['DiffTime'] = self['TrueEnd'][0:(len(self['TrueEnd'])-1)] - self['TrueStart'][1:len(self['TrueStart'])].values
-        self['DiffTime'] = self['DiffTime']>pd.to_timedelta(-2,unit='s') #makes the assumption that if sound files are 1 second apart they are actually consecutive (deals with rounding differences)
+        self['DiffTime']=range(len(self)) #declare new row
+        self['DiffTime'][0]=pd.to_timedelta(0)
+        self['DiffTime'][1:len(self)] = pd.to_timedelta(abs(self['TrueEnd'][0:(len(self['TrueEnd'])-1)] - self['TrueStart'][1:len(self['TrueStart'])].values)) #changes 7/12/21, fix bug where difftime was assigned improperly
+        self['DiffTime'] = self['DiffTime']>pd.to_timedelta(2,unit='s') #makes the assumption that if sound files are 1 second apart they are actually consecutive (deals with rounding differences)
         consecutive = numpy.empty(len(self['DiffTime']), dtype=int)
         consecutive[0] = 1
         iterator = 1
@@ -269,6 +271,8 @@ class FormatFG(INSTINCT_Task):
         FG_dict = Helper.peek(self.FGfile,fn_type = object,fp_type = object,st_type = object,dur_type = 'float64')
         FG = pd.read_csv(self.FGfile, dtype=FG_dict)
         FG['StartTime'] = pd.to_datetime(FG['StartTime'], format='%y%m%d-%H%M%S')
+        #import code
+        #code.interact(local=locals())
         FG=Helper.getDifftime(FG)
 
         if not os.path.exists(self.outpath()):
@@ -407,7 +411,7 @@ class RunED(SplitED,INSTINCT_Rmethod_Task):
     def requires(self):
         return SplitED.invoke(self)
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/DETx' + str(self.splitNum+1) + '.csv.gz')
+        return luigi.LocalTarget(self.outpath() + '/DETx' + str(self.splitNum+1) + 'ED.csv.gz') #change this to not be same output as FE input. Change made July 12, backwards incompatible with naming before. 
     def run(self):
         #define volume arguments
         FGpath = self.upstream_task1.outpath() +'/'
@@ -451,7 +455,7 @@ class UnifyED(RunED):
         
         dataframes = [None] * self.EDsplits
         for k in range(self.EDsplits):
-            dataframes[k] = pd.read_csv(self.outpath() +'/DETx' + str(k+1) + '.csv.gz',dtype=EDdict)
+            dataframes[k] = pd.read_csv(self.outpath() +'/DETx' + str(k+1) + 'ED.csv.gz',dtype=EDdict)
         ED = pd.concat(dataframes,ignore_index=True)
         ED['ProcessTag2']=ED.ProcessTag.str.split('_', 1).map(lambda x: x[0])
         #determin PT changes
@@ -524,8 +528,16 @@ class UnifyED(RunED):
             #now load in result,
             EDpatches = pd.read_csv(FGpath+'/DETx.csv.gz',dtype=EDdict2)
             PatchList = [None] * len(EDpatches['DiffTime'].unique().tolist())
+
+            #import code
+            #code.interact(local=locals())
+            
             for n in range(len(EDpatches['DiffTime'].unique().tolist())):
-                EDpatchN= EDpatches[[x == EDpatches['DiffTime'].unique().tolist()[n] for x in EDpatches['DiffTime']]]
+                #EDpatchN= EDpatches[[x == EDpatches['DiffTime'].unique().tolist()[n] for x in EDpatches['DiffTime']]] #this line looks like a problem for larger datasets. Try 1st answer on this thread instead of this line:
+                #https://stackoverflow.com/questions/21738882/fast-pandas-filtering. This appears much faster, replaced. 
+
+                nPatch = [EDpatches['DiffTime'].unique().tolist()[n]]
+                EDpatchN=EDpatches.loc[EDpatches['DiffTime'].isin(nPatch),]
                 FGpatch = FG[FG['DiffTime']==(n+1)]
                 FirstFile = EDpatchN.iloc[[0]]['StartFile'].astype('string').iloc[0]
                 LastFile = EDpatchN.iloc[[-1]]['StartFile'].astype('string').iloc[0]
@@ -581,7 +593,7 @@ class UnifyED(RunED):
             os.remove(FGpath + '/EDoutCorrect.csv.gz')
             
         for n in range(self.EDsplits):
-            os.remove(self.outpath() + '/DETx' + str(n+1) + '.csv.gz') 
+            os.remove(self.outpath() + '/DETx' + str(n+1) + 'ED.csv.gz') 
         for n in range(self.EDsplits):
             os.remove(self.upstream_task1.outpath() + '/FileGroupFormat' + str(n+1) + '.csv.gz') #might want to rework this to make the files load in the current directory instead of the upstream directory. makes more atomic
 

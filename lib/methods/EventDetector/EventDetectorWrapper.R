@@ -224,7 +224,7 @@ detOut<-foreach(i=1:BigChunks) %do% {
 }
 
 #write to result
-outName<-paste("DETx",splitID,".csv.gz",sep="")  
+outName<-paste("DETx",splitID,"ED.csv.gz",sep="")  
 
 
 }else if(EDstage=="2"){
@@ -234,7 +234,7 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
   
   
   #note: added this stuff in as a potential bug fix, but it is untested!!! test before pushing. 
-  BigChunks<-ceiling(filez/(crs*chunkSize))
+  #BigChunks<-ceiling(filez/(crs*chunkSize))s
   
   if(length(unique(data$DiffTime))<crs){
     crs<-length(unique(data$DiffTime))
@@ -244,25 +244,24 @@ outName<-paste("DETx",splitID,".csv.gz",sep="")
     crs<-detectCores()
   }
   
-  StartFile<-(1+i*(crs*chunkSize)-(crs*chunkSize))
-  if(i!=BigChunks){
-    EndFile<-i*(crs*chunkSize)
-  }else{
-    EndFile<-filez
-  }
+  #StartFile<-(1+i*(crs*chunkSize)-(crs*chunkSize))
+  #if(i!=BigChunks){
+  #  EndFile<-i*(crs*chunkSize)
+  #}else{
+  #  EndFile<-filez
+  #}
   
-  FilezPerCr<-ceiling(length(StartFile:EndFile)/crs)
+  #FilezPerCr<-ceiling(length(StartFile:EndFile)/crs)
   
-  FilezAssign<-rep(1:crs,each=FilezPerCr)
-  FilezAssign<-FilezAssign[1:length(StartFile:EndFile)]
+  #FilezAssign<-rep(1:crs,each=FilezPerCr)
+  #FilezAssign<-FilezAssign[1:length(StartFile:EndFile)]
   
   #reassign crs based on crs which actually made it into file split (will be crs on each except possibly not on last BigChunk)
-  crs<-length(unique(FilezAssign))
+  #crs<-length(unique(FilezAssign))
   
   startLocalPar(crs,"data","EventDetectoR","specgram","ParamArgs","targetSampRate","decimateData","resampINST","decDo","prime.factor","readWave2",nameSpaceFxns)
   
-  print("MADE IT")
-  
+
   detOut<-foreach(n=unique(data$DiffTime),.packages=c("tuneR","doParallel","signal",librariesToLoad)) %dopar% {
     #for(n in unique(data$DiffTime)){
       #print(n)
