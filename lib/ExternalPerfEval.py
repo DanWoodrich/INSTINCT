@@ -15,7 +15,7 @@ from supporting.job_fxns import *
 
 #this runs one RFN to view in Raven. If wanting to generate in loop, or use outputs, use the other job, RunFullNovel.  
 
-class ExternalPerfEval(FormatFG,ServeModel): #FormatGT,AssignLabels,PerfEval2
+class ExternalPerfEval(FormatFG,ServeModel,FormatGT): #,AssignLabels,PerfEval2
 
     JobName=luigi.Parameter()
 
