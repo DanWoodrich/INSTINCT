@@ -44,8 +44,7 @@ class Helper:
         self['TrueStart'] = self['StartTime']+pd.to_timedelta(self['SegStart'], unit='s')
         self['TrueEnd'] = self['TrueStart']+pd.to_timedelta(self['SegDur'], unit='s')
         #self['EndTime'] = self['StartTime']+pd.to_timedelta(self['Duration'], unit='s')
-        self['DiffTime']=range(len(self)) #declare new row
-        self['DiffTime'][0]=pd.to_timedelta(0)
+        self['DiffTime']=pd.to_timedelta(0)
         self['DiffTime'][1:len(self)] = pd.to_timedelta(abs(self['TrueEnd'][0:(len(self['TrueEnd'])-1)] - self['TrueStart'][1:len(self['TrueStart'])].values)) #changes 7/12/21, fix bug where difftime was assigned improperly
         self['DiffTime'] = self['DiffTime']>pd.to_timedelta(2,unit='s') #makes the assumption that if sound files are 1 second apart they are actually consecutive (deals with rounding differences)
         consecutive = numpy.empty(len(self['DiffTime']), dtype=int)

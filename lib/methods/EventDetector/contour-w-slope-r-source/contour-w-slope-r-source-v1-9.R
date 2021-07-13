@@ -124,8 +124,8 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini,ParamArgs){
   #plot(as.cimg(image1[4500:5500,,,]))
   
   #plot(image1)
-  image1<-threshold(image1,ImgThresh1) #changed order of this and next line 
   image1<-isoblur(image1,sigma=IsoblurSigma1)
+  image1<-threshold(image1,ImgThresh1) #UNchange the order of this and the next line!!! Undo stealth change which may have been made unintentionally. 
   #image1<-threshold(image1,"90%")
   #plot(image1)
   #plot(as.cimg(image1[4500:5500,,,]))
