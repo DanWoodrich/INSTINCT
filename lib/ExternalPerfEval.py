@@ -70,12 +70,13 @@ class ExternalPerfEval(FormatFG,ServeModel): #FormatGT,AssignLabels,PerfEval2
         return(ExternalPerfEval(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                             FGfile=obj.FGfile,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,FGparamString = obj.FGparamString,FGmethodID = obj.FGmethodID,\
                             decimatedata = obj.decimatedata,SMprocess=obj.SMprocess,SMmethodID=obj.SMmethodID,SMvenv_type=obj.SMvenv_type,SMvenv_name=obj.SMvenv_name,\
-                            SMparamString=obj.SMparamString,CacheRoot=obj.CacheRoot))
+                            SMparamString=obj.SMparamString,GTfile=obj.GTfile,GT_signal_code=obj.GT_signal_code,CacheRoot=obj.CacheRoot))
     def getParams(args):
         
         params = Load_Job('ExternalPerfEval',args)
 
         params = FG(params,'FormatFG')
+        params = GT(params,'FormatGT')
         params = SM(params,'ServeModel')
         #params = GT(params,'FormatGT')
         #params = GT(params,'FormatGT')
