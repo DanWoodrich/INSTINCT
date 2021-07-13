@@ -19,6 +19,7 @@ class ExternalPerfEval(FormatFG,ServeModel,FormatGT): #,AssignLabels,PerfEval2
 
     JobName=luigi.Parameter()
 
+    GT_signal_code=luigi.Parameter()
     #nullify some inherited parameters:
     PE2datType=None
 
