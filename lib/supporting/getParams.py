@@ -195,6 +195,17 @@ def RG(self,ID):
 
     return self
 
+def SM(self,ID):
+    self.SMprocess = 'ServeModel'
+    self.SMmethodID = self.MasterINI[ID]['MethodID']
+    self.SMvenv_type = self.MasterINI[ID]['venv_type']
+    self.SMvenv_name = self.MasterINI[ID]['venv_name']
+
+    p_ini = readP_Params(self.ParamsRoot,self.SMmethodID)
+    paramList = getParamDeets(p_ini,self.SMprocess,1)
+    self.SMparamString = getParamString(paramList,self.SMmethodID)
+    
+    return self
 
 
 

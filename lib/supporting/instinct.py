@@ -94,72 +94,63 @@ class Helper:
 ##########################################
 
 class argParse:
-    #I need to do some work on this. Command1 should be split, since the parts of it which depend on OS are serpeate from the relationship of the arguments. 
-    def run(cmdType,MethodID,Paths,Args,Params,paramsNames=None,ProcessID=None,Program=None,ProjectRoot=None,dockerVolMounts=None,Wrapper=False):
+    #start reworking this 7/13/21. I don't know what led me to originally use the -e source() syntax, but I think I can get this accomplished with just Rscipt [path].R
+    #now. Maybe adding the user path fixed it. Currently testing
+    def run(cmdType,MethodID,Paths,Args,Params,paramsNames=None,ProcessID=None,Program=None,ProjectRoot=None,dockerVolMounts=None,Wrapper=False,venv=None,venvName=None):
 
         SlashPos= [pos for pos, char in enumerate(MethodID) if char == "-"]
         MethodIDcut = MethodID[:SlashPos[-2]]
-        #windows cmd just wants all arguments seperated by a space
-        if(cmdType=='win'):
-            if(Program=='R'):
-                #default install vers
-                if(Wrapper==False):
-                    command1 = '"Rscript" -e "source(\'' + ProjectRoot + 'lib/methods/' + ProcessID + '/' + MethodIDcut +'/'+MethodID+'.R\')"'
-                    command2 = ' '.join(Paths) + ' ' + ' '.join(Args) + ' ' + Params
+        
+        if(Program=='R'):
+            executable1 = 'Rscript '
+            executable2 = '.R'
+        elif(Program!='Python'):
+            executable1 = 'python '
+            executable2 = '.py'
+        
+        if(Wrapper==False):
+            command1 = executable1 + ProjectRoot + 'lib/methods/' + ProcessID + '/' + MethodIDcut + '/' + MethodID + executable2
+            command2 = ' '.join(Paths) + ' ' + ' '.join(Args) + ' ' + Params
 
-                elif(Wrapper):
-                    command1 = '"Rscript.exe" -e "source(\'' + ProjectRoot + 'lib/methods/' + ProcessID + '/' + ProcessID + 'Wrapper.R\')"'
-                    command2 = ProjectRoot + ' ' + ' '.join(Paths) + ' ' + ' '.join(Args) #don't think lists need to be flattened, since these should refer to process not the individual methods
+        elif(Wrapper):
+            command1 = executable1 + ProjectRoot + 'lib/methods/' + ProcessID + '/' + ProcessID + 'Wrapper' + executable2
+            command2 = ProjectRoot + ' ' + ' '.join(Paths) + ' ' + ' '.join(Args) #don't think lists need to be flattened, since these should refer to process not the individual methods
 
-                    if not(isinstance(MethodID, list)): #this will be a list if there are multiple methods being passed 
-                        command2 = command2 + ' method1 ' + MethodID + ' ' + Params + ' ' + paramsNames
-                    else:
-                        loopVar = 1
-                        for h in range(len(MethodID)):
-                            IDit = "method" + str(loopVar)
-                            command2 = command2 + ' ' + IDit + ' ' + MethodID[h] + ' ' + Params[h] + ' ' + paramsNames[h]
+            if not(isinstance(MethodID, list)): #this will be a list if there are multiple methods being passed 
+                command2 = command2 + ' method1 ' + MethodID + ' ' + Params + ' ' + paramsNames
+            else:
+                loopVar = 1
+                for h in range(len(MethodID)):
+                    IDit = "method" + str(loopVar)
+                    command2 = command2 + ' ' + IDit + ' ' + MethodID[h] + ' ' + Params[h] + ' ' + paramsNames[h]
 
+        #schema for wrapper will be 1: project root, 2: Paths 3: Args 4: "method1" 5:Method1 name 6: method1 params 7: "method2" 8: method2 name 9: method2 params... etc
+        #this way, wrapper can get load in relevant paths, but keep methods parsing dynamic for individual methods. Find method params logic is look after methodx for each method to find name and
+        #then pass params to method. 
+        #paths and args determined by process, such as 
 
-                #when writing argParse command in python, just make nested list of MethodID, and MethodID params
+        command = command1 + ' ' + command2
 
-                #schema for wrapper will be 1: project root, 2: Paths 3: Args 4: "method1" 5:Method1 name 6: method1 params 7: "method2" 8: method2 name 9: method2 params... etc
-                #this way, wrapper can get load in relevant paths, but keep methods parsing dynamic for individual methods. Find method params logic is look after methodx for each method to find name and
-                #then pass params to method. 
-                #paths and args determined by process, such as 
+        if(venv!=None):
+            print("******************************\nActivating virtual environment " + venvName + " with " + venv + "\n******************************")
+            if(venv=='Conda'):
+                command_venv = venv + ' activate ' + venvName + ' & '
+                command = command_venv + command #append venv call to start of command. This assumes conda venv is set up to work on command line.
+            else:
+                print("VENV NOT YET CONFIGURED TO WORK ON BASE VENV")
+        
+        print("******************************\nRunning " + Program + " method " + MethodID + " for process " + ProcessID + "\n******************************")
 
-                command = command1 + ' ' + command2
-                print("******************************\nRunning R method " + MethodID + " for process " + ProcessID + "\n******************************")
+        print("******************************\nCommand params (can copy and paste): " + command2 +"\n******************************")
 
-                print("******************************\nCommand params (can copy and paste): " + command2 +"\n******************************")
-
-                subprocess.run(shlex.split(command))
-                return None
-            elif(Program!='R'):
-                #do something else
-                return None
-        elif(cmdType=='lin'):
-            if(Program=='R'):
-                command1 = 'Rscript' + ' ' + ProjectRoot + 'lib/' + ProcessID + '/' + MethodID +'/'+MethodID+'.R'
-                command2 = ' '.join(Paths) + ' ' + ' '.join(Args) + ' ' + Params
-                command = command1 + ' ' + command2
-                os.system(command)
-            elif(Program!='R'):
-                #do something else
-                return None
-        elif(cmdType=='docker'):
-            #pseudocode (don't need this right now)
-            #figure out container name and tab from MethodID var
-            #determine length of Paths, combine them with corresponding dockerVolMounts and turn into -v arguments
-            #turn args and params into -e arguments
-            command1='docker run' 
-            return None
+        subprocess.run(command)
+            
 
 #make this class to avoid repetition above when settled on parser. Do this to add to linux as well 
 
 #class makeCommand2:
     #this will determine if needs 
 #    def run(MethodID,Paths,Args,Params):
-
 
 ########################
 #instinct base fxns
@@ -998,6 +989,47 @@ class ApplyModel(INSTINCT_Rmethod_Task):
     def invoke(self,upstream1,upstream2,upstream3):
         return(ApplyModel(upstream_task1=upstream1,upstream_task2=upstream2,upstream_task3=upstream3,TMprocess=self.TMprocess,TMmethodID=self.TMmethodID,\
                           system=self.system,ProjectRoot=self.ProjectRoot))
+
+
+class ServeModel(INSTINCT_Task):
+    #right now very dependent on environment preconfigured for AFSC VM 161.55.120.110 (Windows 10 & Titan RTX GPU)
+
+    upstream_task1 = luigi.Parameter() #FG
+
+    SoundFileRootDir_Host_Dec = luigi.Parameter()
+    SMvenv_type = luigi.Parameter() #conda or base
+    SMvenv_name = luigi.Parameter() #venv name
+
+    SMprocess = luigi.Parameter()
+    SMmethodID = luigi.Parameter()
+    SMparamString = luigi.Parameter() #parameters, for the existing tf-hub method, just consists of model location 
+
+    def hashProcess(self):
+        hashLength = 6 
+        SMparamsHash = Helper.getParamHash2(self.SMparamString + ' ' + self.SMmethodID,hashLength)
+        return SMparamsHash
+    def requires(self):
+        return self.upstream_task1
+    def output(self):
+        return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
+    def run(self):
+
+        FGpath = self.upstream_task1.outpath() + '/FileGroupFormat.csv.gz'
+        resultPath = self.outpath()
+
+        if not os.path.exists(resultPath):
+            os.mkdir(resultPath)
+
+        Paths = [FGpath,resultPath]
+        Args = [self.SoundFileRootDir_Host_Dec]
+        Params = [self.SMparamString]
+
+        #needs to first activate venv and then run model, then deactivate venv in same command. 
+        argParse.run(Program='Python',cmdType=None,ProjectRoot=self.ProjectRoot,ProcessID=self.SMprocess,MethodID=self.SMmethodID,Paths=Paths,Args=Args,Params=Params,venv=self.SMvenv_type,venvName=self.SMvenv_name)
+        
+    def invoke(self,upstream1):
+        return(ServeModel(upstream_task1=upstream1,SMprocess=self.SMprocess,SMmethodID=self.SMmethodID,SMvenv_type=self.SMvenv_type,SMvenv_name=self.SMvenv_name,\
+                                  SMparamString=self.SMparamString,SoundFileRootDir_Host_Dec=self.SoundFileRootDir_Host_Dec,ProjectRoot=self.ProjectRoot))
 
 ####################################################################################
 #Split data with probs and labels back into FG components (used for perf eval 2) 
