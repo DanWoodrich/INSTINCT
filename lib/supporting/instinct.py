@@ -104,7 +104,7 @@ class argParse:
         if(Program=='R'):
             executable1 = 'Rscript '
             executable2 = '.R'
-        elif(Program!='Python'):
+        elif(Program=='Python'):
             executable1 = 'python '
             executable2 = '.py'
         
