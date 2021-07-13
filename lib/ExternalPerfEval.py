@@ -86,5 +86,5 @@ class ExternalPerfEval(FormatFG,ApplyModel,ApplyCutoff,ServeModel): #,AssignLabe
         return params
     
 if __name__ == '__main__':
-    deployJob(ViewRFN,sys.argv)
+    deployJob(ExternalPerfEval,sys.argv)
 
