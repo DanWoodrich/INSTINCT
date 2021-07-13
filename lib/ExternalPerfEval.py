@@ -68,7 +68,7 @@ class ExternalPerfEval(FormatFG,ServeModel): #FormatGT,AssignLabels,PerfEval2
         
     def invoke(obj):
         return(ExternalPerfEval(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
-                            FGfile=obj.FGfile,FileGroupID=obj.FileGroupID,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\
+                            FGfile=obj.FGfile,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\
                             decimatedata = obj.decimatedata,SMprocess=obj.SMprocess,SMmethodID=obj.SMmethodID,SMvenv_type=obj.SMvenv_type,SMvenv_name=obj.SMvenv_name,\
                             SMparamString=obj.SMparamString,system=obj.system,CacheRoot=obj.CacheRoot))
     def getParams(args):
