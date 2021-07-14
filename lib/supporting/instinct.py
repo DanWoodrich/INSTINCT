@@ -142,7 +142,7 @@ class argParse:
 
         print("******************************\nCommand params (can copy and paste): " + command2 +"\n******************************")
 
-        subprocess.run(command)
+        subprocess.run(command,shell=True)
             
 
 #make this class to avoid repetition above when settled on parser. Do this to add to linux as well 
@@ -1021,7 +1021,7 @@ class ServeModel(INSTINCT_Task):
 
         Paths = [FGpath,resultPath]
         Args = [self.SoundFileRootDir_Host_Dec]
-        Params = [self.SMparamString]
+        Params = self.SMparamString
 
         #needs to first activate venv and then run model, then deactivate venv in same command. 
         argParse.run(Program='Python',cmdType=None,ProjectRoot=self.ProjectRoot,ProcessID=self.SMprocess,MethodID=self.SMmethodID,Paths=Paths,Args=Args,Params=Params,venv=self.SMvenv_type,venvName=self.SMvenv_name)

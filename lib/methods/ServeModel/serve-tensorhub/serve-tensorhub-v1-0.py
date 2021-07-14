@@ -23,17 +23,17 @@ from matplotlib import pyplot as plt
 #######import params###########
 
 
-#args="serve-tensorhub-v1-0.py //akc0ss-n086/NMML_CAEP_Acoustics/Detector/google_HB/FileGroupFormat.csv.gz //akc0ss-n086/NMML_CAEP_Acoustics/Detector/google_HB //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/10000 https://tfhub.dev/google/humpback_whale/1"
+#args="C:/Apps/INSTINCT/Cache/f1f81de75ed5/FileGroupFormat.csv.gz C:/Apps/INSTINCT/Cache/f1f81de75ed5/8a148e //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/10000 https://tfhub.dev/google/humpback_whale/1 serve-tensorhub-v1-0"
 #args=args.split()
 
 args=sys.argv
 #args=args[1]
 #args=args.split()
 
-FGpath=args[2]
-resultpath=args[3]
-datapath=args[4]
-model_name=args[5]
+FGpath=args[1]
+resultpath=args[2]
+datapath=args[3]
+model_name=args[4]
 
 #start_ind = args[5]
 
