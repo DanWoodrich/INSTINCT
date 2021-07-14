@@ -73,6 +73,10 @@ class ExternalPerfEval(FormatFG,ServeModel,FormatGT): #,AssignLabels,PerfEval2
                             decimatedata = obj.decimatedata,SMprocess=obj.SMprocess,SMmethodID=obj.SMmethodID,SMvenv_type=obj.SMvenv_type,SMvenv_name=obj.SMvenv_name,\
                             SMparamString=obj.SMparamString,GTfile=obj.GTfile,GT_signal_code=obj.GT_signal_code,CacheRoot=obj.CacheRoot))
     def getParams(args):
+
+        #thought- in here I could use parameters to declare which kind of model I was applying, so I could make pipelines compositional. But, the problem is in how I am defining parameters in .invoke. This
+        #is something I could take a look at- I am not really explicity using the Luigi parameter functionality, I could just try to pass the parameter object itself, and not define luigi parameters. Maybe
+        #the classess will just have these parameters self object? Maybe they need a self object? I am not sure, I could use some help here. 
         
         params = Load_Job('ExternalPerfEval',args)
 
