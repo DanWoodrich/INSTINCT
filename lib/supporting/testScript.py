@@ -70,4 +70,6 @@ task1=RunDetector.pipelineMap(params.RD,params.master.RDruntype,task0) #will ret
 task2=RavenFromDETx(task1)
 
 
-        
+
+#next thing I want to do here is create a task template, inherit it, and make
+#a dummy pipeline to test out if the parameter passing works. 
