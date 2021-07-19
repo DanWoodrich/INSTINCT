@@ -101,6 +101,7 @@ pullFxn<-function(dataIn,pullDur,pullType,percTarget){
       }
       
       pull<-do.call('rbind',pull)
+      pull<-pull[order(pull$StartDateTime),] #reoder pull based on time. stealth change 7-19-20
       pull$pullID<-pullID
       pullID=pullID+1
       
@@ -158,7 +159,7 @@ saveSample<-function(x,xname,path){
 
 
 #cant do it this way unfortunately, with the internal quotes. maybe can find a better way eventually..
-args="C:/Apps/INSTINCT/Data/FileGroups //161.55.120.117/NMML_AcousticsData/Audio_Data testFG.csv //nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/RWupyeses_1.csv AL16_AU_BS01_files_All.csv,AL16_AU_BS03_files_59-114.csv 15 7200 allRand 1"
+args="C:/Apps/INSTINCT/Data/FileGroups //161.55.120.117/NMML_AcousticsData/Audio_Data fivehrtest1prc.csv //nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/LMall_2.csv None 1 3600 allRand 1 query-random-by-month-v1-0"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -258,6 +259,8 @@ for(i in 1:nrow(out)){
     out[i,"Duration"]<-round(info$samples/info$sample.rate)
   }
 }
+
+
 
 #Do not allow overrides! Test to see if file is present, and only print if not. If it is, spit an error. 
 filePath<-paste(resultPath,"/",fileName,sep="")
