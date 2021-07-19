@@ -36,7 +36,7 @@ formatToDets<-function(data,data2){
   return(data)
 }
 
-args="//161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/004be6ff1ea2/a21b11 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/004be6ff1ea2 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/004be6ff1ea2/a21b11/acbd5b //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 T"
+args="C:/Apps/INSTINCT/Cache/e8b5906711c8/a21b11 C:/Apps/INSTINCT/Cache/e8b5906711c8 C:/Apps/INSTINCT/Cache/e8b5906711c8/a21b11/8e53b5 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/512 T"
 args<-strsplit(args,split=" ")[[1]]
 
 args<-commandArgs(trailingOnly = TRUE)
@@ -149,9 +149,15 @@ if(nrow(outNeg)>0){
 
 #test if Dets have labels, or not. 
 
-
+FG$order<-1:nrow(FG)
 
 DetsFG<-merge(Dets,FG,by="StartFile")
+
+#reorder to original order
+DetsFG<-DetsFG[order(DetsFG$order),]
+
+FG$order<-NULL
+DetsFG$order<-NULL
 
 #calculate delta time for each detection
 #process these seperately
@@ -165,8 +171,8 @@ DetsFGSameFile$DeltaTime<-DetsFGSameFile$EndTime-DetsFGSameFile$StartTime
 DetsFGdiffFile$DeltaTime<-(DetsFGdiffFile$Duration-DetsFGdiffFile$StartTime)+DetsFGdiffFile$EndTime
 
 DetsFG<-rbind(DetsFGSameFile,DetsFGdiffFile)
-stop()
-DetsFG<-DetsFG[order(DetsFG$StartFile,DetsFG$StartTime),]
+
+#DetsFG<-DetsFG[order(DetsFG$StartFile,DetsFG$StartTime),]
 
 DetsFG$FileOffset<-DetsFG$StartTime
 
