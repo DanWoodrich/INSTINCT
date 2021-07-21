@@ -3,7 +3,7 @@ library(doParallel) #need
 library(tuneR) #need
 library(signal) #need
 
-args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/c01fc54d27fd/ C:/Apps/INSTINCT/Cache/c01fc54d27fd/e5d724 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/c01fc54d27fd/e5d724/fe909d 1 99 method1 feat-ext-hough-light-source-v1-3 n 75 1.5 30 specgram 1024 24 1 50 0 feat-ext-hough-light-source-v1-3 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
+args<-"C:/Apps/INSTINCT/ C:/Apps/INSTINCT/Cache/24a0a4828a24/ C:/Apps/INSTINCT/Cache/24a0a4828a24/37cab8 //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/24a0a4828a24/37cab8/a3bc3c 1 99 method1 feat-ext-hough-light-source-v1-4 n 75 1.5 30 specgram 1024 24 1.5 50 0 feat-ext-hough-light-source-v1-4 channel_normalize img_thresh isoblur_sigma overlap spectrogram_func t_samp_rate tile_axis_size time_min_buffer window_length zero_padding"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -232,8 +232,8 @@ out2<-foreach(f=1:crs,.packages=c("tuneR","doParallel","seewave","signal",librar
     wav<-decimateData(wav,targetSampRate)
     
     #could render spectrogram here 
-    
-    featList<-FeatureExtracteR(wav,spectrogram=NULL,featList,args=ParamArgs)
+    metadata=list(substr(StartNameL,1,nchar(StartNameL)-4),ProjectRoot)
+    featList<-FeatureExtracteR(wav,spectrogram=NULL,featList,args=ParamArgs,verbose='y',metadata=metadata)
     #endTimes<-c(endTimes,Sys.time())
     
     featList<-c(dataIn[r,"mapID"],featList[5:length(featList)]) #this is a test line to see if it fixes bug

@@ -5,7 +5,6 @@ library(tuneR)
 library(signal)
 library(foreach)
 
-
 #windows test values
 #DataPath <-"//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves/"        #docker volume
 #FGpath <- "C:/Apps/INSTINCT/Cache/7f1040f41deafd01007a7cd0ad636c71fc686212"  #docker volume
@@ -44,7 +43,7 @@ EDstage<-"1"
 crs<-99
 chunkSize<- 20
 
-paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/f1f81de75ed5/d70ca2 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/f1f81de75ed5/d70ca2 EDoutCorrect.csv.gz 2 99 20 method1 contour-w-slope-r-source-v1-9 Upsweep 260 3 0.25 85 50 1.2 2 60 0.9 2.5 90 40 1024 132 contour-w-slope-r-source-v1-9 desired_slope high_freq hough_slope_max hough_slope_min img_thresh1 img_thresh2 isoblur_sigma1 isoblur_sigma2 low_freq noise_thresh noise_win_length overlap pix_thresh t_samp_rate window_length"
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/98ccbe6898da/ C:/Apps/INSTINCT/Cache/98ccbe6898da/8d0560 FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-13 y 0.5 Downsweep 500 -Inf -1 80 80 1.1 2 50 0.9 2 10 100 1024 20 contour-w-slope-r-source-v1-13 combine_dets combine_int desired_slope high_freq hough_slope_max hough_slope_min img_thresh1 img_thresh2 isoblur_sigma1 isoblur_sigma2 low_freq noise_thresh noise_win_length overlap pix_thresh t_samp_rate window_length"
 args<-strsplit(paramArgsPre,split=" ")[[1]]
 
 #To make this general to ED, need to pass method params instead of hard defining here. 
@@ -184,8 +183,8 @@ detOut<-foreach(i=1:BigChunks) %do% {
       #                       window=windowLength,
       #                       overlap=Overlap
       #)
-      
-      outputs<-EventDetectoR(soundFile,spectrogram=NULL,dataMini,ParamArgs)
+      metadata=list(substr(dataMini$FileName[1],1,nchar(dataMini$FileName[1])-4),ProjectRoot)
+      outputs<-EventDetectoR(soundFile,spectrogram=NULL,dataMini,ParamArgs,verbose='n',metadata=metadata)
       
       
       if(length(outputs)>0){
@@ -290,7 +289,8 @@ outName<-paste("DETx",splitID,"ED.csv.gz",sep="")
     #                       overlap=Overlap
     #)
     
-    outputs<-EventDetectoR(soundFile,spectrogram=NULL,dataMini,ParamArgs)
+    metadata=list(substr(dataMini$FileName[1],1,nchar(dataMini$FileName[1])-4),ProjectRoot)
+    outputs<-EventDetectoR(soundFile,spectrogram=NULL,dataMini,ParamArgs,verbose='n',metadata=metadata)
     
     if(length(outputs)>0){
       Cums<-data.frame(cut(outputs[,1],breaks=c(0,cumsum(dataMini$SegDur)),labels=dataMini$cumsum),
