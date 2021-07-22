@@ -7,7 +7,8 @@ source("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R")
 
 #define mooring
 
-Mooring<-"BS17_AU_PM02-a"
+Mooring<-"BS14_AU_PM04"
+species="HB"
 
 #load in FG
 
@@ -16,10 +17,10 @@ FG<-read.csv(paste("C:/Apps/INSTINCT/Data/FileGroups/",Mooring,"_files_All.csv",
 ##########################
 #load in ANALYSIS tab
 
-ANALYSIStab<-read.csv("//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/HumpbackYeses_2.csv")
+#ANALYSIStab<-read.csv("//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/HumpbackYeses_2.csv")
 
 #mandate column names to fit standard (column names changed on Cath end)
-colnames(ANALYSIStab)[1:7]<-c("Wavefile","StartSecInWav","EndSecInWav","MooringSite","MooringDeployID","StartFieldTimeUTC","EndFieldTimeUTC")
+#colnames(ANALYSIStab)[1:7]<-c("Wavefile","StartSecInWav","EndSecInWav","MooringSite","MooringDeployID","StartFieldTimeUTC","EndFieldTimeUTC")
 
 ###########################
 
@@ -30,7 +31,7 @@ library(R.matlab)
 library(foreach)
 
 Mooringpath="//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/PngResultsforALL_26Apr2021/"
-prefix="PNGrslts_BS17_AU_PM02-a_check0"
+prefix=paste("PNGrslts_",Mooring,"_check0",sep="")
 
 MooringMid=paste(Mooringpath,prefix,"2.mat",sep="")
 
@@ -78,12 +79,12 @@ Data<-data.frame(Pngs,datetime,specs)
 colnames(Data)[3:ncol(Data)]<-trimws(Mids$PNGrslts.MetaData[,,2]$CheckSpp[,1])
 
 #get wav names by substring, and setting last 3 chars to 000, adding .wav
-#this is not general, specific to BS17_AU_PM02-a!
-Data$Wavnames<-paste(substr(Data$Pngs,1,22),"000.wav",sep="")
+
+Data$Wavnames<-paste(substr(Data$Pngs,1,nchar(Mooring)+8),"000.wav",sep="")
 
 Data<-Data[which(Data$right!=99),]
 
-mss<-paste("0",substr(Data$Pngs,23,25),sep="")
+mss<-paste("0",substr(Data$Pngs,nchar(Mooring)+9,nchar(Mooring)+11),sep="")
 vals<-as.POSIXlt(mss,format="%M%S")
 vals<- vals$sec+vals$min*60
 
@@ -94,7 +95,12 @@ vals2[which(vals2==450)]<-600
 vals2[which(vals2==225)]<-450
 vals2[which(vals2==0)]<-225
 
-labs<-Data$humpback
+if(species=="HB"){
+  labs<-Data$humpback
+}else if(species=="LW"){
+  labs<-pmax(Data$humpback,Data$bowhead,Data$right)
+}
+
 
 labs[which(labs==0)]<-'n'
 labs[which(labs==2)]<-'m' #could consider giving this a different label. Honestly I should, and ignore it if I want to
@@ -107,10 +113,10 @@ labs[which(labs==1)]<-'y'
 
 #subset ANALYSIS tab to mooring ID, 
 
-GTnew<-data.frame(vals,vals2,0,800,Data$Wavnames,Data$Wavnames,labs,"SC","HB")
+GTnew<-data.frame(vals,vals2,0,800,Data$Wavnames,Data$Wavnames,labs,"SC",species)
 colnames(GTnew)<-c("StartTime","EndTime","LowFreq","HighFreq","StartFile",	"EndFile",	"label",	"Type",	"SignalCode")
 
-write.csv(GTnew,"C:/Apps/INSTINCT/Data/GroundTruth/HB/HB_BS17_AU_PM02-a_files_All.csv",row.names = FALSE)
+write.csv(GTnew,paste("C:/Apps/INSTINCT/Data/GroundTruth/",species,"/",species,"_",Mooring,"_files_All.csv",sep=""),row.names = FALSE)
 
 
 
