@@ -15,7 +15,7 @@ from supporting.job_fxns import *
 
 #this runs one RFN to view in Raven. If wanting to generate in loop, or use outputs, use the other job, RunFullNovel.  
 
-class ExternalPerfEval(FormatFG,ServeModel,FormatGT,AssignLabels,): #,AssignLabels,PerfEval2
+class ExternalPerfEval(FormatFG,ServeModel,FormatGT,AssignLabels,PerfEval2,PerfEval1_s1): #,AssignLabels,PerfEval2
 
     JobName=luigi.Parameter()
 
@@ -34,9 +34,10 @@ class ExternalPerfEval(FormatFG,ServeModel,FormatGT,AssignLabels,): #,AssignLabe
             task2 = ServeModel.invoke(self,task0)
 
             task3 = AssignLabels.invoke(self,task2,task1,task0)
-            #task4 = PerfEval2.invoke(self,task3,None,"NoPE1")
+            task4 = PerfEval1_s1.invoke(self,task3,task0,task3,n=0,src="GT")
+            task5 = PerfEval2.invoke(self,task3,task4,"FG")
 
-            return [task3]
+            return [task4,task5]
     def hashProcess(self):
         taskStr = []
         tasks = self.pipelineMap()
@@ -48,30 +49,32 @@ class ExternalPerfEval(FormatFG,ServeModel,FormatGT,AssignLabels,): #,AssignLabe
         return Helper.getParamHash2(' '.join(hashStrings),6)
     def requires(self):
         tasks = self.pipelineMap()
-        return tasks[0]
+        yield tasks[0]
+        yield tasks[1]
     def outpath(self):
         return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/DETx.csv.gz')
     def run(self):
+        print('damn')
+        #tasks = self.pipelineMap()
+        #filepath = tasks[0].outpath() + '/DETx.csv.gz'
+        #filedest = self.outpath() + '/DETx.csv.gz'
 
-        tasks = self.pipelineMap()
-        filepath = tasks[0].outpath() + '/DETx.csv.gz'
-        filedest = self.outpath() + '/DETx.csv.gz'
+        #if not os.path.exists(self.ProjectRoot +'Outputs/' + self.JobName):
+        #    os.mkdir(self.ProjectRoot +'Outputs/' + self.JobName)
 
-        if not os.path.exists(self.ProjectRoot +'Outputs/' + self.JobName):
-            os.mkdir(self.ProjectRoot +'Outputs/' + self.JobName)
+        #if not os.path.exists(self.outpath()):
+        #    os.mkdir(self.outpath())
 
-        if not os.path.exists(self.outpath()):
-            os.mkdir(self.outpath())
-
-        shutil.copy(filepath, filedest)
+        #shutil.copy(filepath, filedest)
         
     def invoke(obj):
         return(ExternalPerfEval(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                             FGfile=obj.FGfile,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,FGparamString = obj.FGparamString,FGmethodID = obj.FGmethodID,\
                             decimatedata = obj.decimatedata,SMprocess=obj.SMprocess,SMmethodID=obj.SMmethodID,SMvenv_type=obj.SMvenv_type,SMvenv_name=obj.SMvenv_name,\
-                            ALprocess=obj.ALprocess,ALmethodID=obj.ALmethodID,ALparamString=obj.ALparamString,\
+                            ALprocess=obj.ALprocess,ALmethodID=obj.ALmethodID,ALparamString=obj.ALparamString,PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,\
+                            PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,FileGroupID=obj.FileGroupID,\
                             SMparamString=obj.SMparamString,GTfile=obj.GTfile,GT_signal_code=obj.GT_signal_code,CacheRoot=obj.CacheRoot,system=obj.system))
     def getParams(args):
 
@@ -87,7 +90,9 @@ class ExternalPerfEval(FormatFG,ServeModel,FormatGT,AssignLabels,): #,AssignLabe
         params = GT(params,'FormatGT')
         
         params = AL(params,'AssignLabels')
-        #params = AL(params,'PerfEval2')
+        params = PE2(params,'PerfEval2')
+        params = PE1(params,'PerfEval1')
+
 
         return params
     
