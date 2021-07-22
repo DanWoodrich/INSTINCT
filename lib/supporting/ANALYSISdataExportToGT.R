@@ -29,8 +29,8 @@ colnames(ANALYSIStab)[1:7]<-c("Wavefile","StartSecInWav","EndSecInWav","MooringS
 library(R.matlab)
 library(foreach)
 
-Mooringpath="//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/BS17_AU_02a/"
-prefix="PNGrslts_BS17_AU_02a_check0"
+Mooringpath="//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/PngResultsforALL_26Apr2021/"
+prefix="PNGrslts_BS17_AU_PM02-a_check0"
 
 MooringMid=paste(Mooringpath,prefix,"2.mat",sep="")
 
@@ -77,15 +77,37 @@ Data<-data.frame(Pngs,datetime,specs)
 
 colnames(Data)[3:ncol(Data)]<-trimws(Mids$PNGrslts.MetaData[,,2]$CheckSpp[,1])
 
+#get wav names by substring, and setting last 3 chars to 000, adding .wav
+#this is not general, specific to BS17_AU_PM02-a!
+Data$Wavnames<-paste(substr(Data$Pngs,1,22),"000.wav",sep="")
+
+Data<-Data[which(Data$right!=99),]
+
+mss<-paste("0",substr(Data$Pngs,23,25),sep="")
+vals<-as.POSIXlt(mss,format="%M%S")
+vals<- vals$sec+vals$min*60
+
+vals2<-vals
+
+#this skips reading the sound file which is the right way to do it
+vals2[which(vals2==450)]<-600
+vals2[which(vals2==225)]<-450
+vals2[which(vals2==0)]<-225
+
+labs<-Data$humpback
+
+labs[which(labs==0)]<-'n'
+labs[which(labs==2)]<-'m' #could consider giving this a different label. Honestly I should, and ignore it if I want to
+labs[which(labs==1)]<-'y'
+
+
 #png names are old names. Need to convert to new names, get wav file, GT form (Sf names, seg start/dur)
 #to find end time, just grab start time of next. For the files between duty cycle, catch high values and 
 #read header of wav file to find true end time. Ughhhhh
 
 #subset ANALYSIS tab to mooring ID, 
 
-GT<-ANALYSIStab[which(ANALYSIStab$MooringDeployID==Mooring),]
-
-GTnew<-data.frame(GT$StartSecInWav,GT$EndSecInWav,0,800,getFileName(GT$Wavefile),getFileName(GT$Wavefile),"y","SC","HB")
+GTnew<-data.frame(vals,vals2,0,800,Data$Wavnames,Data$Wavnames,labs,"SC","HB")
 colnames(GTnew)<-c("StartTime","EndTime","LowFreq","HighFreq","StartFile",	"EndFile",	"label",	"Type",	"SignalCode")
 
 write.csv(GTnew,"C:/Apps/INSTINCT/Data/GroundTruth/HB/HB_BS17_AU_PM02-a_files_All.csv",row.names = FALSE)
