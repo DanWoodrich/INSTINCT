@@ -40,22 +40,25 @@ class Helper:
                 sha1.update(data)
         return sha1.hexdigest()[0:hlen]
     def getDifftime(self):
+
         #self=self.sort_values(['Deployment','StartTime','SegStart'], ascending=[True,True,True]) #change this behavior 7/12/21, don't re-sort. 
         self['TrueStart'] = self['StartTime']+pd.to_timedelta(self['SegStart'], unit='s')
         self['TrueEnd'] = self['TrueStart']+pd.to_timedelta(self['SegDur'], unit='s')
         #self['EndTime'] = self['StartTime']+pd.to_timedelta(self['Duration'], unit='s')
         self['DiffTime']=pd.to_timedelta(0)
-        self['DiffTime'][1:len(self)] = pd.to_timedelta(abs(self['TrueEnd'][0:(len(self['TrueEnd'])-1)] - self['TrueStart'][1:len(self['TrueStart'])].values)) #changes 7/12/21, fix bug where difftime was assigned improperly
-        self['DiffTime'] = self['DiffTime']>pd.to_timedelta(2,unit='s') #makes the assumption that if sound files are 1 second apart they are actually consecutive (deals with rounding differences)
+        self['DiffTime'][0:(len(self)-1)] = pd.to_timedelta(abs(self['TrueEnd'][0:(len(self['TrueEnd'])-1)] - self['TrueStart'][1:len(self['TrueStart'])].values)) #changes 7/12/21, fix bug where difftime was assigned improperly
+        self['DiffTime'] = (self['DiffTime']>pd.to_timedelta(2,unit='s'))==False #makes the assumption that if sound files are 1 second apart they are actually consecutive (deals with rounding differences)
         consecutive = numpy.empty(len(self['DiffTime']), dtype=int)
         consecutive[0] = 1
         iterator = 1
-        for n in range(0,(len(self['DiffTime']))-1):
+        
+        for n in range(0,(len(self['DiffTime'])-1)):
             if self['DiffTime'].values[n] != True:
                 iterator = iterator+1
-                consecutive[n + 1] = iterator
+                consecutive[n+1] = iterator
             else:
-                consecutive[n + 1] = iterator
+                consecutive[n+1] = iterator
+
         self['DiffTime'] = consecutive
         self = self.drop(columns='TrueStart')
         self = self.drop(columns='TrueEnd')

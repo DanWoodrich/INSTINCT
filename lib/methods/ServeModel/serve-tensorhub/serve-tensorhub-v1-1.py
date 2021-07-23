@@ -184,10 +184,10 @@ for i in range(len(FG.DiffTime.unique())-1):
     ExcludeStart = numpy.where(compStart==True)[0]#indeces to exclude from the final table
     ExcludeEnd = numpy.where(compEnd==True)[0]#indeces to exclude from the final table
 
-    StartFile=pd.cut(StartTime, cums, labels=FGin.FileName,right=False) #this breaks with labels smaller than wav files (pngs). 
-    EndFile=pd.cut(EndTime, cums, labels=FGin.FileName,right=False)
+    StartFile=pd.cut(StartTime, cums, labels=FGin.FileName,right=False,ordered=False) #this breaks with labels smaller than wav files (pngs). 
+    EndFile=pd.cut(EndTime, cums, labels=FGin.FileName,right=False,ordered=False)
 
-    DeploymentID = pd.cut(StartTime, cums, labels=FGin.Deployment,right=False) #since this processes difftimes, this also should
+    DeploymentID = pd.cut(StartTime, cums, labels=FGin.Deployment,right=False,ordered=False) #since this processes difftimes, this also should
     #always be a fixed value. 
 
     StartTimeMod = pd.to_numeric(pd.cut(StartTime, cums, labels=cums[0:(len(cums)-1)],right=False))
