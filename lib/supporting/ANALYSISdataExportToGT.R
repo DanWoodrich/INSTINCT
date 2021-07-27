@@ -7,7 +7,7 @@ source("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R")
 #define mooring
 
 Mooring<-"BS17_AU_PM02-a"
-species="AS"
+species="GS"
 
 #load in FG
 
@@ -100,11 +100,13 @@ if(species=="HB"){
   labs<-pmax(Data$humpback,Data$bowhead,Data$right)
 }else if(species=="AS"){
   labs<-pmax(Data$humpback,Data$bowhead,Data$right,Data$gunshot,Data$minke,Data$gray,Data$walrus,Data$genPinni)
+}else if(species=="GS"){
+  labs<-Data$gunshot
 }
 
 
 labs[which(labs==0)]<-'n'
-labs[which(labs==2)]<-'m' #could consider giving this a different label. Honestly I should, and ignore it if I want to
+labs[which(labs==2)]<-'m' 
 labs[which(labs==1)]<-'y'
 
 

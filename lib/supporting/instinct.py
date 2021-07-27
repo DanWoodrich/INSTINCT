@@ -749,9 +749,15 @@ class AssignLabels(INSTINCT_Rmethod_Task):
 
         argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ALprocess,MethodID=self.ALmethodID,Paths=Paths,Args=Args,Params=self.ALparamString)
         
-    def invoke(obj,upstream1,upstream2,upstream3):
+    def invoke(obj,upstream1,upstream2,upstream3,AL_apply="n"):
+        if AL_apply == "y":
+            ALparamString=obj.n_ALparamString
+            ALmethodID=obj.n_ALmethodID
+        else: #default
+            ALparamString=obj.ALparamString
+            ALmethodID=obj.ALparamString
         return(AssignLabels(upstream_task1 = upstream1,upstream_task2 = upstream2,upstream_task3 = upstream3,\
-                            ALmethodID=obj.ALmethodID,ALprocess=obj.ALprocess,ALparamString=obj.ALparamString,\
+                            ALmethodID=ALmethodID,ALprocess=obj.ALprocess,ALparamString=ALparamString,\
                             system=obj.system,ProjectRoot=obj.ProjectRoot))
 
 ########################

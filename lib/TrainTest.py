@@ -33,6 +33,9 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
     GTfile =luigi.Parameter()
     FileGroupID=luigi.Parameter()
 
+    n_ALmethodID = luigi.Parameter()
+    n_ALparamString = luigi.Parameter()
+    AL_apply = luigi.Parameter()
 
     def pipelineMap(self,l):
 
@@ -53,7 +56,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         task10 = FormatGT.invoke(self,task6,n=l,src="n_")#FormatGT(upstream_task1=task6,uTask1path=task6.outpath(),GTfile=self.n_GTfile[l],ProjectRoot=self.ProjectRoot)
         task11 = AssignLabels.invoke(self,task9,task10,task6)
         task12 = ApplyCutoff.invoke(self,task11)
-        task13 = AssignLabels.invoke(self,task12,task10,task6)
+        task13 = AssignLabels.invoke(self,task12,task10,task6,AL_apply=self.AL_apply) #controls if different criteria is used in test- ie, png level vs det level. 
         task14 = PerfEval1_s1.invoke(self,task13,task6,task12,n=l,src="n_") 
         task15 = PerfEval2.invoke(self,task11,task1,"FG") #use the pre cutoff data
             
@@ -142,7 +145,8 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
                             TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
                             TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_FileGroupID=obj.n_FileGroupID,\
                             PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
-                            PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,loopVar=obj.n_IDlength,\
+                            PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,loopVar=obj.n_IDlength,n_ALmethodID=obj.n_ALmethodID,\
+                            n_ALparamString=obj.n_ALparamString,AL_apply=obj.AL_apply,\
                             FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                             n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,n_GTfile=obj.n_GTfile,system=obj.system,CacheRoot=obj.CacheRoot))
     def getParams(args):
@@ -165,8 +169,10 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         #FG for novel data
         n_params = Load_Job('TrainTest',args)
         n_params = FG(n_params,'FormatFGapply')
-
         n_params = GT(n_params,'FormatGTapply')
+
+        if(params.AL_apply=='y'):
+            n_params = AL(n_params,'FormatALapply')
 
         #only retain these ones. 
         params.n_FileGroupID = n_params.FileGroupID
@@ -174,6 +180,13 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         params.n_IDlength = n_params.IDlength
         params.n_GTfile = n_params.GTfile
 
+        if(params.AL_apply=='y'):
+            params.n_ALmethodID = n_params.ALmethodID
+            params.n_ALparamString = n_params.ALparamString
+        else:
+            params.n_ALmethodID = None
+            params.n_ALparamString = None
+            
         params.TT_WriteToOutputs = 'y'
 
         return params

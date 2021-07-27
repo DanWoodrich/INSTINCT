@@ -64,6 +64,12 @@ class Load_Job:
         self.system=self.MasterINI['Global']['system']
         self.CacheRoot=self.MasterINI['Global']['CacheRoot']
 
+        #load in AL option if available, default to n
+        if MasterINI.has_option('Global', 'AL_apply'):
+            self.AL_apply = self.MasterINI['Global']['AL_apply']
+        else:
+            self.AL_apply = 'n'
+
 def getArt(signal,result,num=1):
     if signal in ["GS","RW","LM"]:
         #template for art by artist 'snd' https://ascii.co.uk/art/whale
