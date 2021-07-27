@@ -42,7 +42,7 @@ class ExternalPerfEval(FormatFG,ServeModel,FormatGT,AssignLabels,PerfEval2,PerfE
 
             #add in processes to view various components of this
 
-            task6 = ApplyCutoff.invoke(self,task2)
+            task6 = ApplyCutoff.invoke(self,task3)
             task7 = RavenViewDETx.invoke(self,task6,task0)
 
 
@@ -53,7 +53,7 @@ class ExternalPerfEval(FormatFG,ServeModel,FormatGT,AssignLabels,PerfEval2,PerfE
         for f in range(len(tasks)):
             taskStr.extend([tasks[f].hashProcess()])
             
-        hashStrings = ' '.join(taskStr)
+        hashStrings = ' '.join(taskStr)+"a" #TEMP, DELETE THIS
 
         return Helper.getParamHash2(' '.join(hashStrings),6)
     def requires(self):

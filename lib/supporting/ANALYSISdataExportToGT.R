@@ -2,13 +2,12 @@
 
 library(R.matlab)
 
-
 source("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R") 
 
 #define mooring
 
-Mooring<-"BS14_AU_PM04"
-species="HB"
+Mooring<-"BS17_AU_PM02-a"
+species="AS"
 
 #load in FG
 
@@ -99,6 +98,8 @@ if(species=="HB"){
   labs<-Data$humpback
 }else if(species=="LW"){
   labs<-pmax(Data$humpback,Data$bowhead,Data$right)
+}else if(species=="AS"){
+  labs<-pmax(Data$humpback,Data$bowhead,Data$right,Data$gunshot,Data$minke,Data$gray,Data$walrus,Data$genPinni)
 }
 
 
