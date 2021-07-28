@@ -1,4 +1,5 @@
 #rebin to GT bins, and take GT labels 
+
 #v1-1
 #change how FG duration is calculated
 #clean up condition to test for IOU (still could do a lot of work here to optimize)
@@ -51,18 +52,49 @@ if(mbehave=="y"){
   GTdata<-GTdata[-which(GTdata$label=='m'),]
 }
 
-GTdataCopy<-GTdata
-GTdataCopy<-GTdataCopy[which(GTdata$label=="TP"),]
-
 GTdata$SignalCode<-'out'
 
 #could do this in parallel, but fast enough for now. Parallel would be a pain since the data is high memory. 
 
-for(n in 1:nrow(GTdata)){
-  GTrow=GTdata[n,]
-  outDat<-outDataAll[which(outDataAll$StartFile==GTrow[,"StartFile"]),]
-  GTdata[n,"probs"]<-routine(outDat[which(outDat$StartTime<GTrow[,"EndTime"]&outDat$StartTime>GTrow[,"StartTime"]),"probs"])
+#make two routines, depending on whether or not probs are present
+
+if("probs" %in% names(outDataAll)){
+  for(n in 1:nrow(GTdata)){
+    GTrow=GTdata[n,]
+    outDat<-outDataAll[which(outDataAll$StartFile==GTrow[,"StartFile"]),]
+    GTdata[n,"probs"]<-routine(outDat[which(outDat$StartTime<GTrow[,"EndTime"]&outDat$StartTime>GTrow[,"StartTime"]),"probs"])
+    
+    if(nrow(outDat)==0){
+      if(GTdata[n,"label"]=="FP"){
+        GTdata[n,"label"]<-"TN"
+      }else if(GTdata[n,"label"]=="TP"){
+        GTdata[n,"label"]<-"FN"
+      }
+    }
+  }
+}else{
+  for(n in 1:nrow(GTdata)){
+    GTrow=GTdata[n,]
+    outDat<-outDataAll[which(outDataAll$StartFile==GTrow[,"StartFile"]),]
+    if(nrow(outDat)==0){
+      if(GTdata[n,"label"]=="FP"){
+        GTdata[n,"label"]<-"TN"
+      }else if(GTdata[n,"label"]=="TP"){
+        GTdata[n,"label"]<-"FN"
+      }
+    }
+  }
+  GTdata$probs<-NULL
 }
+
+#drop these for now
+if(any(GTdata$label=="TN")){
+  GTdata<-GTdata[-which(GTdata$label=="TN"),]
+}
+
+GTdataCopy<-GTdata[which(GTdata$label=="TP"),]
+
+GTdataCopy$SignalCode<-"GS"
 
 GTdata=rbind(GTdata,GTdataCopy)
 

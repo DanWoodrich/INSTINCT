@@ -41,6 +41,9 @@ if(DataType=="All"){
 #drop FN labels. 
 data<-data[which(data$label %in% c("TP","FP")),]
 
+#v5 also drop labels where probs = NA
+data<-data[-which(is.na(data$probs)),]
+
 #if still has species code labels, drop them
 
 if("SignalCode" %in% colnames(data)){

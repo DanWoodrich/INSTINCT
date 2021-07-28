@@ -112,11 +112,11 @@ class argParse:
         
         if(Wrapper==False):
             command1 = executable1 + ProjectRoot + 'lib/methods/' + ProcessID + '/' + MethodIDcut + '/' + MethodID + executable2
-            command2 = ' '.join(Paths) + ' ' + ' '.join(Args) + ' ' + Params
+            command2 = ' '.join(Paths+Args)+ ' ' + Params
 
         elif(Wrapper):
             command1 = executable1 + ProjectRoot + 'lib/methods/' + ProcessID + '/' + ProcessID + 'Wrapper' + executable2
-            command2 = ProjectRoot + ' ' + ' '.join(Paths) + ' ' + ' '.join(Args) #don't think lists need to be flattened, since these should refer to process not the individual methods
+            command2 = ProjectRoot + ' ' +  ' '.join(Paths+Args) #don't think lists need to be flattened, since these should refer to process not the individual methods
 
             if not(isinstance(MethodID, list)): #this will be a list if there are multiple methods being passed 
                 command2 = command2 + ' method1 ' + MethodID + ' ' + Params + ' ' + paramsNames
@@ -726,6 +726,7 @@ class AssignLabels(INSTINCT_Rmethod_Task):
     ALmethodID = luigi.Parameter()
     
     def hashProcess(self):
+
         hashLength = 6 
         ALparamsHash = Helper.getParamHash2(self.ALparamString + ' ' + self.ALmethodID + ' ' + self.upstream_task2.hashProcess()+ ' ' + self.upstream_task3.hashProcess(),hashLength)
         return ALparamsHash
@@ -745,7 +746,7 @@ class AssignLabels(INSTINCT_Rmethod_Task):
             os.mkdir(resultPath)
 
         Paths = [FGpath,GTpath,DETpath,resultPath]
-        Args = ''
+        Args = []
 
         argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.ALprocess,MethodID=self.ALmethodID,Paths=Paths,Args=Args,Params=self.ALparamString)
         
@@ -755,7 +756,7 @@ class AssignLabels(INSTINCT_Rmethod_Task):
             ALmethodID=obj.n_ALmethodID
         else: #default
             ALparamString=obj.ALparamString
-            ALmethodID=obj.ALparamString
+            ALmethodID=obj.ALmethodID
         return(AssignLabels(upstream_task1 = upstream1,upstream_task2 = upstream2,upstream_task3 = upstream3,\
                             ALmethodID=ALmethodID,ALprocess=obj.ALprocess,ALparamString=ALparamString,\
                             system=obj.system,ProjectRoot=obj.ProjectRoot))
@@ -792,7 +793,7 @@ class MergeFE_AL(INSTINCT_Rmethod_Task):
 
         Paths = [DETwFEpath,DETwALpath,resultPath]
 
-        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.MFAprocess,MethodID=self.MFAmethodID,Paths=Paths,Args='',Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.MFAprocess,MethodID=self.MFAmethodID,Paths=Paths,Args=[],Params='')
         
     def invoke(obj,upstream1,upstream2):
         return(MergeFE_AL(upstream_task1 = upstream1,upstream_task2 = upstream2,\
@@ -922,7 +923,7 @@ class PerfEval2(INSTINCT_Rmethod_Task):
 
         Paths = [DETpath,resultPath,StatsPath,self.PE2datType]
 
-        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE2process,MethodID=self.PE2methodID,Paths=Paths,Args='',Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PE2process,MethodID=self.PE2methodID,Paths=Paths,Args=[],Params='')
 
     def invoke(obj,upstream1,upstream2,PE2datTypeDef=None):
         return(PerfEval2(upstream_task1=upstream1,upstream_task2=upstream2,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
@@ -1260,7 +1261,7 @@ class ReduceByGT(INSTINCT_Rmethod_Task):
         Paths = [DETpath,FGpath,resultPath]
         Params = self.RGparamString
         
-        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="ReduceByGT",MethodID=self.RGmethodID,Paths=Paths,Args='',Params=Params)
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="ReduceByGT",MethodID=self.RGmethodID,Paths=Paths,Args=[],Params=Params)
         
     def invoke(self,upstream1,upstream2):
         return(ReduceByGT(upstream_task1=upstream1,upstream_task2=upstream2,RGmethodID=self.RGmethodID,RGparamString=self.RGparamString,\

@@ -33,10 +33,6 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
     GTfile =luigi.Parameter()
     FileGroupID=luigi.Parameter()
 
-    n_ALmethodID = luigi.Parameter()
-    n_ALparamString = luigi.Parameter()
-    AL_apply = luigi.Parameter()
-
     def pipelineMap(self,l):
 
         #this does perf eval on the n_ data 
@@ -54,7 +50,8 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         task8 = UnifyFE.invoke(self,task7,task6)
         task9 = ApplyModel.invoke(self,task8,task3,task6)
         task10 = FormatGT.invoke(self,task6,n=l,src="n_")#FormatGT(upstream_task1=task6,uTask1path=task6.outpath(),GTfile=self.n_GTfile[l],ProjectRoot=self.ProjectRoot)
-        task11 = AssignLabels.invoke(self,task9,task10,task6)
+        task11 = AssignLabels.invoke(self,task9,task10,task6,AL_apply=self.AL_apply)
+
         task12 = ApplyCutoff.invoke(self,task11)
         task13 = AssignLabels.invoke(self,task12,task10,task6,AL_apply=self.AL_apply) #controls if different criteria is used in test- ie, png level vs det level. 
         task14 = PerfEval1_s1.invoke(self,task13,task6,task12,n=l,src="n_") 
@@ -73,6 +70,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
             yield tasks[5]
             yield tasks[14]
             yield tasks[15]
+
     def output(self):
         return luigi.LocalTarget(self.outpath() + '/FullStats.csv')
     def run(self):
@@ -131,7 +129,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         Paths = [EDstatPath,MDstatPath,MDvisPath,resultPath]
         Args = [FGvis_paths,FGIDs]
 
-        argParse.run(Program='R',rVers=self.r_version,cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PRprocess,MethodID=self.PRmethodID,Paths=Paths,Args=Args,Params='')
+        argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PRprocess,MethodID=self.PRmethodID,Paths=Paths,Args=Args,Params='')
         
     def invoke(obj):
         return(TrainTest(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\

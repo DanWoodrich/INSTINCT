@@ -18,6 +18,9 @@ class Comb4PE2All(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,M
     upstream_task2=None
     upstream_task3=None
 
+    n_ALmethodID = luigi.Parameter()
+    n_ALparamString = luigi.Parameter()
+    AL_apply = luigi.Parameter()
     
     def pipelineMap(self,l):
         task0 = Comb4FeatureTrain.invoke(self)
@@ -28,7 +31,7 @@ class Comb4PE2All(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,M
         task4 = UnifyFE.invoke(self,task3,task2)
         task5 = ApplyModel.invoke(self,task4,task1,task2)
         task6 = FormatGT.invoke(self,task2,n=l,src="n_")
-        task7 = AssignLabels.invoke(self,task5,task6,task2)
+        task7 = AssignLabels.invoke(self,task5,task6,task2,AL_apply=self.AL_apply)
 
         return [task0,task1,task2,task3,task4,task5,task6,task7]
     def invoke(obj):
@@ -42,6 +45,7 @@ class Comb4PE2All(Comb4Standard,FormatFG,FormatGT,UnifyED,AssignLabels,UnifyFE,M
                             FEcpu=obj.FEcpu,MFAprocess=obj.MFAprocess,MFAmethodID=obj.MFAmethodID,FGparamString=obj.FGparamString,\
                             FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                             TMprocess=obj.TMprocess,TMmethodID=obj.TMmethodID,TMparamString=obj.TMparamString,TMstage=obj.TMstage,\
-                            TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,\
+                            TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_ALmethodID=obj.n_ALmethodID,\
+                            n_ALparamString=obj.n_ALparamString,AL_apply=obj.AL_apply,\
                             n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,n_GTfile=obj.n_GTfile,system=obj.system,CacheRoot=obj.CacheRoot))
     
