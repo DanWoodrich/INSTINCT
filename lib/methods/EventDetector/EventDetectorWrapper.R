@@ -43,7 +43,7 @@ EDstage<-"1"
 crs<-99
 chunkSize<- 20
 
-paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 C:/Apps/INSTINCT/Cache/98ccbe6898da/ C:/Apps/INSTINCT/Cache/98ccbe6898da/8d0560 FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-13 y 0.5 Downsweep 500 -Inf -1 80 80 1.1 2 50 0.9 2 10 100 1024 20 contour-w-slope-r-source-v1-13 combine_dets combine_int desired_slope high_freq hough_slope_max hough_slope_min img_thresh1 img_thresh2 isoblur_sigma1 isoblur_sigma2 low_freq noise_thresh noise_win_length overlap pix_thresh t_samp_rate window_length"
+paramArgsPre<-"C:/Apps/INSTINCT/ //161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/1024 //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/a36acdff5a2c/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/a36acdff5a2c/e11fbd FileGroupFormat1.csv.gz 1 99 20 method1 contour-w-slope-r-source-v1-13 y 0.5 Downsweep 500 -Inf -1 80 80 1.1 2 50 0.9 2 40 100 1024 50 contour-w-slope-r-source-v1-13 combine_dets combine_int desired_slope high_freq hough_slope_max hough_slope_min img_thresh1 img_thresh2 isoblur_sigma1 isoblur_sigma2 low_freq noise_thresh noise_win_length overlap pix_thresh t_samp_rate window_length"
 args<-strsplit(paramArgsPre,split=" ")[[1]]
 
 #To make this general to ED, need to pass method params instead of hard defining here. 
@@ -151,6 +151,7 @@ detOut<-foreach(i=1:BigChunks) %do% {
     #process per diffTime chunk
     outList <- vector(mode = "list")
     for(h in unique(dataIn$DiffTime)){
+      print(h)
       #identifier for how file was processed
       processTag<-paste(h,splitID,i,n,sep="_")
       

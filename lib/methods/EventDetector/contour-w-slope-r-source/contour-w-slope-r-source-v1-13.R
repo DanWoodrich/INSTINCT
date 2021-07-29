@@ -237,7 +237,7 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini=NULL,ParamArgs=
   #for each detection, if any following detections start within endtime +x, reassign them to the current ID. 
   #last, melt the df by ID, taking the lowest low, highest high, earliest start, latest end. 
   
-  if(CombineDets=="y"){
+  if(CombineDets=="y"&length(Detections)!=0){ #stealth change 7/29/21!!!
     Detections<-as.data.frame(Detections)
     Detections<-Detections[order(Detections$V1),]
     Detections$ID<-1:nrow(Detections)
@@ -265,7 +265,7 @@ EventDetectoR<-function(soundFile=NULL,spectrogram=NULL,dataMini=NULL,ParamArgs=
 
   }
   
-  if(verbose=='y'){
+  if(verbose=='y'&length(Detections)!=0){
     
     
     endpath1<-paste(metadata[2][[1]],"tmp",sep="")

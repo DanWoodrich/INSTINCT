@@ -6,7 +6,7 @@
 #fix bug in determining if intersection is present.
 #
 
-args<-"C:/Apps/INSTINCT/Cache/f1f81de75ed5/ C:/Apps/INSTINCT/Cache/f1f81de75ed5/28b9f9/ C:/Apps/INSTINCT/Cache/f1f81de75ed5/e11fbd/ C:/Apps/INSTINCT/Cache/f1f81de75ed5/e11fbd/9144db y max labels-w-GT-bins-v1-2"
+args<-"C:/Apps/INSTINCT/Cache/f1f81de75ed5/ C:/Apps/INSTINCT/Cache/f1f81de75ed5/28b9f9/ C:/Apps/INSTINCT/Cache/f1f81de75ed5/e11fbd/5d8a3a/b29207/d8b198/715cf4/ C:/Apps/INSTINCT/Cache/f1f81de75ed5/e11fbd/5d8a3a/b29207/d8b198/715cf4/d8b198 y max labels-w-GT-bins-v1-3"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -62,9 +62,11 @@ if("probs" %in% names(outDataAll)){
   for(n in 1:nrow(GTdata)){
     GTrow=GTdata[n,]
     outDat<-outDataAll[which(outDataAll$StartFile==GTrow[,"StartFile"]),]
-    GTdata[n,"probs"]<-routine(outDat[which(outDat$StartTime<GTrow[,"EndTime"]&outDat$StartTime>GTrow[,"StartTime"]),"probs"])
+    outDatPng<-outDat[which(outDat$StartTime<=GTrow[,"EndTime"]&outDat$StartTime>=GTrow[,"StartTime"]),"probs"]
+    GTdata[n,"probs"]<-routine(outDatPng)
     
-    if(nrow(outDat)==0){
+    if(length(outDatPng)==0){
+      GTdata[n,"probs"]<-NA
       if(GTdata[n,"label"]=="FP"){
         GTdata[n,"label"]<-"TN"
       }else if(GTdata[n,"label"]=="TP"){
@@ -92,9 +94,13 @@ if(any(GTdata$label=="TN")){
   GTdata<-GTdata[-which(GTdata$label=="TN"),]
 }
 
-GTdataCopy<-GTdata[which(GTdata$label=="TP"),]
+GTdataCopy<-GTdata[which(GTdata$label=="TP"|GTdata$label=="FN"),]
 
 GTdataCopy$SignalCode<-"GS"
+
+if(any(GTdata$label=="FN")){
+  GTdata<-GTdata[-which(GTdata$label=="FN"),]
+}
 
 GTdata=rbind(GTdata,GTdataCopy)
 
