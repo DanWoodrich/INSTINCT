@@ -363,11 +363,16 @@ class SplitED(luigi.Task):
         return luigi.LocalTarget(self.outpath() + '/FileGroupFormat' + str(self.splitNum+1) + '.csv.gz')
     def run(self):
 
+        #import code
+        #code.interact(local=locals())
+
         inFile = self.upstream_task1.outpath() + '/FileGroupFormat.csv.gz'
         
         FG_dict = Helper.peek(inFile,fn_type = object,fp_type = object,st_type = object,\
                               dur_type = 'float64',comp_type = 'gzip')
         FG = pd.read_csv(inFile, dtype=FG_dict,compression='gzip')
+
+        
         if self.EDsplits == 1:
             FG.to_csv(self.outpath() + '/FileGroupFormat1.csv.gz',index=False,compression='gzip')
         #need to test this section to ensure forking works 
