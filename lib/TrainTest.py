@@ -160,7 +160,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2,RavenView
                             TM_outName=obj.TM_outName,TMcpu=obj.TMcpu,ACcutoffString=obj.ACcutoffString,n_FileGroupID=obj.n_FileGroupID,\
                             PE1process=obj.PE1process,PE1methodID=obj.PE1methodID,PE2process=obj.PE2process,PE2methodID=obj.PE2methodID,\
                             PRprocess=obj.PRprocess,PRmethodID=obj.PRmethodID,loopVar=obj.n_IDlength,n_ALmethodID=obj.n_ALmethodID,\
-                            n_ALparamString=obj.n_ALparamString,AL_apply=obj.AL_apply,\
+                            n_ALparamString=obj.n_ALparamString,AL_apply=obj.AL_apply,RVmethodID=obj.RVmethodID,\
                             FGmethodID=obj.FGmethodID,decimatedata = obj.decimatedata,SoundFileRootDir_Host_Raw=obj.SoundFileRootDir_Host_Raw,\
                             n_IDlength=obj.n_IDlength,n_FGfile=obj.n_FGfile,n_GTfile=obj.n_GTfile,system=obj.system,CacheRoot=obj.CacheRoot))
     def getParams(args):
@@ -177,6 +177,8 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2,RavenView
         params = PE1(params,'PerfEval1')
         params = PE2(params,'PerfEval2')
         params = PR(params,'PerformanceReport')
+        params = RV(params,'RavenViewDetx')
+
 
         #novel data params
 
