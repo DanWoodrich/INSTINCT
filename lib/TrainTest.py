@@ -14,7 +14,7 @@ from supporting.Comb4FeatureTrain import *
 from supporting.Comb4PE2All import *
 from supporting.job_fxns import * 
 
-class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
+class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2,RavenViewDETx):
 
     JobName=luigi.Parameter()
     TT_WriteToOutputs = luigi.Parameter()
@@ -56,8 +56,10 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         task13 = AssignLabels.invoke(self,task12,task10,task6,AL_apply=self.AL_apply) #controls if different criteria is used in test- ie, png level vs det level. 
         task14 = PerfEval1_s1.invoke(self,task13,task6,task12,n=l,src="n_") 
         task15 = PerfEval2.invoke(self,task11,task1,"FG") #use the pre cutoff data
+
+        task16 = RavenViewDETx.invoke(self,task13,task6,"T")
             
-        return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9,task10,task11,task12,task13,task14,task15]
+        return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9,task10,task11,task12,task13,task14,task15,task16]
     def outpath(self):
         if self.TT_WriteToOutputs=='y':
             return self.ProjectRoot +'Outputs/' + self.JobName + '/' + self.hashProcess()
@@ -70,9 +72,12 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
             yield tasks[5]
             yield tasks[14]
             yield tasks[15]
+            yield tasks[16]
 
     def output(self):
-        return luigi.LocalTarget(self.outpath() + '/FullStats.csv')
+        yield luigi.LocalTarget(self.outpath() + '/FullStats.csv')
+        yield luigi.LocalTarget(self.outpath() + '/RAVENx.txt')
+
     def run(self):
 
         #this is basically same as MPE, maybe generalize this somehow... 
@@ -91,7 +96,6 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         if self.TT_WriteToOutputs=='y':
             if not os.path.exists(self.ProjectRoot +'Outputs/' + self.JobName):
                 os.mkdir(self.ProjectRoot +'Outputs/' + self.JobName)
-                    
 
         resultPath = self.outpath()
 
@@ -130,6 +134,18 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2):
         Args = [FGvis_paths,FGIDs]
 
         argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID=self.PRprocess,MethodID=self.PRmethodID,Paths=Paths,Args=Args,Params='')
+
+        #load in the ravenx files, and rbind them in pandas. 
+
+        RX_paths = [None] * self.loopVar
+        for k in range(self.loopVar):
+            tasks = self.pipelineMap(k)
+            RX_dats[k] = pd.read_csv(tasks[16].outpath() + '/Ravenx.txt', delimiter = "\t")
+            
+        RX_dat = pd.concat(RX_dats,ignore_index=True)
+
+        RX_dat.to_csv(resultCache + '/RAVENx.txt',index=False, sep='\t')
+        RX_dat.to_csv(self.outpath() + '/RAVENx.txt',index=False, sep='\t')
         
     def invoke(obj):
         return(TrainTest(JobName=obj.JobName,ProjectRoot=obj.ProjectRoot,SoundFileRootDir_Host_Dec=obj.SoundFileRootDir_Host_Dec,\
