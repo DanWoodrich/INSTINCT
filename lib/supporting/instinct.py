@@ -1178,7 +1178,7 @@ class RavenToDETx(INSTINCT_Rmethod_Task):
     def hashProcess(self):
         hashLength = 6
         #hash the previous file to see if it was edited
-        fileHash = Helper.hashfile(self.upstream_task1.outpath() + self.fileName,hashLength)
+        fileHash = Helper.hashfile(self.upstream_task1.outpath() + "/" +self.fileName,hashLength)
 
         return Helper.getParamHash2(self.RDmethodID + ' ' + fileHash+ ' ' + self.upstream_task1.hashProcess(),hashLength)
     def output(self):

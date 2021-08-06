@@ -33,6 +33,8 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2,RavenView
     GTfile =luigi.Parameter()
     FileGroupID=luigi.Parameter()
 
+    RavenFill = None
+
     def pipelineMap(self,l):
 
         #this does perf eval on the n_ data 
@@ -57,7 +59,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2,RavenView
         task14 = PerfEval1_s1.invoke(self,task13,task6,task12,n=l,src="n_") 
         task15 = PerfEval2.invoke(self,task11,task1,"FG") #use the pre cutoff data
 
-        task16 = RavenViewDETx.invoke(self,task13,task6,"T")
+        task16 = RavenViewDETx.invoke(self,task13,task6,"F")
             
         return [task0,task1,task2,task3,task4,task5,task6,task7,task8,task9,task10,task11,task12,task13,task14,task15,task16]
     def outpath(self):
@@ -137,7 +139,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2,RavenView
 
         #load in the ravenx files, and rbind them in pandas. 
 
-        RX_paths = [None] * self.loopVar
+        RX_dats = [None] * self.loopVar
         for k in range(self.loopVar):
             tasks = self.pipelineMap(k)
             RX_dats[k] = pd.read_csv(tasks[16].outpath() + '/Ravenx.txt', delimiter = "\t")
@@ -177,7 +179,7 @@ class TrainTest(Comb4PE2All,Comb4EDperf_TT,Comb4FeatureTrain,PerfEval2,RavenView
         params = PE1(params,'PerfEval1')
         params = PE2(params,'PerfEval2')
         params = PR(params,'PerformanceReport')
-        params = RV(params,'RavenViewDetx')
+        params = RV(params,'RavenViewDETx')
 
 
         #novel data params

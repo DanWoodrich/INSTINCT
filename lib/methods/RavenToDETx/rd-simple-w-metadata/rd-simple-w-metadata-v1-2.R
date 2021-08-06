@@ -3,7 +3,7 @@ MethodID<-"rd-simple-w-metadata-v1-2"
 #1.1: make it so any extra metadata is retained
 #1.2: include a filename arg
 
-args="C:/Apps/INSTINCT/Outputs/EditGTwRaven/cc8590 C:/Apps/INSTINCT/Cache/c4a8525f118b C:/Apps/INSTINCT/Outputs/EditGTwRaven/cc8590/6d75fa"
+args="C:/Apps/INSTINCT/Cache/185f51d2b03a/e11fbd/76189a/b29207/33493e/bad76b C:/Apps/INSTINCT/Cache/185f51d2b03a C:/Apps/INSTINCT/Cache/185f51d2b03a/e11fbd/76189a/b29207/33493e/bad76b/9215dc RAVENx.txt"
 
 args<-strsplit(args,split=" ")[[1]]
 

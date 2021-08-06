@@ -6,7 +6,7 @@
 #fix bug in determining if intersection is present.
 #
 
-args<-"C:/Apps/INSTINCT/Cache/f1f81de75ed5/ C:/Apps/INSTINCT/Cache/f1f81de75ed5/28b9f9/ C:/Apps/INSTINCT/Cache/f1f81de75ed5/e11fbd/5d8a3a/b29207/d8b198/715cf4/ C:/Apps/INSTINCT/Cache/f1f81de75ed5/e11fbd/5d8a3a/b29207/d8b198/715cf4/d8b198 y max labels-w-GT-bins-v1-3"
+args<-"C:/Apps/INSTINCT/Cache/0eded0cf8d73/ C:/Apps/INSTINCT/Cache/0eded0cf8d73/df49f0/ C:/Apps/INSTINCT/Cache/0eded0cf8d73/e11fbd/ C:/Apps/INSTINCT/Cache/0eded0cf8d73/e11fbd/3b890e i max labels-w-GT-bins-v1-4"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -96,7 +96,11 @@ if(any(GTdata$label=="TN")){
 
 GTdataCopy<-GTdata[which(GTdata$label=="TP"|GTdata$label=="FN"),]
 
-GTdataCopy$SignalCode<-"GS"
+
+if(any(GTdata$label=="TP"|GTdata$label=="FN")){ #stealth change to bugfix
+  GTdataCopy$SignalCode<-"GS"
+}
+
 
 if(any(GTdata$label=="FN")){
   GTdata<-GTdata[-which(GTdata$label=="FN"),]

@@ -26,6 +26,8 @@ transferSF<-"n"
 
 files<-dir(folderName)[grep(".csv",dir(folderName))]
 
+files<-paste(c("BS11_AU_04b"),"_files_All_SFiles_and_durations.csv",sep="")
+
 #just for RW, and temporary
 #files<-files[1:12]
 
@@ -151,10 +153,21 @@ NASpath = "//161.55.120.117/NMML_AcousticsData/Audio_Data/Waves"
 #this will be file duration, but save original duration as 'segDur'. 
 pathsave=""
 for(i in 1:nrow(outData)){
+  print(paste(i,"of",nrow(outData)))
   path = paste(NASpath,outData[i,"FullPath"],outData[i,"FileName"],sep="")
   if(path!=pathsave){
+    if(!file.exists(path)){
+      path = paste(substr(path,1,nchar(path)-5),"1.wav",sep="")
+      outData[i,"FileName"]<-paste(substr(outData[i,"FileName"],1,nchar(outData[i,"FileName"])-5),"1.wav",sep="")
+      outData[i,"StartTime"]<-paste(substr(outData[i,"StartTime"],1,nchar(outData[i,"StartTime"])-1),"1",sep="")
+      outData[i,"SegStart"]<-as.numeric(outData[i,"SegStart"])-1
+      outData[i,"SegDur"]<-as.numeric(outData[i,"SegDur"])+1
+
+    }
+    
     info<-readWave2(path,header = TRUE)
     outData[i,"Duration"]<-round(info$samples/info$sample.rate)
+      
   }else{
     outData[i,"Duration"]<-round(info$samples/info$sample.rate)
   }

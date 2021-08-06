@@ -2,7 +2,7 @@
 library("foreach")
 #1.1: make it so any extra metadata is retained
 
-args="C:/Apps/INSTINCT/Outputs/EditGTwRaven/cc8590/740837 C:/Apps/INSTINCT/Cache/c4a8525f118b C:/Apps/INSTINCT/Outputs/EditGTwRaven/cc8590/740837/498fa0  Cycle None Union #patternA,#patternB Union n y reduce-by-label-and-string-v1-0"
+args="C:/Apps/INSTINCT/Outputs/runFullNovel/093e69/001fca C:/Apps/INSTINCT/Cache/185f51d2b03a C:/Apps/INSTINCT/Outputs/runFullNovel/093e69/001fca/557b6f File Dan_Comments None Union mixed,negative Union n y reduce-by-label-and-string-v1-1"
 
 args<-strsplit(args,split=" ")[[1]]
 
@@ -48,7 +48,14 @@ keepboolString<-matrix(FALSE,nrow=length(Strings),ncol=nrow(GT))
 
 if(UseString=='y'){
   for(n in 1:length(Strings)){
+    
     keepboolString[n,]<-grepl(Strings[n],GT[,ColString])
+    
+    #this is a stealth change, but just prints a warning if string not found
+    if(!any(keepboolString[n,])){
+      print(paste("string: '",Strings[n],"' not found!",sep=""))
+    }
+    
   }
   
   if(String_IorU=="Intersection"){
