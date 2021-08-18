@@ -78,7 +78,7 @@ if(length(RavGT)>11){
 
 colnames(out)[5:6]<-c("StartFile","EndFile")
 
-out<-out[,-which(colnames(out) %in% colnames(FG))]
+out<-out[,-which(colnames(out) %in% colnames(FG)[2:length(colnames(FG))])]
 
 write.csv(out,gzfile(paste(resultPath,"DETx.csv.gz",sep="/")),row.names = FALSE)
 
