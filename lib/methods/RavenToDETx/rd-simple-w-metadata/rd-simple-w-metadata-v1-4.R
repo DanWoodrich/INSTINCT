@@ -1,8 +1,9 @@
-MethodID<-"rd-simple-w-metadata-v1-3"
+MethodID<-"rd-simple-w-metadata-v1-4"
 
 #1.1: make it so any extra metadata is retained
 #1.2: include a filename arg
 #1.3: make general to any DETx, not just GT types. And, don't truncate # of columns provided. 
+#1.4: Ok do truncate, just do it based on the FG data columns remaining. 
 
 args="C:/Apps/INSTINCT/Outputs/EditGTwRaven/04f89c C:/Apps/INSTINCT/Cache/5564e23d3c9c C:/Apps/INSTINCT/Outputs/EditGTwRaven/04f89c/9bc076 RAVENx.txt"
 
@@ -76,6 +77,8 @@ if(length(RavGT)>11){
 }
 
 colnames(out)[5:6]<-c("StartFile","EndFile")
+
+out<-out[,-which(colnames(out) %in% colnames(FG))]
 
 write.csv(out,gzfile(paste(resultPath,"DETx.csv.gz",sep="/")),row.names = FALSE)
 

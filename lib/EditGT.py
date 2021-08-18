@@ -18,6 +18,8 @@ class EditGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx):
     upstream_task1=None
     upstream_task2=None
 
+    fileName = None
+
     def pipelineMap(self): #here is where you define pipeline structure
         task0 = FormatFG.invoke(self,n=0)
         task1 = ViewGT.invoke(self)

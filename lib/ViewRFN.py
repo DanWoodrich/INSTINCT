@@ -35,6 +35,8 @@ class ViewRFN(ApplyModel,Comb4FeatureTrain,TrainModel,ApplyCutoff,RavenViewDETx)
 
     RavenFill = None
 
+    fileName = None
+
     def pipelineMap(self):
             task0 = Comb4FeatureTrain.invoke(self)
             task1 = TrainModel.invoke(self,task0)
