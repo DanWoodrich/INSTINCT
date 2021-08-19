@@ -21,4 +21,5 @@ lib/junk/*
 Outputs/*
 Cache/*
 
-etc/instinct-test1-7452ad442e25.json
+etc/userkey.json
+etc/keyoriginalname.txt
