@@ -26,7 +26,7 @@ transferSF<-"n"
 
 files<-dir(folderName)[grep(".csv",dir(folderName))]
 
-files<-paste(c("BS11_AU_04b"),"_files_All_SFiles_and_durations.csv",sep="")
+files<-paste(c("AL16_AU_BS1"),"_files_All_SFiles_and_durations.csv",sep="")
 
 #just for RW, and temporary
 #files<-files[1:12]

@@ -6,7 +6,7 @@ source("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R")
 
 #define mooring
 
-Mooring<-"AW15_AU_BS03"
+Mooring<-"AL16_AU_BS01"
 species="HB"
 
 #load in FG
