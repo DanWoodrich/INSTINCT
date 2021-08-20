@@ -6,8 +6,8 @@ source("C:/Apps/INSTINCT/lib/supporting/instinct_fxns.R")
 
 #define mooring
 
-Mooring<-"BS17_AU_PM02-a"
-species="GS"
+Mooring<-"AW15_AU_BS03"
+species="HB"
 
 #load in FG
 
@@ -29,7 +29,7 @@ FG<-read.csv(paste("C:/Apps/INSTINCT/Data/FileGroups/",Mooring,"_files_All.csv",
 library(R.matlab)
 library(foreach)
 
-Mooringpath="//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/PngResultsforALL_29Jul2021/"
+Mooringpath="//nmfs/akc-nmml/CAEP/Acoustics/ANALYSIS/PngResultsforALL_11Aug2021/"
 prefix=paste("PNGrslts_",Mooring,"_check0",sep="")
 
 MooringMid=paste(Mooringpath,prefix,"2.mat",sep="")

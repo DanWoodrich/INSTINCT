@@ -6,7 +6,7 @@
 #fix bug in determining if intersection is present.
 #
 
-args<-"C:/Apps/INSTINCT/Cache/0eded0cf8d73/ C:/Apps/INSTINCT/Cache/0eded0cf8d73/df49f0/ C:/Apps/INSTINCT/Cache/0eded0cf8d73/e11fbd/ C:/Apps/INSTINCT/Cache/0eded0cf8d73/e11fbd/3b890e i max labels-w-GT-bins-v1-4"
+args<-"//161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/bd89c5999c35/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/bd89c5999c35/a21b11/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/bd89c5999c35/d69c8f/ //161.55.120.117/NMML_AcousticsData/Working_Folders/INSTINCT_cache/Cache/bd89c5999c35/d69c8f/795dc2 n mean labels-w-GT-bins-v1-4"
 
 args<-strsplit(args,split=" ")[[1]]
 
