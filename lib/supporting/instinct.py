@@ -661,6 +661,7 @@ class RunFE(SplitFE,INSTINCT_Rmethod_Task):
     def hashProcess(self):
         hashLength = 6 
         FEparamsHash = Helper.getParamHash2(self.FEparamString + ' ' + self.FEmethodID + ' ' + self.upstream_task2.hashProcess(),hashLength)
+
         return FEparamsHash
     def outpath(self):
         return self.upstream_task1.outpath() + '/' + self.hashProcess()
@@ -1178,7 +1179,7 @@ class RavenToDETx(INSTINCT_Rmethod_Task):
     def hashProcess(self):
         hashLength = 6
         #hash the previous file to see if it was edited
-        fileHash = Helper.hashfile(self.upstream_task1.outpath() + "/" +self.fileName,hashLength)
+        fileHash = Helper.hashfile(self.upstream_task1.outpath() +self.fileName,hashLength)
 
         return Helper.getParamHash2(self.RDmethodID + ' ' + fileHash+ ' ' + self.upstream_task1.hashProcess(),hashLength)
     def output(self):
@@ -1199,7 +1200,7 @@ class RavenToDETx(INSTINCT_Rmethod_Task):
         
         argParse.run(Program='R',cmdType=self.system,ProjectRoot=self.ProjectRoot,ProcessID="RavenToDETx",MethodID=self.RDmethodID,Paths=Paths,Args=Args,Params='')
         
-    def invoke(self,upstream1,upstream2,fileName='RAVENx.txt'):
+    def invoke(self,upstream1,upstream2,fileName='/RAVENx.txt'):
         self.fileName=fileName
         return(RavenToDETx(upstream_task1=upstream1,upstream_task2=upstream2,RDmethodID=self.RDmethodID,fileName=self.fileName,\
                            system=self.system,ProjectRoot=self.ProjectRoot))
