@@ -13,6 +13,8 @@ class ReduceGT(FormatFG,FormatGT,RavenViewDETx,RavenToDETx,ReduceByGT):
     FileGroupID=luigi.Parameter()
 
     RavenFill=None
+
+    fileName=None
     
     #nullify some inherited parameters:
     upstream_task1=None
