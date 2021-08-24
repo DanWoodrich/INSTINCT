@@ -1,0 +1,3 @@
+Selection	View	Channel	Begin Time (s)	End Time (s)	Low Freq (Hz)	High Freq (Hz)	Begin Path	End Path	File Offset (s)	Delta Time (s)	label	SignalCode	Type
+1	Spectrogram 1	1	0	0.1	0	0	//161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048/XB17_AM_ES01/09_2017/AM-XBES01-170928-000001.wav	//161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048/XB17_AM_ES01/09_2017/AM-XBES01-170928-000001.wav	0	0.1	NA	Placeholder	NA
+2	Spectrogram 1	1	341	341.1	0	0	//161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048/XB17_AM_ES01/09_2017/AM-XBES01-170928-134501.wav	//161.55.120.117/NMML_AcousticsData/Audio_Data/DecimatedWaves/2048/XB17_AM_ES01/09_2017/AM-XBES01-170928-134501.wav	0	0.1	NA	Placeholder	NA
