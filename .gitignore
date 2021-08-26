@@ -20,6 +20,7 @@ lib/Archive/*
 lib/junk/*
 Outputs/*
 Cache/*
+Cache - Copy
 
 etc/userkey.json
 etc/keyoriginalname.txt
