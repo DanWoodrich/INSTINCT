@@ -18,6 +18,6 @@ lib/Archive/*
 lib/junk/*
 Outputs/*
 Cache/*
-etc/lib/user/*
-!etc/lib/user/README.txt
-!etc/lib/user/contrib
+lib/user/*
+!lib/user/README.txt
+!lib/user/contrib
