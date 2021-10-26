@@ -1,0 +1,13 @@
+pipe: StatsTableCombine_ED_AM.pipe
+StatsTableCombine_ED_AM.pipe:
+  process: StatsTableCombine_ED_AM
+  EDperfEval:
+    pipe: PerfEval1_s2.pipe
+    params_drop: TrainModel_paramset
+    pipe_link:
+      name: EDperfEval.nt
+  AMperfEval:
+    pipe: PerfEval1_s2.pipe
+    params_drop: TrainModel_paramset
+    pipe_link:
+      name: AMperfEval.nt

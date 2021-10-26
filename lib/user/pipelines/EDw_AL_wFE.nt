@@ -1,0 +1,15 @@
+FE_from_DETx:
+  pipe: FeatureExtraction
+  GetDETx:
+    pipe: pAssignLabels
+    pAssignLabels:
+      pipe: AssignLabels
+      GetDETx:
+        pipe: EventDetector
+      GetFG:
+        pipe: FormatFG
+      GetGT: 
+        pipe: FormatGT
+  GetFG:
+    pipe: FormatFG
+  

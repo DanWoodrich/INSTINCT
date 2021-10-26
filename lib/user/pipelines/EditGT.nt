@@ -1,0 +1,20 @@
+pipe: ViewFileToDETx
+loop_on: FormatFG
+ViewFileToDETx:
+  process: RavenToDETx
+  GetViewFile:
+    pipe: EditViewFile
+    #loop_on: FormatFG
+    EditViewFile:
+      process: EditRAVENx
+      GetViewFile:
+        pipe: ViewDETx
+        pipe_link: 
+          name: ViewGT.nt
+      GetFG:
+        process: FormatFG
+  GetFG:
+    #loop_on: FormatFG
+    pipe: FormatFG.pipe
+    FormatFG.pipe:
+      process: FormatFG

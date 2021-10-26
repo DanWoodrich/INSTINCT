@@ -1,0 +1,18 @@
+pipe: TrainModel_RF_apply.pipe
+TrainModel_RF_apply.pipe:
+  process: TrainModel_RF_apply
+  GetDETx_w_FE:
+    pipe: FeatureExtraction.pipe
+    FeatureExtraction.pipe:
+      process: FeatureExtraction
+      GetDETx:
+        process: EventDetector
+      GetFG:
+        process: FormatFG
+  GetModel_obj:
+    pipe: TrainModel_RF_obj.pipe
+    params_drop: TrainModel_paramset
+    pipe_link: 
+      name: TrainModel_obj.nt
+  GetFG:
+    process: FormatFG

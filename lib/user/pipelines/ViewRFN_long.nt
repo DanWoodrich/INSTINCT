@@ -1,0 +1,46 @@
+#this is with old syntax, but useful to see how it compares to the shortened version in length
+pViewDETx:
+  pipe: RavenViewDETx
+  GetDETx:
+    pipe: pApplyCutoff
+    pApplyCutoff:
+      pipe: ApplyCutoff
+      GetDETx:
+        pipe: pApply_Model_RF
+        pApply_Model_RF:
+          pipe: TrainModel_RF_apply
+          GetDETx_w_FE:
+            pipe: FE_from_DETx
+            FE_from_DETx:
+              pipe: FeatureExtraction
+              GetDETx:
+                pipe: EventDetector
+              GetFG:
+                pipe: FormatFG
+          GetModel_obj:
+            pipe: TrainModel_base
+            params_drop: TrainModel_paramset
+            TrainModel_base:
+              pipe: TrainModel_RF_obj
+              GetDETx:
+                pipe: FE_from_DETx
+                FE_from_DETx:
+                  pipe: FeatureExtraction
+                  GetDETx:
+                    pipe: pAssignLabels
+                    pAssignLabels:
+                      pipe: AssignLabels
+                      GetDETx:
+                        pipe: EventDetector
+                      GetGT: 
+                        pipe: FormatGT
+                      GetFG:
+                        pipe: FormatFG
+                  GetFG:
+                    pipe: FormatFG
+              GetFG:
+                pipe: FormatFG
+          GetFG:
+            pipe: FormatFG
+  GetFG:
+    pipe: FormatFG

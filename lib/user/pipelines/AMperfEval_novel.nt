@@ -1,0 +1,34 @@
+pipe: PerfEval1_s2.pipe
+PerfEval1_s2.pipe:
+  process: PerfEval1_s2
+  GetPE1_S1:
+    pipe: PerfEval1_s1.pipe
+    loop_on: FormatFG
+    PerfEval1_s1.pipe:
+      process: PerfEval1_s1
+      GetAL:
+        #below is similar to RF_apply_on_GT, but here we first apply the cutoff. 
+        pipe: AssignLabels.pipe
+        params_drop: AL_write_GT
+        AssignLabels.pipe:
+          process: AssignLabels
+          GetDETx:
+            pipe: ApplyCutoff.pipe
+            ApplyCutoff.pipe: 
+              process: ApplyCutoff
+              GetDETx:
+                pipe: TrainModel_RF_apply.pipe
+                #params_drop: Job
+                pipe_link: 
+                  name: Apply_Model_RF_1.nt
+          GetFG:
+            process: FormatFG
+          GetGT: 
+            process: FormatGT
+      GetFG:
+        process: FormatFG
+  GetFG:
+    loop_on: FormatFG
+    pipe: FormatFG.pipe
+    FormatFG.pipe:
+      process: FormatFG

@@ -1,0 +1,14 @@
+loop_on: FormatFG
+pipe: ViewDETx
+ViewDETx:
+  process: RavenViewDETx
+  GetDETx:
+    pipe: ApplyCutoff.pipe
+    ApplyCutoff.pipe: 
+      process: ApplyCutoff
+      GetDETx:
+        pipe: TrainModel_RF_apply.pipe
+        pipe_link: 
+          name: Apply_Model_RF_1.nt
+  GetFG:
+    process: FormatFG

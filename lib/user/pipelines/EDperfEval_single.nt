@@ -1,0 +1,16 @@
+pipe: PerfEval1_s1.pipe
+PerfEval1_s1.pipe:
+  process: PerfEval1_s1
+  GetAL:
+    pipe: AssignLabels.pipe
+    params_drop: AL_write_GT
+    AssignLabels.pipe:
+      process: AssignLabels
+      GetDETx:
+        process: EventDetector
+      GetFG:
+        process: FormatFG
+      GetGT: 
+        process: FormatGT
+  GetFG:
+    process: FormatFG

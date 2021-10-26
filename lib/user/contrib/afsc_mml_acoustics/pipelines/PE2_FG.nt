@@ -1,0 +1,20 @@
+params_drop: TrainModel_paramset
+loop_on: FormatFG
+pipe: PerfEval2.pipe
+PerfEval2.pipe:
+  process: PerfEval2
+  EDperfEval:
+    pipe: PerfEval1_s1.pipe
+    pipe_link: 
+      name: EDperfEval_single.nt
+  GetModel_w_probs:
+    pipe: SplitForPE.pipe
+    SplitForPE.pipe:
+      process: SplitForPE
+      GetModel_w_probs:
+        pipe: TrainModel_RF_CV.pipe
+        #params_drop: TrainModel_paramset
+        pipe_link: 
+          name: TrainModel_CV.nt
+      GetFG:
+        process: FormatFG

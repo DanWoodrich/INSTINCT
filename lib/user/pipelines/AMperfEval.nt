@@ -1,0 +1,40 @@
+pipe: PerfEval1_s2.pipe
+PerfEval1_s2.pipe:
+  process: PerfEval1_s2
+  GetPE1_S1:
+    pipe: PerfEval1_s1.pipe
+    loop_on: FormatFG
+    PerfEval1_s1.pipe:
+      process: PerfEval1_s1
+      GetAL:
+        pipe: AssignLabels.pipe
+        params_drop: AL_write_GT
+        AssignLabels.pipe:
+          process: AssignLabels
+          GetDETx:
+            pipe: ApplyCutoff.pipe
+            ApplyCutoff.pipe: 
+              process: ApplyCutoff
+              GetDETx:
+                pipe: SplitForPE.pipe
+                SplitForPE.pipe:
+                  process: SplitForPE
+                  GetFG:
+                    process: FormatFG
+                  GetModel_w_probs:
+                    pipe: TrainModel_RF_CV.pipe
+                    # resets the AL drop from earlier
+                    params_drop: Job-TrainModel_paramset
+                    pipe_link: 
+                      name: TrainModel_CV.nt
+          GetFG:
+            process: FormatFG
+          GetGT: 
+            process: FormatGT
+      GetFG:
+        process: FormatFG
+  GetFG:
+    loop_on: FormatFG
+    pipe: FormatFG.pipe
+    FormatFG.pipe:
+      process: FormatFG
