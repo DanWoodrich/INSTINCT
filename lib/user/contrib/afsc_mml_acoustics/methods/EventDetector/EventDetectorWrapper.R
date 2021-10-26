@@ -97,7 +97,7 @@ if(length(libraries)>0){
 }
 
 #and general fxns
-source(paste(ProjectRoot,"/lib/R_misc.R",sep="")) 
+source(paste(ProjectRoot,"/lib/user/R_misc.R",sep="")) 
 
 data<-read.csv(paste(FGpath,ReadFile,sep="/"))
 
