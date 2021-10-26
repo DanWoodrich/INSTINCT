@@ -1,7 +1,6 @@
 #functions related to running jobs 
 import time
 import luigi
-import configparser
 import random
 import os
 import nestedtext as nt

@@ -9,14 +9,6 @@ import gzip
 from misc import * 
 from getglobals import PARAMSET_GLOBALS
 
-
-#need this for namespace
-#from user.processes import *
-#if os.environ.get('USECONTRIB')=='True':
-#    from contrib.processes import *
-#    from contrib.pipelines import * 
-#from base.processes import *
-##########
 class INSTINCT_pipeline:
 
     #run() defined in specific pipeline
@@ -143,11 +135,6 @@ class INSTINCT_task(luigi.Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        #if you want to hash a file (for format FG or format GT)
-        #if self.hash_file:
-        #    file_hash = self.getfilehash() #use self.file_groupID, etc
-        #    self._Task__hash = hash(str(self._Task__hash)+ file_hash)
-        #modify built in hash to make it amenible to paths
         self._Task__hash = int(str(self._Task__hash)[1:(1+self.hash_length)])
 
     def requires(self):
@@ -283,16 +270,6 @@ class INSTINCT_process(INSTINCT_task):
             #if cls.__name__!="FormatGT":
 
             parameters = params['parameters'].copy()
-            
-            #else:
-                #steal the FG params from FG process, which will always be in same level as format FG.
-                
-                #this line doesn't work. Fix!
-                #parameters = params['parameters'].copy()
-                #parameters.update({'file_groupID':paramssave['FormatFG']['parameters']['file_groupID']})
-                
-            #make it so lists will be reordered by default, so different order of lists doesn't affect hash. Pass both the
-            #working dictionary and hashable dictionary to task by default
 
             if len(parameters)>0:
 
