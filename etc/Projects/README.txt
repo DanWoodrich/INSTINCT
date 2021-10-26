@@ -4,8 +4,8 @@ Project params are ignored from git for safer version control and individual use
 
 Access params in this folder using additional command line arguments:
 
-command arg1 arg2
+instinct command arg1 arg2
 
-arg1 indicates the parameter source folder.  "." = defaults , "x" = Projects/x (used for project specific params)
+arg1 indicates the parameter project folder. (ie, 'demo')
 
-arg2 indicates the Job name to pull parameters  "." = defaults , "y" = Job Name "y" (useful if experimenting viewing intermediate outputs) 
+arg2 indicates the param file name within the project folder with no extension (ie, 'testproj')

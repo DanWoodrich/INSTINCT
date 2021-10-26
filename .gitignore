@@ -13,6 +13,7 @@ __pycache__/
 Data/
 etc/Projects/*
 !etc/Projects/README.txt
+!etc/Projects/Demo
 cloud_archive
 lib/Archive/*
 lib/junk/*
