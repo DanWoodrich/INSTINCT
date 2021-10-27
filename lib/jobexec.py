@@ -2,7 +2,7 @@ import sys
 import os
 import nestedtext as nt
 import time
-from misc import param_smoosh
+import shutil
 
 app_path = os.getcwd()
 app_path= app_path[:-4]
@@ -12,18 +12,26 @@ if len(sys.argv)==1:
     os.system("start " + project_root) #just start the window
     exit()
 
-if (sys.argv[1]=='Data' or sys.argv[1]=='etc' or sys.argv[1]=='etc/Projects' or sys.argv[1]=='bin' or
-   sys.argv[1]=='lib' or sys.argv[1]=='lib/Supporting'): #add as desired
-    os.system("start " + project_root + sys.argv[1]) #just start the window
-    exit()
+if (sys.argv[1]=='to_contrib'): #add as desired
+    #this will load all of the files in user to the contrib folder on path. 
+    #exclude pycache, contrib, and readme.txt
+
+    contribdir = project_root+"lib/user/contrib/" + os.environ.get('CONTRIBNAME')
+
+    shutil.rmtree(contribdir)
     
+    shutil.copytree(project_root+"lib/user", contribdir, ignore=shutil.ignore_patterns('__pycache__', 'README.txt','contrib'))
+    exit()
+
+
 editor = os.environ.get('TEXTEDITOR') #blank for default
     
 #from classes import *
-
+from misc import param_smoosh
 from getglobals import PARAMSET_GLOBALS
 from getnamespace import GLOBAL_NAMESPACE
 from jobfxns import *
+
 
 
 params_root = project_root + 'etc/Projects/' + sys.argv[2] + '/' + sys.argv[3] + ".nt"

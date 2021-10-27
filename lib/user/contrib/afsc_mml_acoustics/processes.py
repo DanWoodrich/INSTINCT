@@ -18,10 +18,10 @@ class HashableFile:
         
         if self.__class__.__name__=="FormatFG":
             
-            path = PARAMSET_GLOBALS['project_root']+ "Data/FileGroups/" + self.parameters['file_groupID']
+            path = PARAMSET_GLOBALS['project_root']+ "lib/user/Data/FileGroups/" + self.parameters['file_groupID']
             
         elif self.__class__.__name__=="FormatGT":
-            dirpath = PARAMSET_GLOBALS['project_root']+ "Data/GroundTruth/"+self.parameters['signal_code']
+            dirpath = PARAMSET_GLOBALS['project_root']+ "lib/user/Data/GroundTruth/"+self.parameters['signal_code']
             
             path = dirpath + "/"+self.parameters['signal_code']+"_" + self.ports[0].parameters['file_groupID']
             
@@ -503,7 +503,7 @@ class FormatGT(INSTINCT_process):
     outfile = 'DETx.csv.gz'
 
     def infile(self):
-        _dir = PARAMSET_GLOBALS['project_root']+ "Data/GroundTruth/"+self.parameters['signal_code']
+        _dir = PARAMSET_GLOBALS['project_root']+ "lib/user/Data/GroundTruth/"+self.parameters['signal_code']
         path = _dir + "/"+ self.parameters['signal_code']+"_" + self.ports[0].parameters['file_groupID']
         return _dir,path
 
@@ -545,7 +545,7 @@ class FormatFG(INSTINCT_process):
         if self.ports[0]!=None:
             file =self.ports[0].outfilegen()
         else:
-            file = PARAMSET_GLOBALS['project_root'] + "Data/FileGroups/" + self.parameters['file_groupID']
+            file = PARAMSET_GLOBALS['project_root'] + "lib/user/Data/FileGroups/" + self.parameters['file_groupID']
         return file
 
     def __init__(self, *args, **kwargs):
