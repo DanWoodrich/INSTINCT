@@ -10,7 +10,7 @@
 __pycache__/
 
 
-
+etc/INSTINCT.cfg
 etc/Projects/*
 !etc/Projects/README.txt
 !etc/Projects/Demo
