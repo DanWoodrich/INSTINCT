@@ -22,4 +22,3 @@ Cache/*
 lib/user/*
 !lib/user/README.txt
 !lib/user/contrib
-lib/user/contrib/afsc_mml_acoustics_stage
