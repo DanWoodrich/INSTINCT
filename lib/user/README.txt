@@ -14,3 +14,5 @@ not being python files, must share a common namespace with your user directory i
 the existing named files, imports, and objects. Please use the training materials (coming soon) and other examples in contrib to help 
 define your needed objects. 
 
+Recommended pattern is to define a submodule, update it with instinct push_user, and pull it using  git submodule update --remote --merge and
+instinct pull_contrib. This will keep your own version control and allow for others to use your contrib. 
