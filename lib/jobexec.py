@@ -12,18 +12,73 @@ if len(sys.argv)==1:
     os.system("start " + project_root) #just start the window
     exit()
 
-if (sys.argv[1]=='to_contrib'): #add as desired
-    #this will load all of the files in user to the contrib folder on path. 
+if (sys.argv[1]=='push_user'): 
+    #this will push your user changes to a named contrib path (not within this repo)
     #exclude pycache, contrib, and readme.txt
 
-    contribdir = project_root+"lib/user/contrib/" + os.environ.get('CONTRIBNAME')
+    userdir = project_root+"lib/user"
+    contribdir = os.environ.get('CONTRIBPATH')
 
-    shutil.rmtree(contribdir)
+    #iteratively delete files and folders from contrib
+    files_to_ignore_contrib = ['__pycache__', 'README.txt','.git']
     
-    shutil.copytree(project_root+"lib/user", contribdir, ignore=shutil.ignore_patterns('__pycache__', 'README.txt','contrib'))
+    for item in os.listdir(contribdir):
+        if item not in files_to_ignore_contrib:  # If it isn't in the list for retaining
+            path_item = contribdir + '/' + item
+            if os.path.isfile(path_item):
+                os.remove(path_item) #Remove the item 
+            else:
+                shutil.rmtree(path_item)  # Remove the dir
+
+    #iteratively copy files and folders from user
+    files_to_ignore_user = ['__pycache__', 'README.txt','contrib']
+    
+    for item in os.listdir(userdir):
+        if item not in files_to_ignore_user:
+            path_item = userdir + '/' + item
+            if os.path.isfile(path_item):
+                shutil.copyfile(path_item, contribdir + "/" + item) #copy item
+            else:
+                shutil.copytree(path_item,contribdir + "/" + item) #copy tree
     exit()
 
+if (sys.argv[1]=='pull_contrib'):
+    #this will pull from your contib path, but as a submodule
+    #this pattern encourages keeping your changes updated in a submodule repo so that others can access an up to date copy.
 
+    ans = input("Warning: this will REPLACE ALL contents of your /user directory. If not saved externally to this directory, recovery" +
+                " will by impossible. Proceed? (y/n)")
+
+    if ans == 'n':
+        exit()
+
+    userdir = project_root+"lib/user"
+    contribdir = project_root+"lib/user/contrib/" + os.environ.get('CONTRIBNAME')
+
+    #iteratively delete files and folders from user
+    files_to_ignore_user = ['__pycache__', 'README.txt','contrib']
+    
+    for item in os.listdir(userdir):
+        if item not in files_to_ignore_user:
+            path_item = userdir + '/' + item
+            if os.path.isfile(path_item):
+                os.remove(path_item) #Remove the item 
+            else:
+                shutil.rmtree(path_item)  # Remove the dir
+
+    #iteratively copy files and folders from contrib
+    files_to_ignore_contrib = ['__pycache__', 'README.txt','.git']
+    
+    for item in os.listdir(contribdir):
+        if item not in files_to_ignore_contrib:
+            path_item = contribdir + '/' + item
+            if os.path.isfile(path_item):
+                shutil.copyfile(path_item, userdir + "/" + item) #copy item
+            else:
+                shutil.copytree(path_item,userdir + "/" + item) #copy tree
+
+    exit()
+    
 editor = os.environ.get('TEXTEDITOR') #blank for default
     
 #from classes import *
