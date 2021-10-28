@@ -33,7 +33,7 @@ INSTINCT [pipeline or job name] [project name] [parameter file name]
 
 ## About ##
 
-INSTINCT is a command-line application, built to leverage the pipeline framework of Luigi (link) to make acoustic signal detection workflows
+INSTINCT is a command-line application, built to leverage the pipeline framework of Luigi (https://github.com/spotify/luigi) to make acoustic signal detection workflows
 modular, repeatable, and extensible. INSTINCT is currently only in use by the Acoustics group at the Alaska Fisheries Science Center Marine Mammal Lab, but is built for collaboration. 
 The core of INSTINCT is built in python, however, INSTINCT is not at this time a standalone module: it refers to locations within the lib/user directory, where it expects to read files specific to your project. 
 lib/user/contrib is a location where you can link a project specific repo- this will allow for imports of python processes from other groups to better enable collaboration. 
