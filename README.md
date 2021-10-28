@@ -2,9 +2,9 @@
 
 Welcome to the beta version of INSTINCT! INSTINCT is a system for pipeline development for workflows related to detection of signals in acoustic data. INSTINCT pipelines consist of modular components, and can be extended beyond detection to include annotation workflows. 
 
-#Usage #
+## Usage ##
 
-INSTINCT is a through the command line.
+INSTINCT is run within the command line. Currently, it is only setup for Windows, Linux support is planned. 
 
 Before running INSTINCT, you'll need to have an idea of:
 * What workflow you'd like to implement
@@ -29,15 +29,16 @@ If you are interested in linking a submodule in contrib from your user repositor
 The typical command is as follows: 
 ```bash
 INSTINCT [pipeline or job name] [project name] [parameter file name]
-```bash
-#About 
+```
+
+## About ##
 
 INSTINCT is a command-line application, built to leverage the pipeline framework of Luigi (link) to make acoustic signal detection workflows
 modular, repeatable, and extensible. INSTINCT is currently only in use by the Acoustics group at the Alaska Fisheries Science Center Marine Mammal Lab, but is built for collaboration. 
 The core of INSTINCT is built in python, however, INSTINCT is not at this time a standalone module: it refers to locations within the lib/user directory, where it expects to read files specific to your project. 
 lib/user/contrib is a location where you can link a project specific repo- this will allow for imports of python processes from other groups to better enable collaboration. 
 
-# Philosophy
+## Philosophy ##
 
 INSTINCT was designed to be a low dependency, extremely customizable, and language agnostic "one stop shop" for acoustic detector design, evaluation, and deployment. To that end, it has performed very well for us. However, to get started as a new INSTINCT user requires a good understanding of it's design philosophy. 
 
@@ -64,7 +65,7 @@ this is navigated by how you organize the parameter file, and the use of the 'pa
 dictionary to a nested level, and overrites redundant names in the top level. In this way, different parameters can be used for the same
 process/methods within a single job. 
 
-#Further reading
+## Further reading ##
 
 For more information about the INSTINCT basic det/class algorithm, and some of the project's history, see https://repository.library.noaa.gov/view/noaa/27222 .
 * The original det/class algorithm is an extension of the method presented in Ross & Allen 2014
