@@ -1,8 +1,8 @@
-# INSTINCT (beta version)
+# INSTINCT (beta version) #
 
 Welcome to the beta version of INSTINCT! INSTINCT is a system for pipeline development for workflows related to detection of signals in acoustic data. INSTINCT pipelines consist of modular components, and can be extended beyond detection to include annotation workflows. 
 
-#Usage 
+#Usage #
 
 INSTINCT is a through the command line.
 
