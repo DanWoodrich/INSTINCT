@@ -5,4 +5,4 @@ from misc import file_peek,get_difftime,get_param_names
 
 from pipe_shapes import *
 
-from .contrib.afsc_mml_acoustics.processes import *
+from .contrib.instinct_afsc_mml_acoustics.processes import *

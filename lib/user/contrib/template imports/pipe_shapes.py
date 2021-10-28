@@ -1,6 +1,6 @@
 from classes import INSTINCT_pipeline
 from pipe_shapes import *
-from .contrib.afsc_mml_acoustics.pipe_shapes import * 
+from .contrib.instinct_afsc_mml_acoustics.pipe_shapes import * 
 
 
 #have these in here to test idk

@@ -1,5 +1,5 @@
 
-from .contrib.afsc_mml_acoustics.definitions import * 
+from .contrib.instinct_afsc_mml_acoustics.definitions import * 
 
 #jobs = {
 #"MPE":["PE2all","PE2_FG","ED_AM_perfEval"],

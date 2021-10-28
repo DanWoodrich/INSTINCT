@@ -17,7 +17,12 @@ if (sys.argv[1]=='push_user'):
     #exclude pycache, contrib, and readme.txt
 
     userdir = project_root+"lib/user"
-    contribdir = os.environ.get('CONTRIBPATH')
+
+    if len(sys.argv)==3:
+        contribdir =sys.argv[2] #can manually specify, otherwise defaults to named path in INSTINCT.cfg
+    else:
+        contribdir = os.environ.get('CONTRIBPATH')
+   
 
     #iteratively delete files and folders from contrib
     files_to_ignore_contrib = ['__pycache__', 'README.txt','.git']
@@ -53,7 +58,11 @@ if (sys.argv[1]=='pull_contrib'):
         exit()
 
     userdir = project_root+"lib/user"
-    contribdir = project_root+"lib/user/contrib/" + os.environ.get('CONTRIBNAME')
+
+    if len(sys.argv)==3:
+        contribdir =project_root+"lib/user/contrib/" + sys.argv[2]
+    else:
+        contribdir = project_root+"lib/user/contrib/" + os.environ.get('CONTRIBNAME')
 
     #iteratively delete files and folders from user
     files_to_ignore_user = ['__pycache__', 'README.txt','contrib']

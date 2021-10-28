@@ -10,9 +10,10 @@ directory.
 Keep in mind that you can control namespace of contrib processes using your style of import. Methods and pipelines,
 not being python files, must share a common namespace with your user directory if you plan on encorporating them. 
 
-./contrib/template helps to start a new project. Copy in the files/directories from there into this dir and work off of 
-the existing named files, imports, and objects. Please use the training materials (coming soon) and other examples in contrib to help 
-define your needed objects. 
+./contrib/template helps to start a new project. Pull into user with 'instinct pull_contrib template' and work off of 
+the existing named files, imports, and objects. Please use the training materials (coming soon) and other examples in contrib to 
+start building. 
 
-Recommended pattern is to define a submodule, update it with instinct push_user, and pull it using  git submodule update --remote --merge and
-instinct pull_contrib. This will keep your own version control and allow for others to use your contrib. 
+Recommended pattern for code version control is to define a submodule, update it with instinct push_user, and pull it using  git 
+submodule update --remote --merge and instinct pull_contrib. This will keep your own version control and allow for others to 
+use your contrib. 
