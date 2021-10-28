@@ -47,23 +47,23 @@ INSTINCT was designed to be a low dependency, extremely customizable, and langua
 Some of these themes include: 
 
 *The pipeline hierarchy: jobs -> pipelines -> processes -> methods -> parameters
-    * Jobs: are used for execution. They: 
-        * Return one or more output files. 
-        * Can be composed of one or more pipelines.
-        * Can deploy a single pipeline as a job
-    * Pipelines: data processing routine with a single output. They: 
-        * Can be designed compositionally or hard coded by the user. 
-        * Can be composed of processes and pipelines. 
-        * Always ends in a process. 
-    * Processes: data processing step which is defined by standard data processing step, inputs and outputs.   
-    * Methods: a particular implementation of a process. They are:
-        * Called by subprocess 
-        * Implemented in language of choice
-    * Parameters: further control function of methods. 
+	* Jobs: are used for execution. They: 
+		* Return one or more output files. 
+		* Can be composed of one or more pipelines.
+		* Can deploy a single pipeline as a job
+	* Pipelines: data processing routine with a single output. They: 
+		* Can be designed compositionally or hard coded by the user. 
+		* Can be composed of processes and pipelines. 
+		* Always ends in a process. 
+	* Processes: data processing step which is defined by standard data processing step, inputs and outputs.   
+	* Methods: a particular implementation of a process. They are:
+		* Called by subprocess 
+		* Implemented in language of choice
+	* Parameters: further control function of methods. 
 * The interaction of pipelines and parameters:
-    * in order to keep the size of the parameter file small, parameter nesting is used to control which parameters are available to methods during pipeline execution. 
+	* in order to keep the size of the parameter file small, parameter nesting is used to control which parameters are available to methods during pipeline execution. 
 this is navigated by how you organize the parameter file, and the use of the 'params_drop' argument in pipeline definitions 
-    * processes default to reading the parameters section of their same name, in the top level of the dictionary. params_drop drops the
+	* processes default to reading the parameters section of their same name, in the top level of the dictionary. params_drop drops the
 dictionary to a nested level, and overrites redundant names in the top level. In this way, different parameters can be used for the same
 process/methods within a single job. 
 
