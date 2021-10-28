@@ -46,7 +46,7 @@ INSTINCT was designed to be a low dependency, extremely customizable, and langua
 
 Some of these themes include: 
 
-*The pipeline hierarchy: jobs -> pipelines -> processes -> methods -> parameters
+* The pipeline hierarchy: jobs -> pipelines -> processes -> methods -> parameters
 	* Jobs: are used for execution. They: 
 		* Return one or more output files. 
 		* Can be composed of one or more pipelines.
