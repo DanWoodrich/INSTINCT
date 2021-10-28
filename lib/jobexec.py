@@ -98,7 +98,7 @@ from jobfxns import *
 
 
 
-params_root = project_root + 'etc/Projects/' + sys.argv[2] + '/' + sys.argv[3] + ".nt"
+params_root = project_root + 'lib/user/Projects/' + sys.argv[2] + '/' + sys.argv[3] + ".nt"
 
 paramset_original = nt.load(params_root)
 paramset=paramset_original.copy()
