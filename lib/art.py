@@ -1,9 +1,11 @@
 import os
 
 def getArt(project,result,num=1):
-    if project in ["GS","RW","LM"]:
-        #template for art by artist 'snd' https://ascii.co.uk/art/whale
-        #modified by dfw!
+    from user.art import getArt as u_art
+    art = u_art(project,result,num=1)
+    #template for art by artist 'snd' https://ascii.co.uk/art/whale
+    #modified by dfw!
+    if art ==None:
         if result==True and num < 10: 
             art =r"""                                ','. '. ; : ,','
                                    '..'.,',..'
@@ -50,62 +52,6 @@ def getArt(project,result,num=1):
                     '------.    \._____.----' 
              INSTINCT       \.__/  
             """
-        return art
-    elif project=="HB":
-        if result==True and num < 10:
-            art =r"""                                 ','. '. ; : ,','
-                                  '..'.,',..'
-                                   ';.'  ,'
-                                    ;;
-                                    ;'
-                     :._   _.------------.___
-             __      :  :-'                  '-._
-      __   ,' .'    .'       /      _____________'.
-     /__ '.-   \___.'          ^  .' .'  .'  _.-_.'
-        '._              ~      .-': .' _.' _.'_.'
-            '----'._____.|   /._.'_'._:_:_.-'--'
-                        /   /  \  \ 
-        INSTINCT       / ./'    '\ \
-                      /./         \'
-                      '
-            """
-        elif result==True and num==10:
-            art =r"""                                 ','. '. ; : ,','
-                                  '..'.,',..'
-                                   ';.'  ,'
-                                    ;;
-                                    _____
-                                   /     \___           )
-                      :._   _.----+=======+--<         (
-             __      :  :-'                   '-.       )
-      __   ,' .'    .'       __~    _____________[======#
-     /__ '.-   \___.'          D  .' .'  .'  _.-_.'
-        '._              ~      .-': .' _.' _.'_.'
-            '----'._____.|   /._.'_'._:_:_.-'--'
-                        /   /  \  \ 
-        INSTINCT       / ./'    '\ \
-                      /./         \'
-                      '
-             """
-        else:
-            art =r"""                                 ','. '. ; : ,','
-                                  '..'.,',..'
-                                   ';.'  ,'
-                                    ;;
-                                          ;'
-                     :._   _.------------.___
-             __      :  :-'                  '-.
-      __   ,' .'    .'          /    ___________'.
-     /__ '.-   \___.'           o   /.'  .'  _.-_.'
-        '._              ~         / .' _.' _.'_.'
-            '----'._____.|   /.____'._:_:_.-'--'
-                        /   /  \  \ 
-        INSTINCT       / ./'    '\ \
-                      /./         \'
-                      '
-            """
-        return art
-    else:
-        from user.art import getArt as u_art
-        u_art(project,result,num=1)
-        print("Signal art not yet defined")
+    return art
+
+    print("Signal art not yet defined")
