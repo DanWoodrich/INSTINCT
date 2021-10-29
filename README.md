@@ -1,6 +1,6 @@
 # INSTINCT #
 
-Welcome to the Open-alpha version of INSTINCT! 
+Welcome to the open alpha version of INSTINCT! 
 
 INSTINCT is a system for pipeline development for workflows related to detection of signals in acoustic data. INSTINCT pipelines consist of modular components, and can be extended beyond detection to include annotation
 and analysis workflows. 
