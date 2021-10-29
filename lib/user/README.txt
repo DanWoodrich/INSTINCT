@@ -1,5 +1,7 @@
 The user directory is where you develop code for use in INSTINCT. A functional user project would contain ./processes.py, 
-./pipe_shapes.py, ./definitions.py, ./art.py, and __init__.py . And also, the directories methods and pipelines (technically optional)
+./pipe_shapes.py, ./definitions.py, ./art.py, and __init__.py . Additionally, the following directories:
+./Projects, ./methods and ./pipelines. (Methods and pipelines are technically optional: methods aren't required, and pipelines can
+be written in python dictionary format in ./definitions)
 
 INSTINCT is a command line application, not a standalone python package. INSTINCT explicity refers to this location and 
 files of predetermined name. Additionally, INSTINCT relies on some standard object definitions and imports within this 
