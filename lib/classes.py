@@ -191,28 +191,32 @@ class INSTINCT_process(INSTINCT_task):
     def run_cmd(self):
         #1st iteration of this, might modify
 
+        methodjoin = '-'
+
         if self.descriptors['language']=='R':
             executable1 = 'Rscript '
             executable2 = '.R'
         elif self.descriptors['language']=='Python':
             executable1 = 'python '
             executable2 = '.py'
-        #elif self.descriptors['language']=='MATLAB'
-            #encorporate this later
+        elif self.descriptors['language']=='MATLAB':
+            executable1 = ''
+            executable2 = '.mat'
         if self.descriptors['runtype']=='bin':
             executable2 = '.exe'
+            methodjoin = '' #matlab does not allow for '-' in name
 
         wrapper,wrapper_value = keyassess('wrapper',self.descriptors)
         if wrapper_value!='True':
             #import code
             #code.interact(local=locals())
-            command1 = executable1 + PARAMSET_GLOBALS['project_root'] + self.descriptors['runtype'] + '/user/methods/' + self.processID +\
-                       '/' + self.parameters['methodID'] + '/' + self.parameters['methodID'] + '-' + self.parameters['methodvers'] + executable2
+            command1 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID +\
+                       '/' + self.parameters['methodID'] + '/' + self.parameters['methodID'] + methodjoin + self.parameters['methodvers'] + executable2
 
             command2 = ' '.join(self.cmd_args)
             
         else:
-            command1 = executable1 + PARAMSET_GLOBALS['project_root'] + self.descriptors['runtype'] + 'user/methods/' + self.processID + '/'+\
+            command1 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID + '/'+\
             self.processID  +"Wrapper" + executable2
 
             command2 = PARAMSET_GLOBALS['project_root'] + ' ' + ' '.join(self.cmd_args)
@@ -229,11 +233,13 @@ class INSTINCT_process(INSTINCT_task):
             else:
                 print("VENV NOT YET CONFIGURED TO WORK ON BASE VENV")
         
-        print("******************************\nRunning " + self.descriptors['language'] + " method " + self.parameters['methodID'] + '-' + self.parameters['methodvers'] +\
+        print("******************************\nRunning " + self.descriptors['language'] + " method " + self.parameters['methodID'] + methodjoin + self.parameters['methodvers'] +\
               " for process " + self.processID + "\n******************************")
 
         print("******************************\nCommand params (can copy and paste): " + command2 +"\n******************************")
 
+        #import code
+        #code.interact(local=locals())
         subprocess.run(command,shell=True)
 
         

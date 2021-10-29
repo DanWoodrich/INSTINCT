@@ -106,6 +106,6 @@ def getArt(project,result,num=1):
             """
         return art
     else:
-        import user.art.getArt
-        user.art.getArt(project,result,num=1)
+        from user.art import getArt as u_art
+        u_art(project,result,num=1)
         print("Signal art not yet defined")
