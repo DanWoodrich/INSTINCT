@@ -2,7 +2,7 @@ import os
 
 def getArt(project,result,num=1):
     from user.art import getArt as u_art
-    art = u_art(project,result,num=1)
+    art = u_art(project,result,num=num)
     #template for art by artist 'snd' https://ascii.co.uk/art/whale
     #modified by dfw!
     if art ==None:
