@@ -202,10 +202,13 @@ class INSTINCT_process(INSTINCT_task):
         elif self.descriptors['language']=='MATLAB':
             executable1 = ''
             executable2 = '.mat'
-        if self.descriptors['runtype']=='bin':
+        elif self.descriptors['language']=='batch':
+            executable1 = ''
+            executable2 = '.bat'
+        elif self.descriptors['runtype']=='bin':
             executable2 = '.exe'
-            methodjoin = '' #matlab does not allow for '-' in name
-
+            methodjoin = '' #matlab does not allow for '-' in name            
+        
         wrapper,wrapper_value = keyassess('wrapper',self.descriptors)
         if wrapper_value!='True':
             #import code
