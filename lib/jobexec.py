@@ -25,7 +25,7 @@ if (sys.argv[1]=='push_user'):
    
 
     #iteratively delete files and folders from contrib
-    files_to_ignore_contrib = ['__pycache__', 'README.txt','.git']
+    files_to_ignore_contrib = ['__pycache__', 'README.md','LICENSE','.git']
     
     for item in os.listdir(contribdir):
         if item not in files_to_ignore_contrib:  # If it isn't in the list for retaining
@@ -36,7 +36,7 @@ if (sys.argv[1]=='push_user'):
                 shutil.rmtree(path_item)  # Remove the dir
 
     #iteratively copy files and folders from user
-    files_to_ignore_user = ['__pycache__', 'README.txt','contrib']
+    files_to_ignore_user = ['__pycache__', 'README.md','LICENSE','contrib']
     
     for item in os.listdir(userdir):
         if item not in files_to_ignore_user:
