@@ -205,7 +205,8 @@ class INSTINCT_process(INSTINCT_task):
         elif self.descriptors['language']=='batch':
             executable1 = ''
             executable2 = '.bat'
-        elif self.descriptors['runtype']=='bin':
+            
+        if self.descriptors['runtype']=='bin':
             executable2 = '.exe'
             methodjoin = '' #matlab does not allow for '-' in name            
         
@@ -460,6 +461,7 @@ class INSTINCT_userprocess(INSTINCT_process):
                     
                 elif taskcomplete=='n':
                     self.user_cancelation()
+                    os.remove(self.outfilegen())
                 else:
                     raise ValueError("Invalid input to (y/n) prompt")
                 
