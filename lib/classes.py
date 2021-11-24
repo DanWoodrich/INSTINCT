@@ -445,6 +445,7 @@ class INSTINCT_userprocess(INSTINCT_process):
                 #make a change: before calling this, move files into this task output folder- will be much more clear if running different versions, otherwise have already populated
                 #files and folders which will be confusing to the user.
 
+
                 shutil.copy(self.ports[0].outfilegen(), self.outfilegen())
 
                 self.file_modify(self.outfilegen()) #in the specific usage of this class, you can change file_modify to prepare file for analysis. 
