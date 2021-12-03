@@ -1,26 +1,23 @@
 1. Make sure Python (>3.0.0) is installed 
-2. Make sure R (>4.0.0) is installed 
-3. Add R and python binaries to your user or system path
-	a. A binary is an file that runs a program (.exe file)
-	b. What is a system path: https://en.wikipedia.org/wiki/PATH_(variable)
-	c. https://www.mathworks.com/matlabcentral/answers/94933-how-do-i-edit-my-system-
-	path-in-windows
-	d. Above is a similar tutorial to what you need to do here, but for MATLAB. Do this for the binaries (~/bin subfolder) in R and
-	for the python directory, and the python ~/Scripts folder 
-4. Install Git Bash 
-5. Create the directory C:/Apps
-6. ‘Clone’ the repository from https://github.com/DanWoodrich/INSTINCT into C:/Apps
+2. Add python and INSTINCT binaries to your user or system PATH
+	a. Search for environmental variable in Windows search- select option that allows for changing variables in user account
+	b. Add the python ~/Scripts folder as a new PATH 
+	b. Add the INSTINCT ~/bin folder as a new PATH 
+3. Make sure Git Bash is installed.  
+4. Identify and/or create directory for app location. I use 'C:/Apps'
+5. ‘Clone’ the repository from https://github.com/DanWoodrich/INSTINCT into target directory 
 	a. https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository
-7. In ~/INSTINCT/lib/supporting, run the R script Installe.R
-	a. Use the CMD terminal to run the R script, or R studio if installed already (don’t
-	download it only for this)
-	b. To run on CMD terminal, need to search for CMD in windows search bar, run it, navigate to
-	~/INSTINCT/lib/supporting (use an online tutorial for changing directories with CMD)
-	c. Once in the right directory, use Rscript Installe.R
-8. In the CMD terminal, navigate to ~/INSTINCT/etc
+	b. Additional config will be needed as a Git user if planning on contributing to the project. Find guides online to authorize yourself as a git user in these cases. 
+
+6. In the CMD terminal, navigate to ~/INSTINCT/etc
 	a. Use command ‘pip install -r requirements.txt’
 
-The following will require admin privileges
+7. Copy the file ~/INSTINCT/etc/INSTINCT_ex.cfg and rename it ~/INSTINCT/etc/INSTINCT.cfg. This is a personal config file which will be ignored by git. 
 
-1. Install the matlab compiler library (2019a). https://www.mathworks.com/products/compiler/matlab-runtime.html
-2. Install 7zip 
+Optional: 
+To load in all submodules:
+1. navigate in git bash shell to ~/INSTINCT . type: 'git submodule update --init --recursive'
+2. To further update changes in submodules, navigate to ~/INSTINCT in git bash shell and type: 'git submodule update --remote --merge'
+
+The following will require admin privileges
+3. Install 7zip (recommended, helps to troubleshoot intermediates in cache) 

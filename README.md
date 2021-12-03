@@ -15,7 +15,7 @@ Before running INSTINCT, you'll need to have an idea of:
 * The location and metadata of your sound files 
 * The location and metadata of any labels you will need
 
-Needed dependencies are specified in /Instructions - Config.txt and /etc/requirements.txt
+To configure needed dependencies, follow /Instructions - Config.txt . Note that INSTINCT has no base functionality except when used in conjunction with a user submodule (ie, DanWoodrich/instinct_afsc_mml_acoustics) 
 
 There currently is not a manual or training videos detail on how to get started. For those that are eager to use the system, please reach out to me at daniel.woodrich@noaa.gov so I can help get you started. The examples in 
 the afsc_mml_acoustics folder in lib/user/contrib are a good example of how our user project is structured. 
@@ -70,10 +70,12 @@ process/methods within a single job.
 
 ## Further reading ##
 
-For more information about the INSTINCT basic det/class algorithm, and some of the project's history, see https://repository.library.noaa.gov/view/noaa/27222 .
+[A recent demo on basic features of INSTINCT and the instinct_afsc_mml_acoustics user submodule](https://drive.google.com/drive/folders/1TNhrO5JhrNRcO0zN5lN2ZPLXBP386kSi?usp=sharing)
+
+[More information about the INSTINCT basic det/class algorithm, and some of the project's history](https://repository.library.noaa.gov/view/noaa/27222)
 * The original det/class algorithm is an extension of the method presented in Ross & Allen 2014
 
-For a recent presentation at the NOAA 3rd AI workshop: https://docs.google.com/presentation/d/1-bcTugqm44vruxQw3cWvLT0hR5GFPFUK/edit?usp=sharing&ouid=109971476781094853963&rtpof=true&sd=true
+[A recent presentation at the NOAA 3rd AI workshop](https://docs.google.com/presentation/d/1-bcTugqm44vruxQw3cWvLT0hR5GFPFUK/edit?usp=sharing&ouid=109971476781094853963&rtpof=true&sd=true)
 
 
 
