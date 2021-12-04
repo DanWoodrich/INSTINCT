@@ -64,9 +64,6 @@ if (sys.argv[1]=='pull_contrib'):
     else:
         contribdir = project_root+"lib/user/contrib/" + os.environ.get('CONTRIBNAME')
 
-    #iteratively delete files and folders from user
-    files_to_ignore_user = ['__pycache__', 'README.txt','README.md','LICENSE','contrib']
-
     files_to_ignore_contrib = ['__pycache__', 'README.txt','README.md','LICENSE','.git']
 
     for root, dirs, files in os.walk(contribdir, topdown=False):
@@ -97,16 +94,6 @@ if (sys.argv[1]=='pull_contrib'):
             if os.path.exists(dst_file):
                 os.remove(dst_file)
             shutil.copy(src_file, dst_dir)
-        #files = files not in files_to_ignore_contrib
-        
-        
-    #for item in os.listdir(contribdir):
-    #   if item not in files_to_ignore_contrib:
-    #       path_item = contribdir + '/' + item
-    #       if os.path.isfile(path_item):
-    #            shutil.copyfile(path_item, userdir + "/" + item) #copy item
-    #        else:
-    #            shutil.copytree(path_item,userdir + "/" + item) #copy tree
 
     exit()
     
