@@ -51,7 +51,7 @@ if (sys.argv[1]=='pull_contrib'):
     #this will pull from your contib path, but as a submodule
     #this pattern encourages keeping your changes updated in a submodule repo so that others can access an up to date copy.
 
-    ans = input("Warning: this will REPLACE ALL contents of your /user directory. If not saved externally to this directory, recovery" +
+    ans = input("Warning: this will replace all contents of your /user directory with matching name to contrib. If not saved externally to this directory, recovery" +
                 " will by impossible. Proceed? (y/n)")
 
     if ans == 'n':
@@ -66,25 +66,47 @@ if (sys.argv[1]=='pull_contrib'):
 
     #iteratively delete files and folders from user
     files_to_ignore_user = ['__pycache__', 'README.txt','README.md','LICENSE','contrib']
-    
-    for item in os.listdir(userdir):
-        if item not in files_to_ignore_user:
-            path_item = userdir + '/' + item
-            if os.path.isfile(path_item):
-                os.remove(path_item) #Remove the item 
-            else:
-                shutil.rmtree(path_item)  # Remove the dir
 
-    #iteratively copy files and folders from contrib
     files_to_ignore_contrib = ['__pycache__', 'README.txt','README.md','LICENSE','.git']
-    
-    for item in os.listdir(contribdir):
-        if item not in files_to_ignore_contrib:
-            path_item = contribdir + '/' + item
-            if os.path.isfile(path_item):
-                shutil.copyfile(path_item, userdir + "/" + item) #copy item
-            else:
-                shutil.copytree(path_item,userdir + "/" + item) #copy tree
+
+    for root, dirs, files in os.walk(contribdir, topdown=False):
+
+        dst_dir = root.replace(contribdir, userdir, 1)
+        
+        root = root.replace("\\","/")
+        #print(root)
+        root_short = root[(len(contribdir)+1):]
+        #print(root_short)
+        if len(root_short)==0:
+            #import code
+            #code.interact(local=dict(globals(), **locals()))
+            filescomp = files
+        else:
+            filescomp = [root_short +'/'+ x for x in files]
+
+        indeces = [i for i,val in enumerate(filescomp) if val not in files_to_ignore_contrib]
+
+        files = [files[i] for i in indeces]
+
+        if not os.path.exists(dst_dir):
+            os.makedirs(dst_dir)
+        for file_ in files:
+            
+            src_file = os.path.join(root, file_)
+            dst_file = os.path.join(dst_dir, file_)
+            if os.path.exists(dst_file):
+                os.remove(dst_file)
+            shutil.copy(src_file, dst_dir)
+        #files = files not in files_to_ignore_contrib
+        
+        
+    #for item in os.listdir(contribdir):
+    #   if item not in files_to_ignore_contrib:
+    #       path_item = contribdir + '/' + item
+    #       if os.path.isfile(path_item):
+    #            shutil.copyfile(path_item, userdir + "/" + item) #copy item
+    #        else:
+    #            shutil.copytree(path_item,userdir + "/" + item) #copy tree
 
     exit()
     
