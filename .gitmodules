@@ -1,3 +1,3 @@
 [submodule "lib/user/contrib/instinct_afsc_mml_acoustics"]
 	path = lib/user/contrib/instinct_afsc_mml_acoustics
-	url = git@github.com:DanWoodrich/instinct_afsc_mml_acoustics.git
+	url = https://github.com/DanWoodrich/INSTINCT.git
