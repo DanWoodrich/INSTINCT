@@ -25,7 +25,7 @@ if (sys.argv[1]=='push_user'):
    
 
     #iteratively delete files and folders from contrib
-    files_to_ignore_contrib = ['__pycache__', 'README.md','README.txt','LICENSE','.git']
+    files_to_ignore_contrib = ['__pycache__', 'README.md','README.txt','LICENSE','.git','.gitignore']
     
     for item in os.listdir(contribdir):
         if item not in files_to_ignore_contrib:  # If it isn't in the list for retaining
