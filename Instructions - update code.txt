@@ -1,0 +1,11 @@
+To update code if working from a submodule:
+
+1. Open git bash shell, and navigate to ~/INSTINCT. Type: 
+	git pull
+
+then immediately after, type: 
+	git submodule update --remote --merge
+
+2. open a cmd window. In any directory, type: 
+	instinct pull_contrib 
+
