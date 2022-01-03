@@ -75,7 +75,7 @@ process/methods within a single job.
 [More information about the INSTINCT basic det/class algorithm, and some of the project's history](https://repository.library.noaa.gov/view/noaa/27222)
 * The original det/class algorithm is an extension of the method presented in Ross & Allen 2014
 
-[A recent presentation at the NOAA 3rd AI workshop](https://docs.google.com/presentation/d/1-bcTugqm44vruxQw3cWvLT0hR5GFPFUK/edit?usp=sharing&ouid=109971476781094853963&rtpof=true&sd=true)
+[Slides](https://docs.google.com/presentation/d/1-bcTugqm44vruxQw3cWvLT0hR5GFPFUK/edit?usp=sharing&ouid=109971476781094853963&rtpof=true&sd=true) and [video](https://www.youtube.com/watch?v=U9wet-1_3yg&list=PLY6u3ZR91o26z_PgCRd762lmJ9FXN4YTv&index=14&t=1195s) from a recent presentation at the NOAA 3rd AI workshop
 
 
 
