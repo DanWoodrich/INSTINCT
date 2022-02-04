@@ -1,23 +1,15 @@
-1. Make sure Python (>3.0.0) is installed 
-2. Add python and INSTINCT binaries to your user or system PATH
-	a. Search for environmental variable in Windows search- select option that allows for changing variables in user account
-	b. Add the python ~/Scripts folder as a new PATH 
-	b. Add the INSTINCT ~/bin folder as a new PATH 
-3. Make sure Git Bash is installed.  
-4. Identify and/or create directory for app location. I use 'C:/Apps'
-5. ‘Clone’ the repository from https://github.com/DanWoodrich/INSTINCT into target directory 
-	a. https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository
-	b. Additional config will be needed as a Git user if planning on contributing to the project. Find guides online to authorize yourself as a git user in these cases. 
+Mandotory software dependencies: 
 
-6. In the CMD terminal, navigate to ~/INSTINCT/etc
-	a. Use command ‘pip install -r requirements.txt’
+1. Python (>3.0.0)
+2. Git bash
 
-7. Copy the file ~/INSTINCT/etc/INSTINCT_ex.cfg and rename it ~/INSTINCT/etc/INSTINCT.cfg. This is a personal config file which will be ignored by git. 
+--both of the above (./bin) must be on system or user %PATH%!
 
-Optional: 
-To load in all submodules:
-1. navigate in git bash shell to ~/INSTINCT . type: 'git submodule update --init --recursive'
-2. To further update changes in submodules, navigate to ~/INSTINCT in git bash shell and type: 'git submodule update --remote --merge'
+Recommended software dependencies:
+1. 7zip or similar 
 
-The following will require admin privileges
-3. Install 7zip (recommended, helps to troubleshoot intermediates in cache) 
+To config: 
+double click: "INSTINCT/bin/instinct_config" and follow prompts.
+
+To update: 
+double click: "INSTINCT/bin/instinct_update" and follow prompts.
