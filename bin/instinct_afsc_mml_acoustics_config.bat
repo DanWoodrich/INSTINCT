@@ -6,7 +6,11 @@ cd ..
 
 git submodule update --init --recursive ./lib/user/contrib/instinct_afsc_mml_acoustics
 
+cd ./bin
+
 call instinct pull_contrib
+
+cd ..
 
 Rscript ./lib/user/Installe.R
 
