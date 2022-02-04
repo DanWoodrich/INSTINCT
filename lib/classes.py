@@ -240,6 +240,9 @@ class INSTINCT_process(INSTINCT_task):
         print("******************************\nRunning " + self.descriptors['language'] + " method " + self.parameters['methodID'] + methodjoin + self.parameters['methodvers'] +\
               " for process " + self.processID + "\n******************************")
 
+        #temp:
+        #print(command)
+
         print("******************************\nCommand params (can copy and paste): " + command2 +"\n******************************")
 
         #import code
@@ -429,7 +432,7 @@ class INSTINCT_userprocess(INSTINCT_process):
         return text
 
     def file_modify(self,file): #if you want to modify the file prior to user working on it, override this in specific implementation 
-        print("don't modify")
+        print("")
         #for example, this could take a RAVENx file and add a column for analyst (based on user ID) 
     def run(self):
 
