@@ -421,9 +421,9 @@ class INSTINCT_userprocess(INSTINCT_process):
         os.environ["CANCELREVIEW"] = "True"
     def print_manifest(self):
 
-        os.system("start " + self.outpath())
+        os.system("start " + self.outpath().replace('/','\\')) #windows friendly for copy paste (matters on NAS drive) 
 
-        text = 'INPUT: file named: "' + self.outfile + '" in opened directory: "' + self.outpath() + '"\n\n' +\
+        text = 'INPUT: file named: "' + self.outfile + '" in opened directory: "' + self.outpath().replace('/','\\') + '"\n\n' +\
                'INFO:' + self.get_info()+ '"\n\n' +\
                 "INSTRUCTIONS: " + self.parameters['instructions'] + '\n\nOUTPUT: save a new copy of the file in the opened directory as: "' + self.get_userfile(True) + '" \n'+\
                 "When task is completed, enter y to Proceed, or n to abort." + "\n\n" +\

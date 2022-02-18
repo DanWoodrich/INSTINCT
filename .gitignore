@@ -9,7 +9,7 @@
 .idea
 __pycache__/
 
-
+lib/Rplots.pdf
 etc/INSTINCT.cfg
 etc/Projects/*
 !etc/Projects/README.txt
