@@ -63,8 +63,9 @@ class ThreeUpstream_bothUpTo1(INSTINCT_pipeline):
         comp0 = self.run_component(self.compdef[0])
         comp1 = self.run_component(self.compdef[1],upstream = [comp0])
         comp2 = self.run_component(self.compdef[2],upstream = [comp0])
-        comp3 = self.run_component(final_process=True,upstream = [comp2,comp1,comp0]) #these go the opposite way as 2 upstream
+        comp3 = self.run_component(final_process=True,upstream = [comp2,comp1,comp0])
 
         return comp3
+
 
 #can also define pipelines for use w/o process .pipe notation
