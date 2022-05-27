@@ -378,6 +378,11 @@ class INSTINCT_process(INSTINCT_task):
                 #delete all of the downstream outputs 
                 dag._clean(process,'downstream')
 
+        if 'trim_tree' in arguments:
+            if arguments['trim_tree']=='y' and dag!=None:
+                #delete all of the downstream outputs 
+                dag._clean(process,'upstream')
+
         return(process)
 
 class INSTINCT_userprocess(INSTINCT_process):
