@@ -308,11 +308,19 @@ class INSTINCT_process(INSTINCT_task):
                     #or resort the list so that it hashes in a standard way. 
                     prm_vals_sort = [','.join(sorted(prm_vals[x])) if isinstance(prm_vals[x],list) else prm_vals[x] for x in range(len(prm_tlist))]
 
+                #here, check for global parameters and inject in case of match
+                for i in range(len(prm_vals_sort)):
+                    item = prm_vals_sort[i]
+                    if item.startswith("[") and item.endswith("]"):
+                        prm_vals_sort[i] = PARAMSET_GLOBALS['parameters'][item[1:len(item)-1]]
+
+                #import code
+                #code.interact(local=dict(globals(), **locals()))
+
                 param_string = ' '.join(prm_vals_sort)
 
                 #if cls.__name__=="EventDetector":
-                #    import code
-                #    code.interact(local=locals())
+                
 
                 #append on the values for methodID and method to param string
                 if params['descriptors']['runtype']!= "no_method":
