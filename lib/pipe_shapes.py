@@ -67,5 +67,15 @@ class ThreeUpstream_bothUpTo1(INSTINCT_pipeline):
 
         return comp3
 
+class FourUpstream_noCon(INSTINCT_pipeline):
+
+    def run(self):
+        
+        comp0 = self.run_component(self.compdef[0])
+        comp1 = self.run_component(self.compdef[1])
+        comp2 = self.run_component(self.compdef[2])
+        comp3 = self.run_component(self.compdef[3])
+        comp4 = self.run_component(final_process=True,upstream = [comp3,comp2,comp1,comp0]) 
+        return comp4
 
 #can also define pipelines for use w/o process .pipe notation
