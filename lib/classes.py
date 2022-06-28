@@ -24,9 +24,17 @@ class INSTINCT_pipeline:
             pipe_args = pipelink_unpack(pipe_args) #contains a hidden 'if' to check for pipe_link
 
             if 'params_drop' in pipe_args:
+                #print("******did params drop!*******")
+                #import code
+                #code.interact(local=dict(globals(), **locals()))
+                #print(self.pipeID)
+                #print(pipe_args['params_drop'])
+                #print("******did params drop!*******")
+                #print(pipe_args['params_drop'])
                 self.params = param_smoosh(self.params,pipe_args['params_drop'])
+                #print(self.params)
 
-            #test if .pipe is referenced in pipeline
+            #test if .pipe is referenced in pipeline#
             pipe_args,pipe_val,compdef,pipeID =pipetest_pargs_pval_compdef(pipe_args,namespace)
             
             #print(pipe_args)
@@ -53,17 +61,31 @@ class INSTINCT_pipeline:
 
         if final_process==True:
             #print(self.namespace[self.pipe_args['process']])
+                    #if cls.__name__ == "DLmodel_Test":
+                        #import code
+                        #code.interact(local=dict(globals(), **locals()))
+            #
 
-            process = self.namespace[self.pipe_args['process']].invoke(self.params_copy,n=self.n,pipe_args=self.pipe_args_copy,compdef=None,\
+            #I changed the params passing from self.params_copy to self.params... keep an eye on other ramifications of this change.
+            process = self.namespace[self.pipe_args['process']].invoke(self.params,n=self.n,pipe_args=self.pipe_args_copy,compdef=None,\
                                                                             upstream=upstream,pipeID=self.pipeID,namespace = self.namespace,dag=self.dag)
+            #print(self.pipe_args_copy)
+            #print(self.params_copy["Job"]["DLmodel*"])
+            #if self.pipe_args_copy['process'] == "DLmodel_Test":
+            #    import code
+            #    code.interact(local=dict(globals(), **locals()))
             return process
         elif component in self.pipe_args:
 
             #here, test if pipe or process
             #if component =="GetDETx":
+            
 
             #assign temporary pipe args so any modifications will not be retained
             pipe_args = self.pipe_args_copy.copy()
+
+            #print(pipe_args[component])
+            
             
             #component will never have both pipe and process in the same level. (?)
             if 'process' in pipe_args[component]:
@@ -71,8 +93,7 @@ class INSTINCT_pipeline:
                 return self.namespace[pipe_args[component]['process']].invoke(self.params_copy,n=self.n,pipe_args=pipe_args[component],upstream=upstream,\
                                                                        pipeID=self.pipeID,namespace = self.namespace,dag=self.dag,compdef=None)
             elif 'pipe' in pipe_args[component]:
-                #import code
-                #code.interact(local=dict(globals(), **locals()))
+                
                 pipe_args,pipe_val,compdef,pipeID =pipetest_pargs_pval_compdef(self.pipe_args[component],self.namespace)
                 
                     #here  is where I'd test for the loop conditional
@@ -119,6 +140,8 @@ class INSTINCT_pipeline:
         #drop to pipeline name param level if present in keys.
         if cls.__name__ in params:
             params = param_smoosh(params,cls.__name__)
+
+        #print(params["DLmodel*"])
             
         return cls(params,n,pipe_args,upstream,namespace,compdef,dag=dag).run()
 
@@ -263,6 +286,8 @@ class INSTINCT_process(INSTINCT_task):
         paramssave = params
 
         processID = cls.__name__ #overwrite this if have to drop further to find params
+        #print(cls.__name__)
+        
         #if process name present, drop to process
         if cls.__name__ in params:
             params = params[cls.__name__] #always drop to processes available in params: control overrides in param file
@@ -271,6 +296,7 @@ class INSTINCT_process(INSTINCT_task):
             for f in range(len(list(params.keys()))):
                 string_candidate = list(params.keys())[f]
                 if '*' in string_candidate:
+
                     string_candidate_test = string_candidate[0:string_candidate.find('*')]
 
                     if string_candidate_test in cls.__name__:
@@ -539,6 +565,7 @@ class Unify_process:
                                 pipeID=self.pipeID,rerun_key=self.rerun_key)
 #pipelines:
 
+#note: the looping function currently relies on some AFSC submodule file formats, and supporting functions, to correctly combine outputs. 
 class CombineExtLoop(INSTINCT_task):
 
     outfile = luigi.Parameter(significant=False)
@@ -565,11 +592,11 @@ class CombineExtLoop(INSTINCT_task):
 
         elif 'FileGroupFormat.csv.gz' in self.outfile:
 
-            FG_dict = file_peek(self.ports[0].outfilegen(),fn_type = object,fp_type = object,st_type = object,dur_type = 'float64')
+            #FG_dict = file_peek(self.ports[0].outfilegen(),fn_type = object,fp_type = object,st_type = object,dur_type = 'float64')
             
             dataframes = [None] * len(self.ports)
             for L in range(len(self.ports)):
-                dataframes[L] = pd.read_csv(self.ports[L].outfilegen(), dtype=FG_dict)
+                dataframes[L] = pd.read_csv(self.ports[L].outfilegen())#, dtype=FG_dict)
             Dat = pd.concat(dataframes,ignore_index=True)
             Dat['StartTime'] = pd.to_datetime(Dat['StartTime'])
             #import code
@@ -580,7 +607,7 @@ class CombineExtLoop(INSTINCT_task):
             Dat=get_difftime(Dat) #this is currently broken- difftime doesn't work between original format and format FG
         
             Dat.to_csv(self.outfilegen(),index=False)
-        elif '.csv.gz' in self.outfile:
+        elif '.csv.gz' or '.csv.' in self.outfile:
             
             dataframes = [None] * len(self.ports)
             for L in range(len(self.ports)):

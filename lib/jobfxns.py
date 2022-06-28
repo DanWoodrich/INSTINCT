@@ -193,13 +193,16 @@ class StagedJob:
         #test for a params_drop here!
 
         if 'params_drop' in pipe_args:
-            params = self.params.copy()
+            params_copy = self.params.copy()
             #import code
             #code.interact(local=locals())
-            params = param_smoosh(params,pipe_args['params_drop'])
-            del pipe_args['params_drop']
+            #print("******did params drop!*******")
+            #print(pipe_args['params_drop'])
+            #print("******did params drop!*******")
+            params_copy = param_smoosh(params_copy,pipe_args['params_drop'])
+            #del pipe_args['params_drop']
         else:
-            params = self.params
+            params_copy = self.params.copy()
 
         #test for .pipe notation
         if 'pipe' in pipe_args:
@@ -215,7 +218,7 @@ class StagedJob:
                                              process_peek = pipe_args['loop_on'],dag = self.dag)
                 
             else:
-                return pipe_val.invoke(params=params,pipe_args=pipe_args,n=self.novr,namespace=self.namespace,compdef=compdef,dag = self.dag)
+                return pipe_val.invoke(params=params_copy,pipe_args=pipe_args,n=self.novr,namespace=self.namespace,compdef=compdef,dag = self.dag)
         else: #must be a process
             return self.namespace[pipe_args['process']].invoke(params=params,pipe_args={},n=self.novr,namespace=self.namespace,compdef=None,dag = self.dag)
     def getJob(self):
