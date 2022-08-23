@@ -6,6 +6,7 @@ import pandas as pd
 import hashlib
 import subprocess
 import gzip
+import tarfile
 from misc import * 
 from getglobals import PARAMSET_GLOBALS
 
@@ -382,7 +383,17 @@ class INSTINCT_process(INSTINCT_task):
         if 'arguments' in params:
             arguments = params['arguments'].copy()
             if 'splits' not in arguments:
-                arguments.update({'splits':'1'})
+                arguments.update({'splits':'1'})#   
+            
+            #test for presence of global parameters and populate. 
+            arg_vlist= list(arguments.values())
+            arg_klist= list(arguments.keys())
+            for i in range(len(arg_vlist)):
+                val = arg_vlist[i]
+                if val.startswith("[") and val.endswith("]"):
+                    #import code
+                    #code.interact(local=dict(globals(), **locals()))
+                    arguments[arg_klist[i]] = PARAMSET_GLOBALS['parameters'][val[1:len(val)-1]]
         else:
             arguments = {'splits':'1'}
         if 'descriptors' in params:
@@ -575,7 +586,7 @@ class CombineExtLoop(INSTINCT_task):
     def output(self):
         return luigi.LocalTarget(self.outfilegen())
     def run(self):
-        
+
         if '.txt' in self.outfile: #this assumes it's going to be a raven format- can get more specific here
             #if you need other .txt formats. 
             
@@ -589,6 +600,43 @@ class CombineExtLoop(INSTINCT_task):
             #import code
             #code.interact(local=locals())
             Dat.to_csv(self.outfilegen(),index=False, sep = "\t")
+        elif self.outfile=="no_comb" and ('.tgz' in self.ports[0].outfilegen() or '.tar.gz' in self.ports[0].outfilegen()):
+
+            os.mkdir(self.outfilegen()) 
+
+            for L in range(len(self.ports)):
+                outpath_name = self.outfilegen() +"/" + str(L+1) + "_" + os.path.basename(self.ports[L].outfilegen()[:self.ports[L].outfilegen().index(".")])
+                os.mkdir(outpath_name)
+                with tarfile.open(self.ports[L].outfilegen(), "r:gz") as tar:
+                    
+                    #outdir =tarfile.open(self.outfile)
+                    for member in tar:
+                        if member.isdir():
+                            continue
+                        fname = member.name.rsplit('/',1)[1]
+                        tar.makefile(member, outpath_name + '/' + fname)
+
+                tar.close()
+
+            #import code #unpack before combining into folder! Use commented out code at bottom of elifs
+            #code.interact(local=dict(globals(), **locals()))
+
+                    
+                    #tar.extract(outpath_name)
+                    
+                    
+
+        
+            #create a directory called no_comb with all of the files
+            #os.mkdir(self.outfilegen()) 
+            #for L in range(len(self.ports)):
+            #    shutil.copy(self.ports[L].outfilegen(), self.outfilegen() +"/" + str(L+1) + "_" + self.ports[L].outfile)
+     
+        elif self.outfile=="no_comb":
+            #create a directory called no_comb with all of the files
+            os.mkdir(self.outfilegen()) 
+            for L in range(len(self.ports)):
+                shutil.copy(self.ports[L].outfilegen(), self.outfilegen() +"/" + str(L+1) + "_" + self.ports[L].outfile)
 
         elif 'FileGroupFormat.csv.gz' in self.outfile:
 
@@ -615,14 +663,21 @@ class CombineExtLoop(INSTINCT_task):
             Dat = pd.concat(dataframes,ignore_index=True)
 
             Dat.to_csv(self.outfilegen(),index=False)
+        #elif ".tgz" in self.outfile or ".tar.gz" in self.outfile:
 
-        elif self.outfile=="no_comb":
-            #create a directory called no_comb with all of the files
-            os.mkdir(self.outfilegen()) 
-            for L in range(len(self.ports)):
-                shutil.copy(self.ports[L].outfilegen(), self.outfilegen() +"/" + str(L+1) + "_" + self.ports[L].outfile)
-            #import code
-            #code.interact(local=locals())
+            #pseudo: unpack all files into single directory, then tar that directory.
+
+        #    import code
+        #    code.interact(local=dict(globals(), **locals()))
+
+        #    for L in range(len(self.ports)):
+        #        outnamepath = self.outfile[:self.ports[L].outfilegen().index(".")]
+        #        outdir =tarfile.open(self.outfile)
+
+        #        outdir.extractall(outnamepath)            
+            
+
+       
         
             
     @classmethod
@@ -669,7 +724,7 @@ class CombineExtLoop(INSTINCT_task):
 
             portsout = cls.getports(upstreamNew)
 
-            noncombinable_formats = [".png","test"]
+            noncombinable_formats = [".png","test",".tgz"]
             
             if any([(i in upstreamNew[0].outfile) for i in noncombinable_formats]):
                 outmod = "no_comb"
@@ -709,6 +764,9 @@ class INSTINCT_job(INSTINCT_task):
             filedest =self.outpath() + "/" + self.pipenames[n] + "_" + self.ports[n].outfile
             if '.gz' in filedest:
                 filedest = filedest[0:-3]
+            elif '.tgz' in filedest or '.tar.gz' in filedest:
+                    
+                filedest = filedest[:filedest.index(".")]
             yield luigi.LocalTarget(filedest)
         
     def run(self):
@@ -734,6 +792,15 @@ class INSTINCT_job(INSTINCT_task):
                     with gzip.open(filepath, 'rb') as f_in:
                         with open(outnamepath, 'wb') as f_out:
                             shutil.copyfileobj(f_in, f_out)
+                elif '.tgz' in filepath or '.tar.gz' in filepath:
+                    
+                    outnamepath = filedest[:filedest.index(".")]
+                    outdir =tarfile.open(filepath)
+
+                    outdir.extractall(outnamepath)
+                    
+                    #import code
+                    #code.interact(local=dict(globals(), **locals()))
                 else:
                     shutil.copy(filepath, filedest)
                 

@@ -142,6 +142,8 @@ else:
         if "--novr" in xtra_args:
             pos = xtra_args.index("--novr")
             novr = int(xtra_args[pos+1])
+
+    
     #initialize the job
     deployJob(paramset,sys.argv,paramset_original,print_tree,novr,GLOBAL_NAMESPACE)
 
