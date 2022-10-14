@@ -152,7 +152,7 @@ def get_difftime(data,cap_consectutive=None):
 
             xIn = [data['DiffTime_con'].unique().tolist()[x]]
 
-            #if x ==2:
+            #if x ==38:
             #    import code
             #    code.interact(local=dict(globals(), **locals()))
 
@@ -161,16 +161,28 @@ def get_difftime(data,cap_consectutive=None):
             dataIn = dataIn.reset_index()
 
             #hardcoded as 40 minutes
-            _cumsum = dataIn["SegDur"].cumsum()//(cap_consectutive) #hardcode this to be 40 minutes- reason is for backwards compatible. 
+            _cumsum = dataIn["SegDur"].cumsum()//(cap_consectutive) #hardcode this to be 40 minutes- reason is for backwards compatible.
+
+            #import code
+            #code.interact(local=dict(globals(), **locals()))
+            
             _cumsum = pd.Series.tolist(_cumsum)
             indexes = [_cumsum.index(x) for x in set(_cumsum)]
+            indexes2 = list(numpy.where(dataIn["SegDur"]>=3600))[0].tolist()
             #print(x)
 
             if len(dataIn) != 1 and indexes!=[0]:
+
+                #Not sure if below was ever right for any case- I should test it further.
+                #if x !=2:
                 #import code
                 #code.interact(local=dict(globals(), **locals()))
+                
                 dataIn.loc[indexes,"DiffTime"] = False #set first value to false. 
                 dataIn.loc[0,"DiffTime"] = True #except for the first one
+
+                #final change- for each index which is equal to or greater than cap_consectutive, change to false
+                dataIn.loc[indexes2,"DiffTime"] = False
 
             dataIn = dataIn.drop('index', axis=1)
 
@@ -183,6 +195,9 @@ def get_difftime(data,cap_consectutive=None):
         data = data.drop('DiffTime_con', axis=1)
         
     #do again with cap consecutive breaks added
+
+    #import code
+    #code.interact(local=dict(globals(), **locals()))
 
     consecutive = numpy.empty(len(data['DiffTime']), dtype=int)
     consecutive[0] = 1
@@ -199,7 +214,8 @@ def get_difftime(data,cap_consectutive=None):
     data = data.drop(columns='TrueStart')
     data = data.drop(columns='TrueEnd')
 
-
+    #import code
+    #code.interact(local=dict(globals(), **locals()))
     
     return(data)
 

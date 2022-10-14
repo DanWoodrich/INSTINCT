@@ -199,7 +199,9 @@ class INSTINCT_task(luigi.Task):
 class INSTINCT_process(INSTINCT_task):
     
     parameters = luigi.DictParameter(significant=False) #this is referenced within task
-    param_string = luigi.Parameter() #this is passed to run_cmd as well as hashed
+    param_string = luigi.Parameter() #this is only hashed
+
+    param_string2 = luigi.Parameter(significant=False) #this is passed to run_cmd 
 
     rerun_key = luigi.IntParameter() #all this does is change the hash to a unique value
     
@@ -232,7 +234,9 @@ class INSTINCT_process(INSTINCT_task):
             
         if self.descriptors['runtype']=='bin':
             executable2 = '.exe'
-            methodjoin = '' #matlab does not allow for '-' in name            
+            methodjoin = '' #matlab does not allow for '-' in name
+
+            
         
         wrapper,wrapper_value = keyassess('wrapper',self.descriptors)
         if wrapper_value!='True':
@@ -241,17 +245,21 @@ class INSTINCT_process(INSTINCT_task):
             command1 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID +\
                        '/' + self.parameters['methodID'] + '/' + self.parameters['methodID'] + methodjoin + self.parameters['methodvers'] + executable2
 
-            command2 = ' '.join(self.cmd_args)
+            command2 = os.environ["INS_ARG_SEP"].join(self.cmd_args)
             
         else:
             command1 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID + '/'+\
             self.processID  +"Wrapper" + executable2
 
-            command2 = PARAMSET_GLOBALS['project_root'] + ' ' + ' '.join(self.cmd_args)
+            command2 = PARAMSET_GLOBALS['project_root'] + os.environ["INS_ARG_SEP"]+ os.environ["INS_ARG_SEP"].join(self.cmd_args)
                 
         
 
-        command = command1 + ' ' + command2
+
+        command = command1 + ' '+ command2
+
+        #import code
+        #code.interact(local=dict(globals(), **locals()))
 
         if 'venv' in self.descriptors:
             print("******************************\nActivating virtual environment " + self.descriptors['venv_name'] + " with " + self.descriptors['venv'] + "\n******************************")
@@ -337,14 +345,18 @@ class INSTINCT_process(INSTINCT_task):
 
                 #here, check for global parameters and inject in case of match
                 for i in range(len(prm_vals_sort)):
-                    item = prm_vals_sort[i]
-                    if item.startswith("[") and item.endswith("]"):
-                        prm_vals_sort[i] = PARAMSET_GLOBALS['parameters'][item[1:len(item)-1]]
+                    if prm_vals_sort[i].startswith("[") and prm_vals_sort[i].endswith("]"):
+                        prm_vals_sort[i] = PARAMSET_GLOBALS['parameters'][prm_vals_sort[i][1:len(prm_vals_sort[i])-1]]
+                    #also, check for leading and trailing whitespace
+                    #prm_vals_sort[i] = prm_vals_sort[i].strip() 
+                    
 
                 #import code
                 #code.interact(local=dict(globals(), **locals()))
 
                 param_string = ' '.join(prm_vals_sort)
+                param_string2 = os.environ["INS_ARG_SEP"].join(prm_vals_sort)
+
 
                 #if cls.__name__=="EventDetector":
                 
@@ -352,11 +364,14 @@ class INSTINCT_process(INSTINCT_task):
                 #append on the values for methodID and method to param string
                 if params['descriptors']['runtype']!= "no_method":
                 #squish together methodID and methodvers to be more consistent with existing R methods etc. 
-                    param_string = param_string + ' ' + methodparams['methodID'] + "-" + methodparams['methodvers']
+                    param_string = param_string + ' '+ methodparams['methodID'] + "-" + methodparams['methodvers']
+                    param_string2 = param_string2 + os.environ["INS_ARG_SEP"]+ methodparams['methodID'] + "-" + methodparams['methodvers']
+
                     parameters.update(methodparams)
                 
             else:
                 param_string = ''
+                param_string2 = ''
 
             
 
@@ -379,6 +394,7 @@ class INSTINCT_process(INSTINCT_task):
         else:
             parameters_n = None
             param_string =""
+            param_string2 =""
 
         if 'arguments' in params:
             arguments = params['arguments'].copy()
@@ -414,7 +430,7 @@ class INSTINCT_process(INSTINCT_task):
         if 'rerun_key' in arguments:
             rerun_key = int(arguments['rerun_key'])
 
-        process = cls(parameters=parameters_n,param_string=param_string,arguments=arguments,descriptors=descriptors,\
+        process = cls(parameters=parameters_n,param_string=param_string,param_string2=param_string2,arguments=arguments,descriptors=descriptors,\
                    ports=portsout[0],ports_hash=portsout[1],processID=processID,pipeID=pipeID,rerun_key=rerun_key)
 
         #downstream will be set to empty to when just populating hashes for combextloop. 
@@ -561,7 +577,7 @@ class Split_process:
 
 class SplitRun_process:
     def requires(self):
-        return self.SplitInitial(parameters=self.parameters,param_string=self.param_string,arguments=self.arguments,\
+        return self.SplitInitial(parameters=self.parameters,param_string=self.param_string,param_string2=self.param_string2,arguments=self.arguments,\
                                  descriptors=self.descriptors,ports=self.ports,ports_hash=self.ports_hash,splits=self.splits,\
                                  split_ID=self.split_ID,process_ID=self.process_ID,outpath_str = self.outpath(),processID=self.processID,\
                                  pipeID=self.pipeID,rerun_key=self.rerun_key)
@@ -570,7 +586,7 @@ class Unify_process:
     
     def requires(self):
         for k in range(int(self.arguments['splits'])):
-            yield self.SplitRun(parameters=self.parameters,param_string=self.param_string,arguments=self.arguments,\
+            yield self.SplitRun(parameters=self.parameters,param_string=self.param_string,param_string2=self.param_string2,arguments=self.arguments,\
                                 descriptors=self.descriptors,ports=self.ports,ports_hash=self.ports_hash,splits=int(self.arguments['splits']),\
                                 split_ID=k+1,process_ID=self.__class__.__name__,outpath_str = self.outpath(),processID=self.processID,\
                                 pipeID=self.pipeID,rerun_key=self.rerun_key)

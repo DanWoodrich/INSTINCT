@@ -134,6 +134,17 @@ def deployJob(paramset,args,paramset_original,print_tree,novr,GLOBAL_NAMESPACE):
 
     os.environ["CANCELREVIEW"]="False" #set default env value
 
+    #import code
+    #code.interact(local=dict(globals(), **locals()))
+
+    #declare env variable and remove quotes.
+    if 'custom_argument_seperator' in paramset['Global']:
+        sepvar= paramset['Global']['custom_argument_seperator']
+        assert sepvar[0] == "'" and sepvar[len(sepvar)-1] == "'", "Custom argument seperator must be bounded by single quotes"
+        os.environ["INS_ARG_SEP"] = sepvar[1:len(sepvar)-1]
+    else:
+        os.environ["INS_ARG_SEP"] = " "
+    
     job_dets,pipenames = StagedJob(args[1],paramset,novr,GLOBAL_NAMESPACE,None).getJob()
     inv = job.invoke(job_dets,paramset_original,args[3],pipenames=pipenames)
 
@@ -143,8 +154,7 @@ def deployJob(paramset,args,paramset_original,print_tree,novr,GLOBAL_NAMESPACE):
     job_dets,pipenames = StagedJob(args[1],paramset,novr,GLOBAL_NAMESPACE,dag).getJob()
     inv = job.invoke(job_dets,paramset_original,args[3],pipenames=pipenames)
 
-    #import code
-    #code.interact(local=dict(globals(), **locals()))
+
     
     result=luigi.build([inv], local_scheduler=True) and inv.complete()
     randNum=random.randint(1,10)
