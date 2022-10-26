@@ -236,4 +236,32 @@ def file_peek(file,fn_type,fp_type,st_type,dur_type,comp_type=0):#this is out of
             hdict.update(metadict)
         return hdict
 
+def pipeline_n_extract(n,n_ref,component_name):
+
+    #print(n)
+    #print(n_ref)
+    #print(component_name)
+
+    if n_ref == None or n_ref ==[None]:
+        return 'default'
+        
+    if type(n_ref)==list:
+        if component_name in n_ref:
+            if not isinstance(n, int):
+                ind =n_ref.index(component_name)
+                #print(n[ind])
+                #print(n_ref[ind])
+                return n[ind]
+            else:
+                return n
+        else:
+            return 'default'
+        
+    else:
+        if component_name in n_ref:
+            return n
+        else:
+            return 'default'
+
+    
 

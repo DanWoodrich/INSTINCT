@@ -224,6 +224,7 @@ class StagedJob:
             #code.interact(local=dict(globals(), **locals()))
             #see if it's a loop:
             if 'loop_on' in pipe_args:
+                #print('didit')
                 return  CombineExtLoop.invoke(params=params_copy,component=pipe_val,pipe_args=pipe_args,\
                                              pipeID=pipeID,namespace = self.namespace,compdef=compdef,\
                                              process_peek = pipe_args['loop_on'],dag = self.dag)

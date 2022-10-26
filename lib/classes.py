@@ -14,10 +14,11 @@ class INSTINCT_pipeline:
 
     #run() defined in specific pipeline
 
-    def __init__(self,params,n,pipe_args,upstream,namespace,compdef,dag):
+    def __init__(self,params,n,pipe_args,upstream,namespace,compdef,n_ref,dag):
 
         self.params=params
         self.n=n
+        self.n_ref=n_ref
         self.namespace = namespace
 
         if pipe_args!={}:
@@ -60,15 +61,25 @@ class INSTINCT_pipeline:
 
     def run_component(self,component=None,final_process=False,upstream=[None]):
 
+        #print(component)
+        #print(self.n)
+        #print(self.n_ref)
+
         if final_process==True:
             #print(self.namespace[self.pipe_args['process']])
                     #if cls.__name__ == "DLmodel_Test":
                         #import code
                         #code.interact(local=dict(globals(), **locals()))
             #
+            component_name = self.pipe_args['process']
+            n_use = pipeline_n_extract(self.n,self.n_ref,component_name)
+
+            #print(n_use)
+            #print(self.n_ref)
+            #print(self.namespace[component_name])
 
             #I changed the params passing from self.params_copy to self.params... keep an eye on other ramifications of this change.
-            process = self.namespace[self.pipe_args['process']].invoke(self.params,n=self.n,pipe_args=self.pipe_args_copy,compdef=None,\
+            process = self.namespace[component_name].invoke(self.params,n=n_use,n_ref=self.n_ref,pipe_args=self.pipe_args_copy,compdef=None,\
                                                                             upstream=upstream,pipeID=self.pipeID,namespace = self.namespace,dag=self.dag)
             #print(self.pipe_args_copy)
             #print(self.params_copy["Job"]["DLmodel*"])
@@ -84,14 +95,20 @@ class INSTINCT_pipeline:
 
             #assign temporary pipe args so any modifications will not be retained
             pipe_args = self.pipe_args_copy.copy()
-
+    
             #print(pipe_args[component])
             
             
             #component will never have both pipe and process in the same level. (?)
             if 'process' in pipe_args[component]:
 
-                return self.namespace[pipe_args[component]['process']].invoke(self.params_copy,n=self.n,pipe_args=pipe_args[component],upstream=upstream,\
+                component_name = pipe_args[component]['process']
+                n_use = pipeline_n_extract(self.n,self.n_ref,component_name)
+                #print(n_use)
+                #print(self.n_ref)
+                #print(self.namespace[component_name])
+
+                return self.namespace[component_name].invoke(self.params_copy,n=n_use,n_ref=self.n_ref,pipe_args=pipe_args[component],upstream=upstream,\
                                                                        pipeID=self.pipeID,namespace = self.namespace,dag=self.dag,compdef=None)
             elif 'pipe' in pipe_args[component]:
                 
@@ -108,11 +125,41 @@ class INSTINCT_pipeline:
                     #if component== "GetPE1_S1":
                     #    import code
                     #    code.interact(local=dict(globals(), **locals()))
+
+                    #print(pipe_args['loop_on'])
+
+                    #import code
+                    #code.interact(local=dict(globals(), **locals()))
+                    if 'reset_loop' in pipe_args:
+                        if pipe_args['reset_loop'] == 'y':
+                            do_reset = True
+                    else:
+                        do_reset = False
+
+                    #print(component)
+                    #print(upstream)
+                    #print(self.n_ref)
+                    #print(self.n)
+
+                    #if len(self.n)==2 and len(self.n_ref)==1:
+                    #    import code
+                    #    code.interact(local=dict(globals(), **locals()))
+                    #print(self.n)
+                    #print(self.n_ref)
                     
                     return CombineExtLoop.invoke(params=self.params_copy,component=pipe_val,pipe_args=pipe_args,pipeID=pipeID,\
-                                                 namespace = self.namespace,compdef=compdef,process_peek = pipe_args['loop_on'],dag=self.dag)
+                                                 namespace = self.namespace,compdef=compdef,process_peek = pipe_args['loop_on'],dag=self.dag,\
+                                                 n=self.n, n_ref = self.n_ref, reset_loop = do_reset)
                 else:
-                    return pipe_val.invoke(self.params_copy,n=self.n,pipe_args=pipe_args,upstream=upstream,\
+
+                    #reworking looping. Need to see what vars are available here to plug into pipeline_n_extract
+                    #import code
+                    #code.interact(local=dict(globals(), **locals()))
+
+                    #assert 1==2
+                    #print("THIS HAPPENED")
+                    
+                    return pipe_val.invoke(self.params_copy,n=self.n,n_ref=self.n_ref,pipe_args=pipe_args,upstream=upstream,\
                                            pipeID=pipeID,compdef=compdef,namespace = self.namespace,dag=self.dag)
         else:
 
@@ -122,7 +169,7 @@ class INSTINCT_pipeline:
                 #this means that there is a hardcoded process or pipeline as the component. 
                 #When hardcoding compdef, use a string to identify process or pipeline in namespace.
                 #once you hardcode a component, you cannot go back to pipeargs (everything upstream also must be hardcoded
-                self.namespace[component].invoke(self.params_copy,n=self.n,pipe_args={},upstream=upstream,\
+                self.namespace[component].invoke(self.params_copy,n=self.n,n_ref=self.n_ref,pipe_args={},upstream=upstream,\
                                                pipeID=pipeID,compdef=None,namespace = self.namespace,dag=self.dag)
             else:
                 #this means that the component is not assigned. So, we return None. This can be done intentionally or unintentionally, be careful
@@ -132,11 +179,21 @@ class INSTINCT_pipeline:
             
     def loop_component(self,component=None,final_process=False,upstream=[None],process_peek=None):
 
+        #unsure if this is being used, but if so want to see if I can 
+        import code
+        code.interact(local=dict(globals(), **locals()))
+        if 'reset_loop' in pipe_args:
+            if pipe_args['reset_loop'] == 'y':
+                do_reset = True
+        else:
+            do_reset = False
+        
         return CombineExtLoop.invoke(params=self.params_copy,component=component,pipe_args={},pipeID=self.pipeID,\
-                                             namespace = self.namespace,compdef=None,process_peek = process_peek,dag=self.dag)
+                                             namespace = self.namespace,compdef=None,process_peek = process_peek,dag=self.dag,\
+                                     n=self.n,n_ref=self.n_ref,reset_loop = do_reset)
         
     @classmethod
-    def invoke(cls,params,pipe_args={},upstream=[None],n='default',pipeID=None,namespace = None,compdef = None,dag=[]):
+    def invoke(cls,params,pipe_args={},upstream=[None],n='default',pipeID=None,namespace = None,compdef = None,dag=[],n_ref=None):
 
         #drop to pipeline name param level if present in keys.
         if cls.__name__ in params:
@@ -144,7 +201,7 @@ class INSTINCT_pipeline:
 
         #print(params["DLmodel*"])
             
-        return cls(params,n,pipe_args,upstream,namespace,compdef,dag=dag).run()
+        return cls(params,n,pipe_args,upstream,namespace,compdef,n_ref,dag=dag).run()
 
 class INSTINCT_task(luigi.Task):
 
@@ -284,7 +341,9 @@ class INSTINCT_process(INSTINCT_task):
         
     #pipe_args is not refered to here since it is a placeholder to allow for dynamic calling between pipelines/processes
     @classmethod 
-    def invoke(cls,params,upstream=[None],n='default',pipe_args={},pipeID=None,namespace=None,dag=None,compdef=None):
+    def invoke(cls,params,upstream=[None],n='default',pipe_args={},pipeID=None,namespace=None,dag=None,compdef=None,n_ref=None):
+
+        #print(n)
         
         keytest,value = keyassess('drop',pipe_args)
 
@@ -337,6 +396,8 @@ class INSTINCT_process(INSTINCT_task):
                 
                 prm_vals = [prm_tlist[x][1] for x in range(len(prm_tlist))]
                 if n != 'default':
+                    #print('didit')
+                    #print(n)
                     prm_vals_sort = [sorted(prm_vals[x])[n] if isinstance(prm_vals[x],list) else prm_vals[x] for x in range(len(prm_vals))]
 
                 else:
@@ -697,38 +758,159 @@ class CombineExtLoop(INSTINCT_task):
         
             
     @classmethod
-    def invoke(cls,params,component,pipe_args={},upstream=[None],process_peek=None,novr=False,pipeID=None,namespace = None,compdef=None,dag=None):
+    def invoke(cls,params,component,pipe_args={},upstream=[None],process_peek=None,novr='default',pipeID=None,namespace = None,compdef=None,dag=None,
+               n_ref=None,n='default',reset_loop=False):
         #params in this case, just means a level above processes/subroutines
 
-        paramssave=params
-        params = params[process_peek] #defaults to formatFG, since usually looping through FG
-
-        parameters = params["parameters"]
-
-        #print(component)
-
-
-        #figure out which parameter is the list
-
-        keys = list(parameters.keys())
-
-        n_len = None
-        for i in range(len(keys)):
-            if type(parameters[keys[i]])==list:
-                n_len = len(parameters[keys[i]])
-
+        #save these variables as copies so I don't modify self.n_ref
+        
+        #n = n.copy()
+        #print(n)
+        #print(isinstance(n, int))
+        #print(n_ref)
+        #print(process_peek)
+        if n_ref!=None:
+            n_ref = n_ref.copy()
         #import code
         #code.interact(local=locals())
 
-        if novr!=False:
-            n_len = 1
-            nval = novr
+
+        #if this is true, blank out n_ref and n
+        if reset_loop:
+            n_ref = None
+            n = 'default'
+        
+        paramssave=params
+
+        n_lens = []
+
+        #make everything into lists
+        if n_ref==None or isinstance(n_ref, str):
+            n_ref= [n_ref]
+            #n=[n]
+
+        if isinstance(n, int):
+            n = [n]
+        
+        if isinstance(process_peek, str):
+            process_peek= [process_peek]
+
+        
+
+        for f in range(len(process_peek)):
+
+            process_lookup = process_peek[f]
+
+            parameters = params[process_lookup]["parameters"]
+
+            n_len = None
+            for i in parameters.keys():
+                if type(parameters[i])==list:
+                    n_len = len(parameters[i])
+
+            if novr!= 'default':
+                n_len = 1
+                nval = novr
+            else:
+                nval = 0
+
+            n_lens.append(range(n_len))
+
+            #print(pipe_args)
+
+
+        #print(process_peek)
+        #print(n_lens)
+        #print(n_ref)
+        
+        #might work a little better as a dict, but using the itertools below which seems to work better on lists.
+        override_matches = set(process_peek) & set(n_ref)
+
+        if len(override_matches)>0:
+            #didthis=True
+            override_matches_list = list(override_matches)
+
+            for p in range(len(override_matches_list)):
+                #new (process peek) will override old (n_ref). 
+
+                #find index of match in old
+                del_ind = n_ref.index(override_matches_list[p])
+
+                #print("DIDIT")
+
+                n_ref = [x for i,x in enumerate(n_ref) if i!=del_ind]
+                n = [x for i,x in enumerate(n) if i!=del_ind]
+
+                #del n_ref[del_ind]
+                #del n[del_ind]
+
+                #print(n_ref)
+                #print(n_ref != [None] and n_ref != [])
+                #print(list(range(len(n))))
+
+                override_matches = []
+        #else:
+        #    didthis = False
+
+        #if didthis:
+        #    print(n_lens)
+        #    print(process_peek)
+                
+        if n_ref != [None] and n_ref != []:
+            #if n_ref is not none need to append
+            #append lists
+
+            #if len(n_ref) !=len(n):
+            #        import code
+             #       code.interact(local=locals())
+                    
+            for p in range(len(n)):
+                n_lens.append(range(n[p],n[p]+1))
+                process_peek.append(n_ref[p])
+
+        #if didthis:
+        #    print(n_lens)
+        #    print(process_peek)
+        
+        #if is_list:
+        if(len(process_peek)>1):
+            
+            import itertools
+            perms = list(itertools.product(*n_lens))
+            #convert tuples to list
+            perms = [list(tup) for tup in perms]
+
+
+            #assert len(perms[0]) == len(process_peek )
         else:
-            nval = 0
+            perms =  n_lens[0]
 
-        #print(pipe_args)
+        #else
+        #    perms = n_lens[0]
 
-        upstreamNew=[component.invoke(paramssave,n=L,pipe_args=pipe_args.copy(),upstream=upstream,pipeID=pipeID,namespace = namespace,compdef=compdef,dag=dag) for L in range(n_len)]
+
+    
+
+        #print(perms)
+        #print(process_peek)
+        
+        #print(n_ref)
+        
+        #[assert len(L)==len(process_peek) for L in perms]
+
+        #here, determine if n_ref should be ignored (if absent), appended to (if unique) or overwritten (if the same).
+        #also, see if I can access other parameters on the same level ('loop_reset') for instance. 
+        #if n_ref != None:
+            
+        
+        #for p in n_ref:
+
+        #print(perms)
+        #print(process_peek)
+
+
+        upstreamNew=[component.invoke(paramssave,n=L,n_ref=process_peek,pipe_args=pipe_args.copy(),upstream=upstream,pipeID=pipeID,namespace = namespace,\
+                                      compdef=compdef,dag=dag) for L in perms]
 
         #import code
         #code.interact(local=dict(globals(), **locals()))

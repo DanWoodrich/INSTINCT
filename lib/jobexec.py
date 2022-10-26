@@ -126,7 +126,7 @@ else:
 
     #defaults for arguments
     print_tree=False
-    novr=False
+    novr='default'
 
     if len(sys.argv)>4:
 
