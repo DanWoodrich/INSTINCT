@@ -293,36 +293,39 @@ class INSTINCT_process(INSTINCT_task):
             executable2 = '.exe'
             methodjoin = '' #matlab does not allow for '-' in name
 
-            
+
+        command0 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID +\
+                       '/' + self.parameters['methodID'] + '/' + self.parameters['methodID'] + methodjoin + self.parameters['methodvers'] + executable2
         
         wrapper,wrapper_value = keyassess('wrapper',self.descriptors)
         if wrapper_value!='True':
             #import code
             #code.interact(local=locals())
-            command1 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID +\
-                       '/' + self.parameters['methodID'] + '/' + self.parameters['methodID'] + methodjoin + self.parameters['methodvers'] + executable2
-
             command2 = os.environ["INS_ARG_SEP"].join(self.cmd_args)
+
+            command = command0 + ' '+ command2
             
         else:
             command1 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID + '/'+\
             self.processID  +"Wrapper" + executable2
 
             command2 = PARAMSET_GLOBALS['project_root'] + os.environ["INS_ARG_SEP"]+ os.environ["INS_ARG_SEP"].join(self.cmd_args)
-                
-        
 
-
-        command = command1 + ' '+ command2
-
-        #import code
-        #code.interact(local=dict(globals(), **locals()))
+            command = command1 + ' '+ command2
 
         if 'venv' in self.descriptors:
             print("******************************\nActivating virtual environment " + self.descriptors['venv_name'] + " with " + self.descriptors['venv'] + "\n******************************")
             if(self.descriptors['venv']=='Conda'):
                 command_venv = self.descriptors['venv'] + ' activate ' + self.descriptors['venv_name'] + ' & '
                 command = command_venv + command #append venv call to start of command. This assumes conda venv is set up to work on command line.
+
+                pass_sub,pass_sub_val = keyassess('pass_sub_to_wrapper',self.descriptors)
+                if pass_sub_val=='True':
+
+                    command = command + os.environ["INS_ARG_SEP"]+ command0
+
+                #import code
+                #code.interact(local=dict(globals(), **locals()))
             else:
                 print("VENV NOT YET CONFIGURED TO WORK ON BASE VENV")
         
@@ -727,6 +730,8 @@ class CombineExtLoop(INSTINCT_task):
             #import code
             #code.interact(local=locals())
 
+            #Note: since I don't have access to the parameter to do this correctly, I should probably not do this at all.
+            #however, do I know the implications if i don't do this here? 
             Dat.drop(columns=['DiffTime'])
 
             Dat=get_difftime(Dat) #this is currently broken- difftime doesn't work between original format and format FG
