@@ -16,6 +16,8 @@ class INSTINCT_pipeline:
 
     def __init__(self,params,n,pipe_args,upstream,namespace,compdef,n_ref,dag):
 
+        #print(n)
+
         self.params=params
         self.n=n
         self.n_ref=n_ref
@@ -79,7 +81,7 @@ class INSTINCT_pipeline:
             #print(self.namespace[component_name])
 
             #I changed the params passing from self.params_copy to self.params... keep an eye on other ramifications of this change.
-            process = self.namespace[component_name].invoke(self.params,n=n_use,n_ref=self.n_ref,pipe_args=self.pipe_args_copy,compdef=None,\
+            process = self.namespace[component_name].invoke(self.params_copy,n=n_use,n_ref=self.n_ref,pipe_args=self.pipe_args_copy,compdef=None,\
                                                                             upstream=upstream,pipeID=self.pipeID,namespace = self.namespace,dag=self.dag)
             #print(self.pipe_args_copy)
             #print(self.params_copy["Job"]["DLmodel*"])
@@ -95,6 +97,12 @@ class INSTINCT_pipeline:
 
             #assign temporary pipe args so any modifications will not be retained
             pipe_args = self.pipe_args_copy.copy()
+
+            #test- similar to above. 
+            params = self.params_copy.copy()
+
+            #import code
+            #code.interact(local=dict(globals(), **locals()))
     
             #print(pipe_args[component])
             
@@ -108,11 +116,19 @@ class INSTINCT_pipeline:
                 #print(self.n_ref)
                 #print(self.namespace[component_name])
 
-                return self.namespace[component_name].invoke(self.params_copy,n=n_use,n_ref=self.n_ref,pipe_args=pipe_args[component],upstream=upstream,\
+                return self.namespace[component_name].invoke(params,n=n_use,n_ref=self.n_ref,pipe_args=pipe_args[component],upstream=upstream,\
                                                                        pipeID=self.pipeID,namespace = self.namespace,dag=self.dag,compdef=None)
             elif 'pipe' in pipe_args[component]:
+
+                #test turn this off. 
+                #pipe_args,pipe_val,compdef,pipeID =pipetest_pargs_pval_compdef(self.pipe_args[component],self.namespace)
+
+                #test possible bugfix
+                pipe_args,pipe_val,compdef,pipeID =pipetest_pargs_pval_compdef(pipe_args[component],self.namespace)
+
+                #although this didn't fix the current bug, it is probably more correct so leave it.
+                #now, test saving a copy of params in the style of pipe_args above to avoid this persisting between components
                 
-                pipe_args,pipe_val,compdef,pipeID =pipetest_pargs_pval_compdef(self.pipe_args[component],self.namespace)
                 
                     #here  is where I'd test for the loop conditional
                  
@@ -147,7 +163,7 @@ class INSTINCT_pipeline:
                     #print(self.n)
                     #print(self.n_ref)
                     
-                    return CombineExtLoop.invoke(params=self.params_copy,component=pipe_val,pipe_args=pipe_args,pipeID=pipeID,\
+                    return CombineExtLoop.invoke(params=params,component=pipe_val,pipe_args=pipe_args,pipeID=pipeID,\
                                                  namespace = self.namespace,compdef=compdef,process_peek = pipe_args['loop_on'],dag=self.dag,\
                                                  n=self.n, n_ref = self.n_ref, reset_loop = do_reset)
                 else:
@@ -159,7 +175,7 @@ class INSTINCT_pipeline:
                     #assert 1==2
                     #print("THIS HAPPENED")
                     
-                    return pipe_val.invoke(self.params_copy,n=self.n,n_ref=self.n_ref,pipe_args=pipe_args,upstream=upstream,\
+                    return pipe_val.invoke(self.params,n=self.n,n_ref=self.n_ref,pipe_args=pipe_args,upstream=upstream,\
                                            pipeID=pipeID,compdef=compdef,namespace = self.namespace,dag=self.dag)
         else:
 
@@ -292,7 +308,7 @@ class INSTINCT_process(INSTINCT_task):
         if self.descriptors['runtype']=='bin':
             executable2 = '.exe'
             methodjoin = '' #matlab does not allow for '-' in name
-
+        #print(self.cmd_args)
 
         command0 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID +\
                        '/' + self.parameters['methodID'] + '/' + self.parameters['methodID'] + methodjoin + self.parameters['methodvers'] + executable2
@@ -346,6 +362,7 @@ class INSTINCT_process(INSTINCT_task):
     @classmethod 
     def invoke(cls,params,upstream=[None],n='default',pipe_args={},pipeID=None,namespace=None,dag=None,compdef=None,n_ref=None):
 
+        #print(cls)
         #print(n)
         
         keytest,value = keyassess('drop',pipe_args)
@@ -374,6 +391,7 @@ class INSTINCT_process(INSTINCT_task):
                         params = params[string_candidate] #if candidate contains string and wildcard
                         processID = string_candidate_test
                         break
+        #print(params)
             
         if 'parameters' in params:
 
@@ -888,8 +906,10 @@ class CombineExtLoop(INSTINCT_task):
 
             #assert len(perms[0]) == len(process_peek )
         else:
+            
             perms =  n_lens[0]
-
+            #import code
+            #code.interact(local=locals())
         #else
         #    perms = n_lens[0]
 
@@ -909,16 +929,15 @@ class CombineExtLoop(INSTINCT_task):
             
         
         #for p in n_ref:
-
         #print(perms)
         #print(process_peek)
 
+        #print(perms)
 
         upstreamNew=[component.invoke(paramssave,n=L,n_ref=process_peek,pipe_args=pipe_args.copy(),upstream=upstream,pipeID=pipeID,namespace = namespace,\
                                       compdef=compdef,dag=dag) for L in perms]
 
-        #import code
-        #code.interact(local=dict(globals(), **locals()))
+        
         #this makes sure only unique inputs are retained. If not unique, why run it? 
         upstreamNew = list(set(upstreamNew))
         n_len = len(upstreamNew)
@@ -939,6 +958,9 @@ class CombineExtLoop(INSTINCT_task):
             return(comb_process)
         else:
             #if it isn't a loop, just return the component
+            #import code
+            #code.interact(local=locals())
+            #print(perms)
             return component.invoke(paramssave,n=nval,pipe_args=pipe_args,upstream=upstream,pipeID=pipeID,namespace = namespace,compdef=compdef,dag=dag)
 
         #pass values into luigi task as parameters: outpath, hash, file type, etc. 
