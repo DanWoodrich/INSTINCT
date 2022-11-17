@@ -175,7 +175,7 @@ class INSTINCT_pipeline:
                     #assert 1==2
                     #print("THIS HAPPENED")
                     
-                    return pipe_val.invoke(self.params,n=self.n,n_ref=self.n_ref,pipe_args=pipe_args,upstream=upstream,\
+                    return pipe_val.invoke(params,n=self.n,n_ref=self.n_ref,pipe_args=pipe_args,upstream=upstream,\
                                            pipeID=pipeID,compdef=compdef,namespace = self.namespace,dag=self.dag)
         else:
 
