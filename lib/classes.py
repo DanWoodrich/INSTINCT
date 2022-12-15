@@ -416,6 +416,10 @@ class INSTINCT_process(INSTINCT_task):
                 prm_tlist= sorted(parameters.items())
                 
                 prm_vals = [prm_tlist[x][1] for x in range(len(prm_tlist))]
+
+                #import code
+                #code.interact(local=dict(globals(), **locals()))
+                        
                 if n != 'default':
                     #print('didit')
                     #print(n)
@@ -427,15 +431,20 @@ class INSTINCT_process(INSTINCT_task):
 
                 #here, check for global parameters and inject in case of match
                 for i in range(len(prm_vals_sort)):
-                    if prm_vals_sort[i].startswith("[") and prm_vals_sort[i].endswith("]"):
+                    while prm_vals_sort[i].startswith("[") and prm_vals_sort[i].endswith("]"): #attempt a bugfix
+                        
                         prm_vals_sort[i] = PARAMSET_GLOBALS['parameters'][prm_vals_sort[i][1:len(prm_vals_sort[i])-1]]
                     #also, check for leading and trailing whitespace
                     #prm_vals_sort[i] = prm_vals_sort[i].strip() 
                     
 
-                #import code
-                #code.interact(local=dict(globals(), **locals()))
-
+                #remove /n from strings if present
+                for i in range(len(prm_vals_sort)):
+                    if "\n" in prm_vals_sort[i]:
+                        prm_vals_sort[i] = prm_vals_sort[i].replace('\n','')
+                        #import code
+                        #code.interact(local=dict(globals(), **locals()))
+                
                 param_string = ' '.join(prm_vals_sort)
                 param_string2 = os.environ["INS_ARG_SEP"].join(prm_vals_sort)
 
@@ -458,26 +467,35 @@ class INSTINCT_process(INSTINCT_task):
             
 
             #change the n value within parameters
-            if n!= 'default':
-                #import code
-                #code.interact(local=locals())
-                keys = list(parameters.keys())
-                any_list = False
-                for i in range(len(keys)):
-                    if type(parameters[keys[i]])==list:
-                        any_list=True
-                        parameters_n = parameters.copy()
-                        parameters_n[keys[i]]=sorted(parameters[keys[i]])[n]
-                if any_list==False:
-                    parameters_n = parameters
-            else:
+            #if n!= 'default':
+            #import code
+            #code.interact(local=locals())
+            keys = list(parameters.keys())
+            any_list = False
+            for i in range(len(keys)):
+                if type(parameters[keys[i]])==list:
+                    any_list=True
+                    parameters_n = parameters.copy()
+                    #print(n)
+                    #import code
+                    #code.interact(local=dict(globals(), **locals()))
+                    if n == 'default':
+                        n_ = 0
+                    else:
+                        n_ = n
+                    parameters_n[keys[i]]=sorted(parameters[keys[i]])[n_]
+            if any_list==False:
                 parameters_n = parameters
+            #else:
+                #parameters_n = parameters
 
         else:
             parameters_n = None
             param_string =""
             param_string2 =""
 
+        #print(parameters_n)
+            
         if 'arguments' in params:
             arguments = params['arguments'].copy()
             if 'splits' not in arguments:
