@@ -222,6 +222,7 @@ class INSTINCT_pipeline:
 class INSTINCT_task(luigi.Task):
 
     ports = luigi.Parameter(significant=False) #these are the upstream ports , in order.
+    
     ports_hash = luigi.ListParameter() #these are included to be hashed.
     
     #internal variable definitions
@@ -1065,7 +1066,9 @@ class INSTINCT_job(INSTINCT_task):
         #code.interact(local=locals())
     
         job_out=list(job.keys())[0]
-        upstream=list(job.values())[0]        
+        upstream=list(job.values())[0]
+
+        #print(upstream[0].outpath())
 
         portsout = cls.getports(upstream)
 

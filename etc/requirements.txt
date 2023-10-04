@@ -2,3 +2,5 @@ luigi
 pandas
 numpy
 nestedtext
+
+matplotlib

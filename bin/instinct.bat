@@ -9,6 +9,6 @@ cd ../
 
 cd ./lib
 
-jobexec.py %*
+python jobexec.py %*
 
 cd %PREVDIR%

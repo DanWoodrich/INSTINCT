@@ -22,7 +22,14 @@ def pipetest_pargs_pval_compdef(pipe_args,namespace):
         return pipe_args,pipeshape[0],compdef,pipeshape[1].__name__+ '.pipe'
     #add to this original name so pipeID is useful info again. 
     else:
-        return pipe_args,namespace[pipe_args['pipe']],namespace[pipe_args['pipe']].compdef,pipe_args['pipe']
+        #import code
+        #code.interact(local=dict(globals(), **locals()))
+        if hasattr(namespace[pipe_args['pipe']],"compdef"):
+            return pipe_args,namespace[pipe_args['pipe']],namespace[pipe_args['pipe']].compdef,pipe_args['pipe']
+        else:
+            return pipe_args,namespace[pipe_args['pipe']],None,pipe_args['pipe']
+            #import code
+            #code.interact(local=dict(globals(), **locals()))
 
 def pipelink_unpack(pipe_args):
     if 'pipe_link' in pipe_args:
