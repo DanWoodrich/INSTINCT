@@ -127,7 +127,11 @@ def param_smoosh(params,entry):
 
 def get_difftime(data,cap_consectutive=None):
 
-    
+    #this needs a filter for different location, shouldn't assume time match should necessarily be suffecient
+
+    #print(len(data)),
+
+
 
     data['TrueStart'] = data['StartTime']+pd.to_timedelta(data['SegStart'], unit='s')
     data['TrueEnd'] = data['TrueStart']+pd.to_timedelta(data['SegDur'], unit='s')
@@ -139,72 +143,24 @@ def get_difftime(data,cap_consectutive=None):
     consecutive[0] = 1
     iterator = 1
 
+
+
     if cap_consectutive != None:
-        #loop through each difftime, and if
-        for n in range(0,(len(data['DiffTime'])-1)):
-            if data['DiffTime'].values[n] != True:
-                iterator = iterator+1
-                consecutive[n+1] = iterator
+
+        cum_sum =0 
+
+        for x in range(len(data)):
+            if data["DiffTime"][x]:
+                cum_sum += data["SegDur"][x]
             else:
-                consecutive[n+1] = iterator
+                cum_sum= 0
 
-        #data['DiffTime'] = consecutive
-
-        #temporary to use for loop
-        data['DiffTime_con'] = consecutive
-
-        dpatch_list = [None] * len(data['DiffTime_con'].unique().tolist())
-
-        for x in range(len(data["DiffTime_con"].unique().tolist())):
-
-            xIn = [data['DiffTime_con'].unique().tolist()[x]]
-
-            #if x ==38:
-            #    import code
-            #    code.interact(local=dict(globals(), **locals()))
-
-            dataIn = data.loc[data['DiffTime_con'].isin(xIn),]
-
-            dataIn = dataIn.reset_index()
-
-            #hardcoded as 40 minutes
-            _cumsum = dataIn["SegDur"].cumsum()//(cap_consectutive) #hardcode this to be 40 minutes- reason is for backwards compatible.
-
-            #import code
-            #code.interact(local=dict(globals(), **locals()))
-            
-            _cumsum = pd.Series.tolist(_cumsum)
-            indexes = [_cumsum.index(x) for x in set(_cumsum)]
-            indexes2 = list(numpy.where(dataIn["SegDur"]>=3600))[0].tolist()
-            #print(x)
-
-            if len(dataIn) != 1 and indexes!=[0]:
-
-                #Not sure if below was ever right for any case- I should test it further.
-                #if x !=2:
-                #import code
+            if cum_sum//(cap_consectutive)>0:
+                #print(x)
+                ##import code
                 #code.interact(local=dict(globals(), **locals()))
-                
-                dataIn.loc[indexes,"DiffTime"] = False #set first value to false. 
-                dataIn.loc[0,"DiffTime"] = True #except for the first one
-
-                #final change- for each index which is equal to or greater than cap_consectutive, change to false
-                dataIn.loc[indexes2,"DiffTime"] = False
-
-            dataIn = dataIn.drop('index', axis=1)
-
-            dpatch_list[x]=dataIn
-
-
-        
-        data = pd.concat(dpatch_list,ignore_index=True)
-
-        data = data.drop('DiffTime_con', axis=1)
-        
-    #do again with cap consecutive breaks added
-
-    #import code
-    #code.interact(local=dict(globals(), **locals()))
+                data["DiffTime"][x]=False
+                cum_sum= 0
 
     consecutive = numpy.empty(len(data['DiffTime']), dtype=int)
     consecutive[0] = 1

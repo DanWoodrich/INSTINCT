@@ -514,6 +514,7 @@ class INSTINCT_process(INSTINCT_task):
         else:
             arguments = {'splits':'1'}
         if 'descriptors' in params:
+            #might be able to remove this copy
             descriptors = params['descriptors'].copy()
         else:
             descriptors = None

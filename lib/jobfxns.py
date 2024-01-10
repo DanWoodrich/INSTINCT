@@ -212,6 +212,7 @@ class StagedJob:
             params_copy = param_smoosh(params_copy,pipe_args['params_drop'])
             #del pipe_args['params_drop']
         else:
+            #might be able to remove this copy
             params_copy = self.params.copy()
 
         #test for .pipe notation
@@ -246,6 +247,8 @@ class StagedJob:
         #code.interact(local=dict(globals(), **locals()))
 
         jobslist = self.search_namesp(self.job,pipelist)
+        
+        #might be able to remove this copy
 
         jobsnames_sort = jobsnames.copy()
         jobsnames_sort.sort()
