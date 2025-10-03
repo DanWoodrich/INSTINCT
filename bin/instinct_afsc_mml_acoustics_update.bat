@@ -14,5 +14,7 @@ cd ..
 
 Rscript ./lib/user/Installe.R
 
+pip install -r ./lib/user/requirements.txt
+
 ECHO instinct_afsc_mml_acoustics update complete!
 @Pause

@@ -8,6 +8,8 @@ from classes import *
 from getglobals import PARAMSET_GLOBALS
 import luigi.tools.deps_tree as deps_tree
 import numpy
+from google.cloud import storage
+from urllib.parse import urlparse
 
 #need for namespace
 from user.processes import *
@@ -173,13 +175,43 @@ def deployJob(paramset,args,paramset_original,print_tree,novr,GLOBAL_NAMESPACE):
         print(r"""                 . ,'..'.,'; '. .'.,',; ,' :','..'.,', '. ; ,','""")
 
     if result:
+        if bool(PARAMSET_GLOBALS.get('GCS_output')):
+
+            print(f"saving job output to GCS: {PARAMSET_GLOBALS['GCS_path']}")
+            #save to cloud storage. Use specified name, save cache outpath for possible future use, otherwise
+            #just save file contents in outpath.
+
+            storage_client = storage.Client()
+
+            parsed_uri = urlparse(PARAMSET_GLOBALS['GCS_path'])
+
+            bucket = storage_client.bucket(parsed_uri.netloc)
+            prefix = parsed_uri.path.lstrip('/')
+
+            #recurse and upload all files
+            for root, _, files in os.walk(inv.outpath()):
+                for filename in files:
+                    # Construct the full local path of the file to upload
+                    local_file_path = os.path.join(root, filename)
+                    
+                    # Construct the destination blob name by preserving the folder structure
+                    relative_path = os.path.relpath(local_file_path, inv.outpath())
+                    # GCS uses forward slashes as separators
+                    gcs_path = os.path.join(prefix, relative_path).replace(os.sep, '/')
+
+                    blob = bucket.blob(gcs_path)
+                    
+                    blob.upload_from_filename(local_file_path)
+            #write out what was the local path
+            blob = bucket.blob(os.path.join(prefix, "local_path.txt").replace(os.sep, '/'))
+            blob.upload_from_string(inv.outpath(), content_type="text/plain")
         if(PARAMSET_GLOBALS['Wrapper'] == "False"):
             print("                     ,'..'. Output file location path: ':',,''\n" + "                   " +inv.outpath())
             if os.name == 'nt': #if system is windows- explorer not a thing on linux
                 os.system("start " + inv.outpath())
-        elif(PARAMSET_GLOBALS['Wrapper'] == "True"):
+        elif(bool(PARAMSET_GLOBALS['Wrapper'])):
             print("                             Wrapper Job Successful!                   ")
-        print("                        elapsed time (d:h:m:s): " + str(secToDHMS(round(end-start,0))))
+        print("                        elapsed time (d:h:m:s): " + str(secToDHMS(round(end-start,0))))    
     else:
         print(failmessage)
     print(getArt(args[2],result,num=randNum))
