@@ -3,6 +3,8 @@ import pandas as pd
 import numpy
 import nestedtext as nt
 from getglobals import PARAMSET_GLOBALS
+from google.api_core.exceptions import NotFound
+import os
 
 #some fxns to handle .pipe syntax
 def pipetest_pargs_pval_compdef(pipe_args,namespace):
@@ -131,8 +133,6 @@ def get_difftime(data,cap_consectutive=None):
 
     #print(len(data)),
 
-
-
     data['TrueStart'] = data['StartTime']+pd.to_timedelta(data['SegStart'], unit='s')
     data['TrueEnd'] = data['TrueStart']+pd.to_timedelta(data['SegDur'], unit='s')
     data['DiffTime']=pd.to_timedelta(0)
@@ -142,8 +142,6 @@ def get_difftime(data,cap_consectutive=None):
     consecutive = numpy.empty(len(data['DiffTime']), dtype=int)
     consecutive[0] = 1
     iterator = 1
-
-
 
     if cap_consectutive != None:
 
@@ -181,6 +179,40 @@ def get_difftime(data,cap_consectutive=None):
     #code.interact(local=dict(globals(), **locals()))
     
     return(data)
+
+def download_blob(client, gsuri, destination_folder):
+    """Downloads a single blob from GCS to a local folder."""
+    try:
+        # By instantiating the client within the function, each thread gets its
+        # own client object. This can help avoid potential threading issues with
+        # some libraries, though the GCS client is generally thread-safe.
+        bucket = client.bucket(gsuri.netloc)
+        prefix = gsuri.path.lstrip('/')
+        blob = bucket.blob(prefix)
+
+        # Construct the full local path
+        # This will preserve any subdirectories in the source_blob_name
+        destination_path = os.path.join(destination_folder, prefix)
+        destination_path = destination_path.replace('bottom_mounted/', '') #remove this... pretty clunky, can readdress later if needed
+        
+        # Create local directories if they don't exist
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+
+        print(f"Downloading gs://{gsuri.netloc}/{prefix} to {destination_path}...")
+        if os.path.exists(destination_path):
+            print(f"{destination_path} already exists, skipping")
+            
+        else: 
+            blob.download_to_filename(destination_path)
+
+        return (f"gs://{gsuri.netloc}/{prefix}", "Success")
+        
+    except NotFound:
+        print(f"ERROR: Blob {source_blob_name} not found in bucket {bucket_name}.")
+        return (f"gs://{gsuri.netloc}/{prefix}", "Error: Not Found")
+    except Exception as e:
+        print(f"ERROR: Failed to download {prefix}. Reason: {e}")
+        return (f"gs://{gsuri.netloc}/{prefix}", f"Error: {e}")
 
 def file_peek(file,fn_type,fp_type,st_type,dur_type,comp_type=0):#this is out of date- don't think I need to have fxn variables for how I load in the standard metadata.
         if comp_type != 0:

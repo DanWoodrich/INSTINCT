@@ -156,7 +156,6 @@ def deployJob(paramset,args,paramset_original,print_tree,novr,GLOBAL_NAMESPACE):
     job_dets,pipenames = StagedJob(args[1],paramset,novr,GLOBAL_NAMESPACE,dag).getJob()
     inv = job.invoke(job_dets,paramset_original,args[3],pipenames=pipenames)
 
-
     
     result=luigi.build([inv], local_scheduler=True) and inv.complete()
     randNum=random.randint(1,10)
