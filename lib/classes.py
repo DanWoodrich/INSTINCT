@@ -288,7 +288,10 @@ class INSTINCT_process(INSTINCT_task):
 
     def output(self):
         return luigi.LocalTarget(self.outfilegen())
-    def run_cmd(self):
+    def run_cmd(self,args=None):
+
+        if args==None:
+            args = self.cmd_args
         #1st iteration of this, might modify
 
         methodjoin = '-'
@@ -309,7 +312,6 @@ class INSTINCT_process(INSTINCT_task):
         if self.descriptors['runtype']=='bin':
             executable2 = '.exe'
             methodjoin = '' #matlab does not allow for '-' in name
-        #print(self.cmd_args)
 
         command0 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID +\
                        '/' + self.parameters['methodID'] + '/' + self.parameters['methodID'] + methodjoin + self.parameters['methodvers'] + executable2
@@ -318,7 +320,7 @@ class INSTINCT_process(INSTINCT_task):
         if wrapper_value!='True':
             #import code
             #code.interact(local=locals())
-            command2 = os.environ["INS_ARG_SEP"].join(self.cmd_args)
+            command2 = os.environ["INS_ARG_SEP"].join(args)
 
             command = command0 + ' '+ command2
             
@@ -326,7 +328,7 @@ class INSTINCT_process(INSTINCT_task):
             command1 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID + '/'+\
             self.processID  +"Wrapper" + executable2
 
-            command2 = PARAMSET_GLOBALS['project_root'] + os.environ["INS_ARG_SEP"]+ os.environ["INS_ARG_SEP"].join(self.cmd_args)
+            command2 = PARAMSET_GLOBALS['project_root'] + os.environ["INS_ARG_SEP"]+ os.environ["INS_ARG_SEP"].join(args)
 
             command = command1 + ' '+ command2
 
@@ -356,7 +358,7 @@ class INSTINCT_process(INSTINCT_task):
 
         #import code
         #code.interact(local=locals())
-        subprocess.run(command,shell=True)
+        return subprocess.run(command,shell=True)
 
         
     #pipe_args is not refered to here since it is a placeholder to allow for dynamic calling between pipelines/processes
