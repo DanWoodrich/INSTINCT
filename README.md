@@ -34,6 +34,9 @@ The typical command is as follows:
 INSTINCT [pipeline or job name] [project name] [parameter file name]
 ```
 
+Now also supports
+INSTINCT [pipeline or job name] [gcs uri to .nt file]
+
 ## About ##
 
 INSTINCT is a command-line application, built to leverage the pipeline framework of [Luigi](https://github.com/spotify/luigi) to make acoustic signal detection workflows

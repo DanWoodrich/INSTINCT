@@ -80,8 +80,6 @@ elif (sys.argv[1]=='pull_contrib'):
         root_short = root[(len(contribdir)+1):]
         #print(root_short)
         if len(root_short)==0:
-            #import code
-            #code.interact(local=dict(globals(), **locals()))
             filescomp = files
         else:
             filescomp = [root_short +'/'+ x for x in files]
@@ -184,6 +182,10 @@ else:
     if "--novr" in sys.argv:
         pos = sys.argv.index("--novr")
         novr = int(sys.argv[pos+1])
+
+    #init cache if it doesn't exist:
+    if not os.path.exists(PARAMSET_GLOBALS['cache_root']):
+        os.makedirs(PARAMSET_GLOBALS['cache_root'])
 
     #initialize the job
     deployJob(paramset,sys.argv,paramset_original,print_tree,novr,GLOBAL_NAMESPACE)

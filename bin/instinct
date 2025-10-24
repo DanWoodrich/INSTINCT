@@ -1,0 +1,4 @@
+#!/bin/bash
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="${ROOT_DIR}:${PYTHONPATH:-}"
+exec python "${ROOT_DIR}/lib/jobexec.py" "$@"
