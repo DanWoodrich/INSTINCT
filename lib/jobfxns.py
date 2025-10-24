@@ -152,10 +152,9 @@ def deployJob(paramset,args,paramset_original,print_tree,novr,GLOBAL_NAMESPACE):
 
     dag = Dag(inv)
 
-    #this is repetitive, but can't think of any other way to do this... enables hard rerun
+    #hard rerun applies in a trailing way while traversing DAG, so rebuild after previous deletes. Inneffecient but effective. 
     job_dets,pipenames = StagedJob(args[1],paramset,novr,GLOBAL_NAMESPACE,dag).getJob()
     inv = job.invoke(job_dets,paramset_original,args[3],pipenames=pipenames)
-
     
     result=luigi.build([inv], local_scheduler=True) and inv.complete()
     randNum=random.randint(1,10)
@@ -201,9 +200,6 @@ def deployJob(paramset,args,paramset_original,print_tree,novr,GLOBAL_NAMESPACE):
                     blob = bucket.blob(gcs_path)
                     
                     blob.upload_from_filename(local_file_path)
-            #write out what was the local path
-            blob = bucket.blob(os.path.join(prefix, "local_path.txt").replace(os.sep, '/'))
-            blob.upload_from_string(inv.outpath(), content_type="text/plain")
         if(PARAMSET_GLOBALS['Wrapper'] == "False"):
             print("                     ,'..'. Output file location path: ':',,''\n" + "                   " +inv.outpath())
             if os.name == 'nt': #if system is windows- explorer not a thing on linux

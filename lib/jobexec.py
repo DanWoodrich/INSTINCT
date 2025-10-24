@@ -1,16 +1,21 @@
 import sys
 import os
+from pathlib import Path
 import nestedtext as nt
 import time
 import shutil
+from google.cloud import storage
+from urllib.parse import urlparse
 
-app_path = os.getcwd()
-app_path= app_path[:-4]
-project_root=app_path.replace('\\', '/')+"/" #append this onto global params
+project_root= (Path(__file__).resolve().parents[1].as_posix() +"/")
 
 if len(sys.argv)==1:
-    os.system("start " + project_root) #just start the window
-    exit()
+    if os.name == 'nt' :
+        os.system("start " + project_root) #just start the window
+        exit()
+    else:
+        print(f"INSTINCT; project root: {project_root}")
+        exit()
 
 elif (sys.argv[1]=='push_user'): 
     #this will push your user changes to a named contrib path (not within this repo)
@@ -101,15 +106,58 @@ else:
     editor = os.environ.get('TEXTEDITOR') #blank for default
 
     #from classes import *
+    
+
+        #defaults for arguments
+    print_tree=False
+    novr='default'
+    count_extra = 0
+
+    #for a project .nt file, drops down to the key specified (for multiple, can use key1-key2)
+    if "--params_drop" in sys.argv:
+        count_extra = count_extra+ 2
+    #upon successful job completion, print out the complete DAG
+    if "--print_tree" in sys.argv:
+        count_extra = count_extra+ 1
+
+    #Manually set a specific index to prevent a full fan out (for testing).ie,  --novr 0
+    if "--novr" in sys.argv:
+        count_extra = count_extra+ 2
+
+    if (len(sys.argv)-count_extra)==3:
+        #assume gcs path if skip local pathing. save to a tmp path.
+        #assumes ADC set up
+        
+        storage_client = storage.Client()
+
+        parsed_uri = urlparse(sys.argv[2])
+
+        bucket = storage_client.bucket(parsed_uri.netloc)
+        prefix = parsed_uri.path.lstrip('/')
+
+        blob = bucket.blob(prefix)
+
+        outdir = project_root +'lib/user/Projects/tmp'
+
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+            
+        params_root=outdir +'/default.nt'
+
+        blob.download_to_filename(params_root)
+        
+        #so ugly, but change arguments which are further passed and use to grab globals downstream
+        sys.argv = sys.argv[:2]+['tmp']+['default']+sys.argv[3:]
+        
+    
+    params_root = project_root + 'lib/user/Projects/' + sys.argv[2] + '/' + sys.argv[3] + ".nt"
+
+    #these have side effects, so  wait till the sys.argv meets normal assumptions (4 instinct args min)
     from misc import param_smoosh
     from getglobals import PARAMSET_GLOBALS
     from getnamespace import GLOBAL_NAMESPACE
     from jobfxns import *
-
-
-
-    params_root = project_root + 'lib/user/Projects/' + sys.argv[2] + '/' + sys.argv[3] + ".nt"
-
+    
     paramset_original = nt.load(params_root)
     paramset=paramset_original.copy()
     paramset = param_smoosh(paramset,'Job')
@@ -119,31 +167,24 @@ else:
         if os.name == 'nt': 
             os.system("start " + editor + " " + params_root) #will use the default text editor. 
             exit()
+        else:
+            #force nano in linux.
+            os.system(f"nano {params_root}")
+            exit()            
 
-    #start paramset further down
+            #for a project .nt file, drops down to the key specified (for multiple, can use key1-key2)
+    if "--params_drop" in sys.argv:
+        pos = sys.argv.index("--params_drop")
+        paramset = param_smoosh(paramset,sys.argv[pos+1])
+    #upon successful job completion, print out the complete DAG
+    if "--print_tree" in sys.argv:
+        print_tree = True
 
-    #arguments to build in: --param_drop , --print_tree , --novr
+    #Manually set a specific index to prevent a full fan out (for testing).ie,  --novr 0
+    if "--novr" in sys.argv:
+        pos = sys.argv.index("--novr")
+        novr = int(sys.argv[pos+1])
 
-    #defaults for arguments
-    print_tree=False
-    novr='default'
-
-    if len(sys.argv)>4:
-
-        xtra_args = sys.argv[4:len(sys.argv)]
-
-        if "--params_drop" in xtra_args:
-            pos = xtra_args.index("--params_drop")
-            paramset = param_smoosh(paramset,xtra_args[pos+1])
-
-        if "--print_tree" in xtra_args:
-            print_tree = True
-            
-        if "--novr" in xtra_args:
-            pos = xtra_args.index("--novr")
-            novr = int(xtra_args[pos+1])
-
-    
     #initialize the job
     deployJob(paramset,sys.argv,paramset_original,print_tree,novr,GLOBAL_NAMESPACE)
 

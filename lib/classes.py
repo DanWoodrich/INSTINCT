@@ -310,7 +310,8 @@ class INSTINCT_process(INSTINCT_task):
             executable2 = '.bat'
             
         if self.descriptors['runtype']=='bin':
-            executable2 = '.exe'
+            #assume on linux os, executible is extentionless
+            executable2 = '.exe' if os.name=='nt' else ''
             methodjoin = '' #matlab does not allow for '-' in name
 
         command0 = executable1 + PARAMSET_GLOBALS['project_root'] + 'lib/user/methods/' + self.processID +\
@@ -334,30 +335,30 @@ class INSTINCT_process(INSTINCT_task):
 
         if 'venv' in self.descriptors:
             print("******************************\nActivating virtual environment " + self.descriptors['venv_name'] + " with " + self.descriptors['venv'] + "\n******************************")
-            if(self.descriptors['venv']=='Conda'):
-                command_venv = self.descriptors['venv'] + ' activate ' + self.descriptors['venv_name'] + ' & '
-                command = command_venv + command #append venv call to start of command. This assumes conda venv is set up to work on command line.
+            if(self.descriptors['venv'].lower()=='conda'):
 
+                #command_venv = self.descriptors['venv'] + ' activate ' + self.descriptors['venv_name'] + ' & '
+                #command = command_venv + command #append venv call to start of command. This assumes conda venv is set up to work on command line.
+
+                #should be platform agnostic
+                command = f'conda run -n {self.descriptors["venv_name"]} --no-capture-output ' + command #append venv call to start of command. This assumes conda venv is set up to work on command line.                
+                
                 pass_sub,pass_sub_val = keyassess('pass_sub_to_wrapper',self.descriptors)
+
                 if pass_sub_val=='True':
 
                     command = command + os.environ["INS_ARG_SEP"]+ command0
 
-                #import code
-                #code.interact(local=dict(globals(), **locals()))
+                    print(command)
+
             else:
                 print("VENV NOT YET CONFIGURED TO WORK ON BASE VENV")
         
         print("******************************\nRunning " + self.descriptors['language'] + " method " + self.parameters['methodID'] + methodjoin + self.parameters['methodvers'] +\
               " for process " + self.processID + "\n******************************")
 
-        #temp:
-        #print(command)
-
         print("******************************\nCommand params (can copy and paste): " + command2 +"\n******************************")
 
-        #import code
-        #code.interact(local=locals())
         return subprocess.run(command,shell=True)
 
         
@@ -403,10 +404,6 @@ class INSTINCT_process(INSTINCT_task):
             parameters = params['parameters'].copy()
 
             if len(parameters)>0:
-
-                #if n==1:
-                #import code
-                #code.interact(local=locals())
 
                 #extract methodID and method vers
                 if params['descriptors']['runtype']!= "no_method":
@@ -591,7 +588,10 @@ class INSTINCT_userprocess(INSTINCT_process):
         os.environ["CANCELREVIEW"] = "True"
     def print_manifest(self):
 
-        os.system("start " + self.outpath().replace('/','\\')) #windows friendly for copy paste (matters on NAS drive) 
+        if os.name =='nt':
+            os.system("start " + self.outpath().replace('/','\\')) #windows friendly for copy paste (matters on NAS drive)
+        else:
+            print(f"INSTINCT; output directory: self.outpath()")
 
         text = 'INPUT: file named: "' + self.outfile + '" in opened directory: "' + self.outpath().replace('/','\\') + '"\n\n' +\
                'INFO:' + self.get_info()+ '"\n\n' +\
@@ -1022,6 +1022,8 @@ class INSTINCT_job(INSTINCT_task):
 
         nt.dump(self.paramset_original, self.outpath() +"/" +self.param_file_name +"_archive.nt")
 
+        all_cachepath_job_outputs = []
+
         for n in range(len(self.ports)):
 
             if self.ports[n].outfile!="no_comb":
@@ -1054,6 +1056,9 @@ class INSTINCT_job(INSTINCT_task):
             else:
 
                 shutil.copytree(self.ports[n].outfilegen(), self.outpath() + "/" + self.pipenames[n] + "_" +  self.ports[n].outfile)
+
+
+            all_cachepath_job_outputs.append({self.pipenames[n],self.ports[n].outfilegen()})
                 
                 #import code
                 #code.interact(local=locals())
@@ -1061,6 +1066,11 @@ class INSTINCT_job(INSTINCT_task):
 
             #add in functionality here to unzip files in outputs!
 
+        #write each job cache output to a text file
+        with open(self.outpath() +"/job_cache_outputs.nt", 'w') as file:
+            for item in all_cachepath_job_outputs:
+                # Write the item to the file, followed by a newline character
+                file.write(f"{item}\n")
         
     @classmethod
     def invoke(cls,job,paramset_original,param_file_name,pipenames,pipeID=None): #testing out change- params was 2nd arg here 
