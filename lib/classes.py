@@ -300,7 +300,7 @@ class INSTINCT_process(INSTINCT_task):
             executable1 = 'Rscript '
             executable2 = '.R'
         elif self.descriptors['language']=='Python':
-            executable1 = 'python '
+            executable1 = 'python ' if os.name=='nt' else 'python3 '
             executable2 = '.py'
         elif self.descriptors['language']=='MATLAB':
             executable1 = ''

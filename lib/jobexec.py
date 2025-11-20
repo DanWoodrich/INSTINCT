@@ -62,6 +62,8 @@ elif (sys.argv[1]=='pull_contrib'):
     if ans == 'n':
         exit()
 
+    print(f"project root is {project_root}")
+
     userdir = project_root+"lib/user"
 
     if len(sys.argv)==3:

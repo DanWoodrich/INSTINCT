@@ -1,4 +1,30 @@
 #!/bin/bash
-ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-export PYTHONPATH="${ROOT_DIR}:${PYTHONPATH:-}"
-exec python "${ROOT_DIR}/lib/jobexec.py" "$@"
+export PREVDIR=$PWD
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+echo $SCRIPT_DIR
+
+cd $SCRIPT_DIR
+
+CONFIG_FILE="../etc/INSTINCT.cfg"
+
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Error: Config file not found at $CONFIG_FILE" >&2
+    exit 1
+fi
+
+while IFS= read -r line; do
+  # Skip empty lines or lines starting with # (comments)
+  if [[ ! -z "$line" && "$line" != \#* ]]; then
+    export "$line"
+  fi
+done < "$CONFIG_FILE"
+
+cd ../
+
+cd ./lib
+
+python3 jobexec.py "$@"
+
+cd "$PREVDIR"
