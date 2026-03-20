@@ -137,7 +137,9 @@ def get_difftime(data,cap_consectutive=None):
     data['TrueEnd'] = data['TrueStart']+pd.to_timedelta(data['SegDur'], unit='s')
     data['DiffTime']=pd.to_timedelta(0)
     data['DiffTime'][0:(len(data)-1)] = pd.to_timedelta(abs(data['TrueEnd'][0:(len(data['TrueEnd'])-1)] - data['TrueStart'][1:len(data['TrueStart'])].values)) #changes 7/12/21, fix bug where difftime was assigned improperly
-    data['DiffTime'] = (data['DiffTime']>pd.to_timedelta(2,unit='s'))==False #makes the assumption that if sound files are 1 second apart they are actually consecutive (deals with rounding differences)
+    data['DiffTime'] = (data['DiffTime']>pd.to_timedelta(1,unit='s'))==False #makes the assumption that if sound files are 1 second apart they are actually consecutive (deals with rounding differences)
+    #was below prior to 3/18/26. 2s ran into issue in our data around files that were exactly 598s and marked as same difftime when not. 
+    #data['DiffTime'] = (data['DiffTime']>pd.to_timedelta(2,unit='s'))==False #makes the assumption that if sound files are 1 second apart they are actually consecutive (deals with rounding differences)
 
     consecutive = numpy.empty(len(data['DiffTime']), dtype=int)
     consecutive[0] = 1
